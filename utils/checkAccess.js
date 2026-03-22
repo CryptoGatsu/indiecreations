@@ -5,7 +5,7 @@ import { getMint, getAssociatedTokenAddress, getAccount } from '@solana/spl-toke
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 const MINT = new PublicKey("8QaHW7cj1HeCWmqtUxMrDFTjLR8GPRaiCG9zRnoEpump");
 
-export async function checkAccess(wallet: PublicKey) {
+export async function checkAccess(wallet) {
   try {
     const mintInfo = await getMint(connection, MINT);
     const totalSupply = Number(mintInfo.supply);

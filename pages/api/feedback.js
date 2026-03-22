@@ -5,7 +5,9 @@ export default async function handler(req, res) {
   const { wallet, feedback, signature } = req.body;
 
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "smtp.office365.com",
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASSWORD
@@ -14,7 +16,7 @@ export default async function handler(req, res) {
 
   await transporter.sendMail({
     from: 'Indie Creations',
-    to: 'Indiecreationsdev@outlook.com',
+    to: 'indiecreationsdev@outlook.com',
     subject: 'New Feedback',
     text: `Wallet: ${wallet}\nFeedback: ${feedback}\nSignature: ${signature}`
   });
