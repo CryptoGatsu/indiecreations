@@ -1,0 +1,14 @@
+
+body {
+  background: #0a0a0a;
+  color: white;
+  font-family: Arial;
+}
+a { color: #00ffa3; }
+button {
+  padding: 10px 20px;
+  background: #00ffa3;
+  border: none;
+  cursor: pointer;
+}
+textarea { margin-top: 20px; }
