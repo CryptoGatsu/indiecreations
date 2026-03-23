@@ -3,7 +3,7 @@
 
 🌌 Indie Creations
 
-Indie Creations is a small, independent development initiative focused on building unique, gameplay-first experiences from the ground up. Every project is driven by experimentation, learning, and a commitment to actually finishing and releasing games—no matter the size.
+Indie Creations is a small, independent development initiative focused on building unique, gameplay-first experiences from the ground up. Every project is driven by experimentation, learning, and a commitment to actually finishing and releasing games, no matter the size.
 
 The goal is simple:
 Create fun, evolving games while documenting the journey from idea → playable → polished.
@@ -23,7 +23,7 @@ Blend creativity with emerging tech (where it makes sense)
 
 🎮 Current Project
 
-🟢 My Slime Journey — v0.1
+🟢 My Slime Journey - v0.1
 
 🎮 Overview
 
