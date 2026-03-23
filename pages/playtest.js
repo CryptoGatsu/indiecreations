@@ -26,9 +26,7 @@ export default function Playtest() {
     }
   }, [publicKey, connected]);
 
-  if (!allowed) {
-    return <p style={{ padding: 40 }}>Checking access...</p>;
-  }
+  if (!allowed) return <div className="container">Checking access...</div>;
 
   const submit = async () => {
     if (!publicKey || !signMessage) return;
@@ -50,22 +48,26 @@ export default function Playtest() {
   };
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Playtest</h1>
+    <div className="container">
+      <h1 className="title">Playtest</h1>
 
       <iframe
         src="/game/index.html"
-        style={{ width: '100%', height: '80vh', border: 'none' }}
+        style={{ width: '100%', height: '75vh' }}
       />
 
-      <textarea
-        value={feedback}
-        onChange={(e) => setFeedback(e.target.value)}
-        placeholder="Your feedback"
-        style={{ width: '100%', height: 120 }}
-      />
+      <div className="card">
+        <h3>Feedback</h3>
+        <textarea
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          placeholder="What should we improve?"
+        />
 
-      <button onClick={submit}>Submit Feedback</button>
+        <button className="button" onClick={submit}>
+          Submit Feedback
+        </button>
+      </div>
     </div>
   );
 }

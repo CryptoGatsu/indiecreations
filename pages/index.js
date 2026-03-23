@@ -1,10 +1,21 @@
-
 export default function Home() {
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Indie Creations</h1>
-      <p>We build experimental indie games powered by community feedback.</p>
-      <a href="/supporter">Enter Supporter Portal</a>
+    <div className="container">
+      <div className="hero">
+        <img src="/logo.png" className="logo" />
+
+        <div className="title">
+          Indie Creations
+        </div>
+
+        <div className="subtitle">
+          Building experimental indie games powered by community feedback.
+        </div>
+
+        <a href="/supporter">
+          <button className="button">Enter Supporter Portal</button>
+        </a>
+      </div>
     </div>
   );
 }

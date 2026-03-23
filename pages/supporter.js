@@ -11,22 +11,24 @@ export default function Supporter() {
 
   useEffect(() => {
     if (publicKey) {
-      checkAccess(publicKey).then((hasAccess) => {
-        setAccess(hasAccess);
-      });
+      checkAccess(publicKey).then(setAccess);
     }
   }, [publicKey]);
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Supporter Portal</h1>
+    <div className="container">
+      <h1 className="title">Supporter Portal</h1>
 
       {!connected && <WalletMultiButton />}
 
-      {connected && !access && <p>You need 0.5% of supply.</p>}
+      {connected && !access && (
+        <div className="card">
+          <p>You need 0.5% of supply to access playtests.</p>
+        </div>
+      )}
 
       {access && (
-        <button onClick={() => router.push('/playtest')}>
+        <button className="button" onClick={() => router.push('/playtest')}>
           Enter Playtest
         </button>
       )}
