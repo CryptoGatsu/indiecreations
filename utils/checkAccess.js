@@ -1,28 +1,31 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token';
 
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 const MINT = new PublicKey("8QaHW7cj1HeCWmqtUxMrDFTjLR8GPRaiCG9zRnoEpump");
 
-// 🔥 REQUIRED TOKENS (adjust if needed)
-const REQUIRED_TOKENS = 5_000_000;
+// 5M tokens with 6 decimals
+const REQUIRED_RAW = 5_000_000 * 1_000_000;
 
 export async function checkAccess(wallet) {
   try {
-    const ata = await getAssociatedTokenAddress(MINT, wallet);
-    const account = await getAccount(connection, ata);
+    // 🔥 Get ALL token accounts for wallet
+    const accounts = await connection.getParsedTokenAccountsByOwner(wallet, {
+      mint: MINT,
+    });
 
-    // Raw amount (no decimals applied yet)
-    const rawBalance = Number(account.amount);
+    let totalBalance = 0;
 
-    // ⚠️ IMPORTANT: most tokens = 6 or 9 decimals
-    const DECIMALS = 6; // ← change if needed
+    accounts.value.forEach((acc) => {
+      const amount =
+        acc.account.data.parsed.info.tokenAmount.amount;
 
-    const balance = rawBalance / Math.pow(10, DECIMALS);
+      totalBalance += Number(amount);
+    });
 
-    console.log("User balance:", balance);
+    console.log("Total Raw Balance:", totalBalance);
+    console.log("Required:", REQUIRED_RAW);
 
-    return balance >= REQUIRED_TOKENS;
+    return totalBalance >= REQUIRED_RAW;
   } catch (err) {
     console.error("Access check failed:", err);
     return false;
