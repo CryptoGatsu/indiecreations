@@ -15,6 +15,10 @@ export default function Home() {
         <a href="/supporter">
           <button className="button">Enter Supporter Portal</button>
         </a>
+
+        <a href="/dashboard">
+          <button className="button">View Feedback Dashboard</button>
+        </a>
       </div>
     </div>
   );

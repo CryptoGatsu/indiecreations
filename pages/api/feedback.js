@@ -1,25 +1,24 @@
-
-import nodemailer from 'nodemailer';
+let feedbackStore = [];
 
 export default async function handler(req, res) {
-  const { wallet, feedback, signature } = req.body;
+  if (req.method === "POST") {
+    const { wallet, feedback, signature } = req.body;
 
-  const transporter = nodemailer.createTransport({
-    host: "smtp.office365.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD
-    }
-  });
+    const entry = {
+      wallet,
+      feedback,
+      signature,
+      date: new Date().toISOString(),
+    };
 
-  await transporter.sendMail({
-    from: 'Indie Creations',
-    to: 'indiecreationsdev@outlook.com',
-    subject: 'New Feedback',
-    text: `Wallet: ${wallet}\nFeedback: ${feedback}\nSignature: ${signature}`
-  });
+    feedbackStore.unshift(entry);
 
-  res.status(200).json({ success: true });
+    console.log("Stored feedback:", entry);
+
+    return res.status(200).json({ success: true });
+  }
+
+  if (req.method === "GET") {
+    return res.status(200).json(feedbackStore);
+  }
 }
