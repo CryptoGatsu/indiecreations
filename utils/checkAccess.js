@@ -3,31 +3,25 @@ import { Connection, PublicKey } from '@solana/web3.js';
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 const MINT = new PublicKey("8QaHW7cj1HeCWmqtUxMrDFTjLR8GPRaiCG9zRnoEpump");
 
-// 5M tokens with 6 decimals
-const REQUIRED_RAW = 5_000_000 * 1_000_000;
-
 export async function checkAccess(wallet) {
   try {
-    // 🔥 Get ALL token accounts for wallet
     const accounts = await connection.getParsedTokenAccountsByOwner(wallet, {
-      mint: MINT,
+      programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
     });
 
-    let totalBalance = 0;
+    console.log("=== ALL TOKEN ACCOUNTS ===");
 
     accounts.value.forEach((acc) => {
-      const amount =
-        acc.account.data.parsed.info.tokenAmount.amount;
+      const info = acc.account.data.parsed.info;
 
-      totalBalance += Number(amount);
+      console.log("Mint:", info.mint);
+      console.log("Amount:", info.tokenAmount.uiAmount);
+      console.log("----------------------");
     });
 
-    console.log("Total Raw Balance:", totalBalance);
-    console.log("Required:", REQUIRED_RAW);
-
-    return totalBalance >= REQUIRED_RAW;
+    return false; // TEMP
   } catch (err) {
-    console.error("Access check failed:", err);
+    console.error(err);
     return false;
   }
 }
