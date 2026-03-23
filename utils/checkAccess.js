@@ -1,8 +1,13 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 
 const connection = new Connection(
-  "https://mainnet.helius-rpc.com/?api-key=abe30281-08a6-4f68-921b-4da93db84835");
+  "https://mainnet.helius-rpc.com/?api-key=abe30281-08a6-4f68-921b-4da93db84835"
+);
+
 const MINT = new PublicKey("8QaHW7cj1HeCWmqtUxMrDFTjLR8GPRaiCG9zRnoEpump");
+
+// 5M tokens (no raw math needed now)
+const REQUIRED = 5_000_000;
 
 export async function checkAccess(wallet) {
   try {
@@ -10,17 +15,19 @@ export async function checkAccess(wallet) {
       programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
     });
 
-    console.log("=== ALL TOKEN ACCOUNTS ===");
+    let totalBalance = 0;
 
     accounts.value.forEach((acc) => {
       const info = acc.account.data.parsed.info;
 
-      console.log("Mint:", info.mint);
-      console.log("Amount:", info.tokenAmount.uiAmount);
-      console.log("----------------------");
+      if (info.mint === MINT.toString()) {
+        totalBalance += info.tokenAmount.uiAmount;
+      }
     });
 
-    return false; // TEMP
+    console.log("Final Balance:", totalBalance);
+
+    return totalBalance >= REQUIRED;
   } catch (err) {
     console.error(err);
     return false;
