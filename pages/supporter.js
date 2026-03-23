@@ -1,16 +1,19 @@
-
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { checkAccess } from '../utils/checkAccess';
 
 export default function Supporter() {
   const { publicKey, connected } = useWallet();
   const [access, setAccess] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (publicKey) {
-      checkAccess(publicKey).then(setAccess);
+      checkAccess(publicKey).then((hasAccess) => {
+        setAccess(hasAccess);
+      });
     }
   }, [publicKey]);
 
@@ -22,7 +25,11 @@ export default function Supporter() {
 
       {connected && !access && <p>You need 0.5% of supply.</p>}
 
-      {access && <a href="/playtest">Enter Playtest</a>}
+      {access && (
+        <button onClick={() => router.push('/playtest')}>
+          Enter Playtest
+        </button>
+      )}
     </div>
   );
 }
