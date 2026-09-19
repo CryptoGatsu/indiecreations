@@ -1,22 +1,25 @@
-
 import '../styles.css';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { useState } from 'react';
+import { Inter_Tight } from 'next/font/google';
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { wagmiConfig } from '../lib/wagmi';
+import Layout from '../components/Layout';
 
-require('@solana/wallet-adapter-react-ui/styles.css');
+const font = Inter_Tight({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
 export default function App({ Component, pageProps }) {
-  const endpoint = "https://api.mainnet-beta.solana.com";
-  const wallets = [new PhantomWalletAdapter()];
+  const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          <Component {...pageProps} />
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <div className={font.className}>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </div>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }

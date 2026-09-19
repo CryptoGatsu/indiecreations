@@ -8,12 +8,28 @@ Indie Creations is a small, independent development initiative focused on buildi
 The goal is simple:
 Create fun, evolving games while documenting the journey from idea → playable → polished.
 
-🪙 Indie $creations Coin
+🪙 $creations
 
-As part of the broader ecosystem, Indie Creations also experiments with digital assets tied to the brand.
+Indie Creations is a tokenized indie game studio. $creations is relaunching as a fixed-supply ERC-20 on Robinhood Chain (chain ID 4663) through PONS Launchpad.
 
-Contract Address (CA):
-8QaHW7cj1HeCWmqtUxMrDFTjLR8GPRaiCG9zRnoEpump
+Holders get:
+- Access to the playtest area
+- The ability to rate and review each build
+- Free access to every game at release
+
+Contract Address (CA): announced at launch
+
+🔧 Site setup
+
+The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
+
+- `NEXT_PUBLIC_TOKEN_ADDRESS` — the $creations CA. While empty, the playtest area is locked for everyone.
+- `NEXT_PUBLIC_MIN_TOKENS` — tokens required to unlock playtests (default 5,000,000).
+- `SESSION_SECRET` — long random string, required in production.
+- `RPC_URL` (optional) — private RPC for balance checks.
+- `NEXT_PUBLIC_WC_PROJECT_ID` (optional) — enables WalletConnect for mobile wallets.
+
+How the gate works: the holder connects a wallet and signs a free message, the server verifies the signature and the on-chain balance, then sets a signed session cookie. `middleware.js` blocks everything under `/game/` without that cookie, so the build cannot be loaded by URL alone.
 
 🚀 Vision
 Build and ship multiple indie games
