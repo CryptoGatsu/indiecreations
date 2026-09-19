@@ -16,13 +16,15 @@
     #note { max-width: 80vw; text-align: center; color: #ff8866; letter-spacing: 0; font-weight: 400; }
     #rotate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #050a08; color: #fff;
               font: 600 18px/1.5 system-ui, sans-serif; text-align: center; padding: 24px; z-index: 5; }
-    @media (orientation: portrait) { body.phone #rotate { display: flex; } }
+    @media (orientation: portrait) { body.phone:not(.upright) #rotate { display: flex; } }
+    #rotate-help { font-weight: 400; font-size: 15px; color: #c8d2c8; }
+    #rotate-skip { font: 600 15px system-ui, sans-serif; color: #050a08; background: #ffcc26; border: 0; border-radius: 8px; padding: 12px 18px; }
   </style>
 </head>
 <body>
   <canvas id="unity-canvas" tabindex="-1"></canvas>
   <div id="loading"><b>PROJECT TJR</b><div id="bar"><div id="fill"></div></div><span id="pct">LOADING</span><div id="note"></div></div>
-  <div id="rotate">Turn your phone sideways to play.</div>
+  <div id="rotate"><div><b>Turn your phone sideways to play.</b><br><br><span id="rotate-help">Inside a wallet app (MetaMask...) the screen can't turn. Go back to the playtest page and tap <b>Play in another browser</b> to continue in Safari or Chrome.</span><br><br><button id="rotate-skip">Play upright anyway</button></div></div>
   <script>
     // The site serves this page as /play while the files sit in /game/ - find them wherever we were loaded from.
     var root = location.pathname.indexOf('/game/') === 0 ? '' : (location.pathname === '/play' || location.pathname.indexOf('/play/') === 0 ? '/game/' : '');
@@ -32,20 +34,23 @@
     var note = document.getElementById('note');
     var config = {
       arguments: [],
-      dataUrl: root + 'Build/d9536641a75e78b4e622ac90d2bdaa58.data.unityweb',
-      frameworkUrl: root + 'Build/bfba997f91156d02d84cc6a7e5774795.framework.js.unityweb',
-      codeUrl: root + 'Build/2bffd1278131177a71d9532f6b5bf707.wasm.unityweb',
+      dataUrl: root + 'Build/c23e4fe90b02c855080cb63a7821dbab.data.unityweb',
+      frameworkUrl: root + 'Build/b91a2ace6f69cc6d7a4ec95627aa4f24.framework.js.unityweb',
+      codeUrl: root + 'Build/4941ebe70f66d2c6455230230b715667.wasm.unityweb',
       streamingAssetsUrl: root + 'StreamingAssets',
       companyName: 'Indie Creations',
       productName: 'Project TJR',
       productVersion: '0.1.0',
       showBanner: function (msg, type) { if (type === 'error') note.textContent = msg; }
     };
-    // Phones have very dense screens; drawing every pixel of them is the quickest way to a slideshow.
-    if (mobile) config.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    // Dense screens (phones, 4K / scaled desktop monitors) would have the game draw 2-4x the pixels for no visible
+    // gain in a low-poly game - the single biggest GPU cost in a browser. Adding ?dpr=2 to the address overrides it for comparison.
+    var wantDpr = parseFloat((location.search.match(/[?&]dpr=([0-9.]+)/) || [])[1]);
+    config.devicePixelRatio = wantDpr > 0 ? wantDpr : Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1);
+    document.getElementById('rotate-skip').addEventListener('click', function () { document.body.classList.add('upright'); });
 
     var script = document.createElement('script');
-    script.src = root + 'Build/511f12c522cc1ff0ddd2069df20daf7c.loader.js';
+    script.src = root + 'Build/c40a32e43f01de6ee29162c1a77eefa5.loader.js';
     script.onload = function () {
       createUnityInstance(canvas, config, function (p) {
         document.getElementById('fill').style.width = Math.round(p * 100) + '%';

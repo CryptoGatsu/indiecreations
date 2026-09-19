@@ -16,6 +16,49 @@ function Gate({ title, children }) {
   );
 }
 
+// Wallet in-app browsers (MetaMask and friends) can't rotate to landscape or go full screen. Holders verify there,
+// then carry the session to their normal browser with a personal link that works for five minutes.
+function PlayElsewhere() {
+  const [link, setLink] = useState(null);
+  const [note, setNote] = useState(null);
+
+  const make = async () => {
+    setNote(null);
+    const res = await fetch('/api/auth/handoff', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return setNote(data.error || 'Could not make a link.');
+    setLink(data.url);
+    try {
+      if (navigator.share) await navigator.share({ title: 'Indie Creations playtest', url: data.url });
+      else {
+        await navigator.clipboard.writeText(data.url);
+        setNote('Link copied. Paste it into Safari or Chrome.');
+      }
+    } catch {
+      setNote('Copy the link below into Safari or Chrome.');
+    }
+  };
+
+  return (
+    <div className="card">
+      <h3>Playing on a phone?</h3>
+      <p className="muted small">
+        Wallet browsers like MetaMask can't turn sideways or go full screen. Make a personal link and open it in
+        Safari or Chrome: it signs that browser in as this wallet and starts the game full screen. The link works
+        for 5 minutes, so don't share it.
+      </p>
+      <div className="actions">
+        <a className="btn btn-primary" href="/play">Play full screen</a>
+        <button type="button" className="btn btn-ghost" onClick={make}>Play in another browser</button>
+      </div>
+      {note && <p className="small">{note}</p>}
+      {link && (
+        <input className="link-box" readOnly value={link} onFocus={(e) => e.target.select()} aria-label="Personal play link" />
+      )}
+    </div>
+  );
+}
+
 function ReviewForm() {
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
@@ -152,7 +195,22 @@ export default function Playtest() {
     );
   }
 
+  // Signed in through a personal link: there is no wallet in this browser, and none is needed to play.
+  if (sessionAddress && !isConnected && ACTIVE_BUILD) {
+    return (
+      <div className="container page">
+        <Gate title={ACTIVE_BUILD.name}>
+          <span className="pill pill-solid">Holder verified · {shortAddress(sessionAddress)}</span>
+          <p className="muted">{ACTIVE_BUILD.version}. Turn your phone sideways for the best view.</p>
+          <a className="btn btn-primary" href="/play">Play full screen</a>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={signOut}>Sign out</button>
+        </Gate>
+      </div>
+    );
+  }
+
   if (!unlocked) {
+    const linkProblem = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('link') : null;
     return (
       <div className="container page">
         <Gate title="Holders only">
@@ -174,6 +232,8 @@ export default function Playtest() {
             </>
           )}
 
+          {linkProblem === 'expired' && <p className="error small">That play link has expired. Make a new one from your wallet's browser.</p>}
+          {linkProblem === 'notholder' && <p className="error small">That wallet no longer holds enough {TOKEN_TICKER}.</p>}
           {result?.error && <p className="error small">{result.error}</p>}
           {result?.balance !== undefined && (
             <div className="notice">
@@ -218,6 +278,7 @@ export default function Playtest() {
 
       <iframe className="game-frame" src="/play" title={ACTIVE_BUILD.name} allow="fullscreen; gamepad" />
 
+      <PlayElsewhere />
       <ReviewForm />
     </div>
   );

@@ -692,3 +692,7 @@ textarea:focus {
 main > .section:first-child {
   border-top: none;
 }
+
+/* personal play link (playtest page) */
+.link-box { width: 100%; margin-top: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.35); color: inherit; font: 13px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; }
