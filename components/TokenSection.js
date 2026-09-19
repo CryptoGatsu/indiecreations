@@ -53,7 +53,7 @@ export default function TokenSection() {
 
           <div className="actions">
             <a href={LINKS.pons} target="_blank" rel="noreferrer" className="btn btn-primary">
-              Open PONS Launchpad
+              Buy on PONS
             </a>
             {LINKS.tokenExplorer && (
               <a href={LINKS.tokenExplorer} target="_blank" rel="noreferrer" className="btn btn-ghost">

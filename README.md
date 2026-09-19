@@ -20,6 +20,8 @@ Holders get:
 Contract Address (CA):
 0xB9195597f91f179EBB05D3F1765B35C3d8491aCb
 
+PONS: https://www.ponsfamily.com/launchpad/0xB9195597f91f179EBB05D3F1765B35C3d8491aCb
+
 X: https://x.com/IndieCreations_
 
 🔧 Site setup
