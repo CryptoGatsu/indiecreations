@@ -29,7 +29,7 @@ The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
 - `RPC_URL` (optional) — private RPC for balance checks.
 - `NEXT_PUBLIC_WC_PROJECT_ID` (optional) — enables WalletConnect for mobile wallets.
 
-How the gate works: the holder connects a wallet and signs a free message, the server verifies the signature and the on-chain balance, then sets a signed session cookie. `middleware.js` blocks everything under `/game/` without that cookie, so the build cannot be loaded by URL alone.
+How the gate works: the holder connects a wallet and signs a free message, the server verifies the signature and the on-chain balance, then sets a signed session cookie. `middleware.js` blocks everything under `/game/` without that cookie, so the build cannot be loaded by URL alone. Which build is live is set in `lib/build.js`; while it is `null`, holders see a "no build live" message and the game files stay closed.
 
 🚀 Vision
 Build and ship multiple indie games
@@ -37,7 +37,7 @@ Continuously improve systems, design, and feel
 Share progress openly
 Blend creativity with emerging tech (where it makes sense)
 
-🎮 Current Project
+🎮 Past Project (no longer in development)
 
 🟢 My Slime Journey - v0.1
 

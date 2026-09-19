@@ -26,8 +26,7 @@ export default function Layout({ children }) {
           </Link>
 
           <nav className="nav">
-            <Link href="/#games">Games</Link>
-            <Link href="/#token">Token</Link>
+            <Link href="/token">Token</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/reviews">Reviews</Link>
           </nav>

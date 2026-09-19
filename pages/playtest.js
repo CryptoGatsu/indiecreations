@@ -4,8 +4,7 @@ import ConnectButton from '../components/ConnectButton';
 import { Mark } from '../components/Logo';
 import { buildSignInMessage } from '../lib/authMessage';
 import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, MIN_TOKENS, shortAddress } from '../lib/config';
-
-const GAME = 'My Slime Journey';
+import { ACTIVE_BUILD } from '../lib/build';
 
 function Gate({ title, children }) {
   return (
@@ -29,7 +28,7 @@ function ReviewForm() {
     const res = await fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ game: GAME, rating, feedback }),
+      body: JSON.stringify({ rating, feedback }),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -192,18 +191,32 @@ export default function Playtest() {
     );
   }
 
+  if (!ACTIVE_BUILD) {
+    return (
+      <div className="container page">
+        <Gate title="No build live right now">
+          <span className="pill pill-solid">Holder verified</span>
+          <p className="muted">
+            You're in. There is no playtest build live at the moment. When the next one drops, it
+            will be playable right here.
+          </p>
+        </Gate>
+      </div>
+    );
+  }
+
   return (
     <div className="container page">
       <div className="page-head">
         <div>
           <p className="eyebrow">Playtest</p>
-          <h1>{GAME}</h1>
-          <p className="muted">v0.1 · first playable build. Click the game to capture input.</p>
+          <h1>{ACTIVE_BUILD.name}</h1>
+          <p className="muted">{ACTIVE_BUILD.version} · Click the game to capture input.</p>
         </div>
         <span className="pill pill-solid">Holder verified</span>
       </div>
 
-      <iframe className="game-frame" src="/game/index.html" title={GAME} allow="fullscreen; gamepad" />
+      <iframe className="game-frame" src="/play" title={ACTIVE_BUILD.name} allow="fullscreen; gamepad" />
 
       <ReviewForm />
     </div>

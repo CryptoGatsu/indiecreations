@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { useState } from 'react';
-import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, MIN_TOKENS, robinhoodChain } from '../lib/config';
+import TokenSection from '../components/TokenSection';
+import { TOKEN_TICKER } from '../lib/config';
 
 const PERKS = [
   {
@@ -17,49 +17,8 @@ const PERKS = [
   },
 ];
 
-const FEATURES = [
-  'Third-person movement and lock-on combat',
-  'Enemy AI and a full boss encounter',
-  'EXP orbs, progression and ability unlocks',
-  'Flame Trail and Slime Dash abilities',
-];
-
-const STEPS = [
-  { title: 'Get a wallet', body: 'Any EVM wallet works. Add Robinhood Chain and bridge a little ETH for gas.' },
-  { title: `Pick up ${TOKEN_TICKER}`, body: 'Buy on PONS Launchpad using the contract address on this page.' },
-  { title: 'Connect and verify', body: 'Sign a free message on the playtest page. No transaction, no approvals.' },
-];
-
 // Decorative 5x5 board echoing the logo mark. 1 = ink tile.
 const BOARD = [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0];
-
-function ContractAddress() {
-  const [copied, setCopied] = useState(false);
-
-  if (!TOKEN_ADDRESS) {
-    return (
-      <div className="ca">
-        <span className="ca-value muted">Announced at launch</span>
-        <span className="pill">Soon</span>
-      </div>
-    );
-  }
-
-  const copy = async () => {
-    await navigator.clipboard.writeText(TOKEN_ADDRESS);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
-  return (
-    <div className="ca">
-      <span className="ca-value">{TOKEN_ADDRESS}</span>
-      <button className="btn btn-primary btn-sm" onClick={copy}>
-        {copied ? 'Copied' : 'Copy'}
-      </button>
-    </div>
-  );
-}
 
 export default function Home() {
   return (
@@ -81,9 +40,9 @@ export default function Home() {
               <Link href="/playtest" className="btn btn-primary">
                 Enter playtest
               </Link>
-              <a href="#token" className="btn btn-ghost">
+              <Link href="/token" className="btn btn-ghost">
                 Get {TOKEN_TICKER}
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -112,114 +71,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* GAMES */}
-      <section className="section section-soft" id="games">
-        <div className="container">
-          <p className="eyebrow">Games</p>
-          <h2>In development</h2>
-
-          <div className="game">
-            <div className="game-art" aria-hidden="true">
-              <span className="game-art-label">v0.1</span>
-            </div>
-            <div className="game-body">
-              <div className="game-meta">
-                <span className="pill pill-solid">Playable now</span>
-                <span className="muted small">Action RPG · Unity</span>
-              </div>
-              <h3>My Slime Journey</h3>
-              <p className="muted">
-                A third-person action RPG where you play a slime that grows stronger by defeating
-                enemies, absorbing experience and unlocking new abilities. v0.1 is the first fully
-                playable build: a complete combat loop, progression and a boss.
-              </p>
-              <ul className="checklist">
-                {FEATURES.map((f) => (
-                  <li key={f}>{f}</li>
-                ))}
-              </ul>
-              <Link href="/playtest" className="btn btn-primary">
-                Play the build
-              </Link>
-            </div>
-          </div>
-
-          <div className="process">
-            <div>
-              <span className="card-index">Idea</span>
-              <p className="muted small">Small, gameplay-first concepts.</p>
-            </div>
-            <div>
-              <span className="card-index">Playable</span>
-              <p className="muted small">Holders playtest early and review.</p>
-            </div>
-            <div>
-              <span className="card-index">Polished</span>
-              <p className="muted small">Shipped, and free for holders.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* TOKEN */}
-      <section className="section" id="token">
-        <div className="container token">
-          <div>
-            <p className="eyebrow">The token</p>
-            <h2>{TOKEN_TICKER}</h2>
-            <p className="muted">
-              {TOKEN_TICKER} is the access pass to everything Indie Creations makes. It is
-              relaunching as a fixed-supply token on Robinhood Chain through PONS Launchpad.
-              Hold at least {MIN_TOKENS.toLocaleString()} to unlock the playtest area.
-            </p>
-
-            <p className="label">Contract address</p>
-            <ContractAddress />
-
-            <div className="actions">
-              <a href={LINKS.pons} target="_blank" rel="noreferrer" className="btn btn-primary">
-                Open PONS Launchpad
-              </a>
-              {LINKS.tokenExplorer && (
-                <a href={LINKS.tokenExplorer} target="_blank" rel="noreferrer" className="btn btn-ghost">
-                  View on explorer
-                </a>
-              )}
-            </div>
-
-            <dl className="facts">
-              <div>
-                <dt>Network</dt>
-                <dd>{robinhoodChain.name}</dd>
-              </div>
-              <div>
-                <dt>Chain ID</dt>
-                <dd>{robinhoodChain.id}</dd>
-              </div>
-              <div>
-                <dt>Launchpad</dt>
-                <dd>PONS</dd>
-              </div>
-              <div>
-                <dt>Gas</dt>
-                <dd>ETH</dd>
-              </div>
-            </dl>
-          </div>
-
-          <ol className="steps">
-            {STEPS.map((step, i) => (
-              <li key={step.title}>
-                <span className="step-num">{i + 1}</span>
-                <div>
-                  <h3>{step.title}</h3>
-                  <p className="muted">{step.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
+      <TokenSection />
     </>
   );
 }

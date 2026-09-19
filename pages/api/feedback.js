@@ -1,4 +1,5 @@
 import { SESSION_COOKIE, readSessionToken } from '../../lib/session';
+import { ACTIVE_BUILD } from '../../lib/build';
 
 // NOTE: in-memory only — resets on every deploy / cold start. Swap for a real
 // database before relying on it.
@@ -12,7 +13,9 @@ export default async function handler(req, res) {
     const session = await readSessionToken(req.cookies[SESSION_COOKIE]);
     if (!session) return res.status(401).json({ error: 'Verify your wallet first.' });
 
-    const { game, rating, feedback } = req.body || {};
+    if (!ACTIVE_BUILD) return res.status(409).json({ error: 'No build is live to review.' });
+
+    const { rating, feedback } = req.body || {};
     const text = typeof feedback === 'string' ? feedback.trim() : '';
     const stars = Number(rating);
 
@@ -25,7 +28,7 @@ export default async function handler(req, res) {
 
     feedbackStore.unshift({
       wallet: session.address,
-      game: typeof game === 'string' ? game.slice(0, 80) : 'My Slime Journey',
+      game: `${ACTIVE_BUILD.name} ${ACTIVE_BUILD.version}`,
       rating: stars,
       feedback: text,
       date: new Date().toISOString(),
