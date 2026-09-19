@@ -1,134 +1,64 @@
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <base href="/game/">
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | My Slime Journey</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-  </head>
-  <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">My Slime Journey</div>
-      </div>
-    </div>
-    <script>
-      var canvas = document.querySelector("#unity-canvas");
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>Project TJR - playtest</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #050a08; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
+    #unity-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: #050a08; outline: none; }
+    #loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+               font: 600 15px/1.4 system-ui, -apple-system, Segoe UI, sans-serif; color: #c8d2c8; letter-spacing: .12em; }
+    #loading b { font-size: 34px; color: #fff; letter-spacing: .04em; }
+    #bar { width: min(420px, 70vw); height: 6px; background: #1c2a22; border-radius: 3px; overflow: hidden; }
+    #fill { width: 0; height: 100%; background: #ffcc26; transition: width .2s; }
+    #note { max-width: 80vw; text-align: center; color: #ff8866; letter-spacing: 0; font-weight: 400; }
+    #rotate { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: #050a08; color: #fff;
+              font: 600 18px/1.5 system-ui, sans-serif; text-align: center; padding: 24px; z-index: 5; }
+    @media (orientation: portrait) { body.phone #rotate { display: flex; } }
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="-1"></canvas>
+  <div id="loading"><b>PROJECT TJR</b><div id="bar"><div id="fill"></div></div><span id="pct">LOADING</span><div id="note"></div></div>
+  <div id="rotate">Turn your phone sideways to play.</div>
+  <script>
+    // The site serves this page as /play while the files sit in /game/ - find them wherever we were loaded from.
+    var root = location.pathname.indexOf('/game/') === 0 ? '' : (location.pathname === '/play' || location.pathname.indexOf('/play/') === 0 ? '/game/' : '');
+    var mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+    if (mobile) document.body.className = 'phone'; // the 'turn your phone' notice is for phones only
+    var canvas = document.getElementById('unity-canvas');
+    var note = document.getElementById('note');
+    var config = {
+      arguments: [],
+      dataUrl: root + 'Build/d9536641a75e78b4e622ac90d2bdaa58.data.unityweb',
+      frameworkUrl: root + 'Build/bfba997f91156d02d84cc6a7e5774795.framework.js.unityweb',
+      codeUrl: root + 'Build/2bffd1278131177a71d9532f6b5bf707.wasm.unityweb',
+      streamingAssetsUrl: root + 'StreamingAssets',
+      companyName: 'Indie Creations',
+      productName: 'Project TJR',
+      productVersion: '0.1.0',
+      showBanner: function (msg, type) { if (type === 'error') note.textContent = msg; }
+    };
+    // Phones have very dense screens; drawing every pixel of them is the quickest way to a slideshow.
+    if (mobile) config.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
-
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/builds.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/builds.data",
-        frameworkUrl: buildUrl + "/builds.framework.js",
-        codeUrl: buildUrl + "/builds.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "IndieCreations",
-        productName: "My Slime Journey",
-        productVersion: "0.1.0",
-        showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
-      };
-
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
-      }
-
-      document.querySelector("#unity-loading-bar").style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
-
-              }).catch((message) => {
-                alert(message);
-              });
-            };
-
-      document.body.appendChild(script);
-
-    </script>
-  </body>
+    var script = document.createElement('script');
+    script.src = root + 'Build/511f12c522cc1ff0ddd2069df20daf7c.loader.js';
+    script.onload = function () {
+      createUnityInstance(canvas, config, function (p) {
+        document.getElementById('fill').style.width = Math.round(p * 100) + '%';
+        document.getElementById('pct').textContent = p < 0.9 ? 'LOADING  ' + Math.round(p / 0.9 * 100) + '%' : 'STARTING';
+      }).then(function () {
+        document.getElementById('loading').style.display = 'none';
+        canvas.focus();
+      }).catch(function (e) { note.textContent = String(e); });
+    };
+    script.onerror = function () { note.textContent = 'Could not load the game files. If you are not signed in as a holder, go back to the playtest page.'; };
+    document.body.appendChild(script);
+    // keyboard focus comes back when the player clicks into the frame
+    window.addEventListener('pointerdown', function () { canvas.focus(); });
+  </script>
+</body>
 </html>
