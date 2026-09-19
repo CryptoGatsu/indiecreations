@@ -10,20 +10,23 @@ Create fun, evolving games while documenting the journey from idea → playable 
 
 🪙 $creations
 
-Indie Creations is a tokenized indie game studio. $creations is relaunching as a fixed-supply ERC-20 on Robinhood Chain (chain ID 4663) through PONS Launchpad.
+Indie Creations is a tokenized indie game studio. $creations is a fixed-supply ERC-20 (1,000,000,000 supply) live on Robinhood Chain (chain ID 4663), launched through PONS Launchpad.
 
 Holders get:
 - Access to the playtest area
 - The ability to rate and review each build
 - Free access to every game at release
 
-Contract Address (CA): announced at launch
+Contract Address (CA):
+0xB9195597f91f179EBB05D3F1765B35C3d8491aCb
+
+X: https://x.com/IndieCreations_
 
 🔧 Site setup
 
 The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
 
-- `NEXT_PUBLIC_TOKEN_ADDRESS` — the $creations CA. While empty, the playtest area is locked for everyone.
+- `NEXT_PUBLIC_TOKEN_ADDRESS` (optional) — overrides the $creations CA, which is already the default in `lib/config.js`.
 - `NEXT_PUBLIC_MIN_TOKENS` — tokens required to unlock playtests (default 5,000,000).
 - `SESSION_SECRET` — long random string, required in production.
 - `RPC_URL` (optional) — private RPC for balance checks.

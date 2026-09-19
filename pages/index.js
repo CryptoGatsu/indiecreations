@@ -29,7 +29,7 @@ export default function Home() {
           <div className="hero-copy">
             <span className="pill">
               <span className="dot" />
-              Relaunching on Robinhood Chain
+              Live on Robinhood Chain
             </span>
             <h1>Indie games, shaped by the people who hold them.</h1>
             <p className="lead">

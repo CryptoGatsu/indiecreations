@@ -17,6 +17,8 @@ export default function Layout({ children }) {
         <meta property="og:title" content="Indie Creations" />
         <meta property="og:description" content={DESCRIPTION} />
         <meta property="og:image" content="https://www.indiecreations.fun/logo.png" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:site" content="@IndieCreations_" />
       </Head>
 
       <header className="site-header">
@@ -29,6 +31,9 @@ export default function Layout({ children }) {
             <Link href="/token">Token</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/reviews">Reviews</Link>
+            <a href={LINKS.x} target="_blank" rel="noreferrer">
+              X
+            </a>
           </nav>
 
           <ConnectButton className="btn btn-primary btn-sm" label="Connect" />
@@ -49,6 +54,9 @@ export default function Layout({ children }) {
           <div className="footer-links">
             <Link href="/playtest">Playtest</Link>
             <Link href="/reviews">Reviews</Link>
+            <a href={LINKS.x} target="_blank" rel="noreferrer">
+              X (Twitter)
+            </a>
             <a href={LINKS.pons} target="_blank" rel="noreferrer">
               PONS Launchpad
             </a>
