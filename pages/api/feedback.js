@@ -1,9 +1,8 @@
 import { SESSION_COOKIE, readSessionToken } from '../../lib/session';
 import { ACTIVE_BUILD } from '../../lib/build';
+import { saveReview, listReviews } from '../../lib/feedbackStore';
 
-// NOTE: in-memory only — resets on every deploy / cold start. Swap for a real
-// database before relying on it.
-let feedbackStore = [];
+// Reviews are kept in Supabase when it is configured (see lib/feedbackStore.js), in memory otherwise.
 
 const MAX_LENGTH = 2000;
 
@@ -26,20 +25,29 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Rating must be 1-5.' });
     }
 
-    feedbackStore.unshift({
-      wallet: session.address,
-      game: `${ACTIVE_BUILD.name} ${ACTIVE_BUILD.version}`,
-      rating: stars,
-      feedback: text,
-      date: new Date().toISOString(),
-    });
-    feedbackStore = feedbackStore.slice(0, 500);
+    try {
+      await saveReview({
+        wallet: session.address,
+        game: `${ACTIVE_BUILD.name} ${ACTIVE_BUILD.version}`,
+        rating: stars,
+        feedback: text,
+      });
+    } catch (err) {
+      console.error('saving review failed:', err);
+      return res.status(502).json({ error: 'Could not save your review. Please try again.' });
+    }
 
     return res.status(200).json({ success: true });
   }
 
   if (req.method === 'GET') {
-    return res.status(200).json(feedbackStore);
+    try {
+      res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=120');
+      return res.status(200).json(await listReviews());
+    } catch (err) {
+      console.error('loading reviews failed:', err);
+      return res.status(200).json([]);
+    }
   }
 
   return res.status(405).end();
