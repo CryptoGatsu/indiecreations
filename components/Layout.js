@@ -30,6 +30,7 @@ export default function Layout({ children }) {
           <nav className="nav">
             <Link href="/token">Token</Link>
             <Link href="/playtest">Playtest</Link>
+            <Link href="/shop">Shop</Link>
             <Link href="/reviews">Reviews</Link>
             <a href={LINKS.x} target="_blank" rel="noreferrer">
               X
@@ -53,6 +54,7 @@ export default function Layout({ children }) {
           </div>
           <div className="footer-links">
             <Link href="/playtest">Playtest</Link>
+            <Link href="/shop">Shop</Link>
             <Link href="/reviews">Reviews</Link>
             <a href={LINKS.x} target="_blank" rel="noreferrer">
               X (Twitter)

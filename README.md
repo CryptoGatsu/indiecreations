@@ -38,6 +38,24 @@ The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
 
 How the gate works: the holder connects a wallet and signs a free message, the server verifies the signature and the on-chain balance, then sets a signed session cookie. `middleware.js` blocks everything under `/game/` without that cookie, so the build cannot be loaded by URL alone. The game also checks for itself: it asks `/api/game/ticket` for a short-lived ticket signed with `GAME_TICKET_KEY` (the balance is re-checked each time) and refuses to run without one, so a copy of the build hosted elsewhere does not work and a wallet that sells below the threshold is out within minutes. Which build is live is set in `lib/build.js`; while it is `null`, holders see a "no build live" message and the game files stay closed.
 
+🛍️ Cosmetics shop (`/shop`)
+
+Every Indie Creations game sells its cosmetics here. Items are priced in USD, paid in $creations, and tied to the buyer's Steam account.
+
+1. The buyer signs in through Steam (Steam's own OpenID login; the site only ever learns the SteamID).
+2. At checkout the USD price is converted at the live $creations price (DexScreener and GeckoTerminal must agree within 15%, otherwise checkout pauses) and held for 10 minutes.
+3. The buyer sends that exact amount of $creations from their wallet to `SHOP_TREASURY_ADDRESS`.
+4. The server finds the transfer on Robinhood Chain and only then records the cosmetic against the SteamID. The payment must come from the quoted wallet, go to the treasury, match the amount to the wei (each order's amount ends in a few random wei), and be newer than the order. One transaction can settle one order, ever.
+
+Payments go to the treasury wallet `0x901fC42f24adc138F73BaC931557Ab17AfCA7093` (the default in `lib/shop.js`; `SHOP_TREASURY_ADDRESS` overrides it). Checkout needs `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` and the tables from `supabase/shop.sql`; without them the shop is browse-only in production. Set `SITE_URL` in production so the Steam sign-in always returns to the real domain.
+
+Adding cosmetics: edit `lib/catalog.js` (the rules are at the top of the file) and put the art in `public/shop/`. Only list cosmetics the game can actually show, because a purchase is a real payment. `SHOP_DEMO=1` shows sample items in local development only.
+
+How a game reads what a player owns:
+
+`GET /api/game/cosmetics?game=<game name>&steamid=<SteamID64>`
+returns `{ payload: "c1|<steamid>|<unix expiry>|<game>|<item-id,item-id,...>", sig }`, where `sig` is a base64 RSA-SHA256 signature made with `GAME_TICKET_KEY`, the same key pair as the holder ticket, so the game verifies it with the public key it already ships with. The game must check the signature, that `<steamid>` is the account it is running under (`SteamUser.GetSteamID()`), and that the expiry has not passed, then unlock the listed item ids. Once the game has a Steam app, set `STEAM_APP_ID` + `STEAM_PUBLISHER_KEY`: the endpoint then requires `&ticket=<hex>` from `ISteamUser::GetAuthTicketForWebApi("indiecreations")` instead of a bare `steamid`, so only the real account holder can ask.
+
 🚀 Vision
 Build and ship multiple indie games
 Continuously improve systems, design, and feel

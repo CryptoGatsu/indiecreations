@@ -696,3 +696,170 @@ main > .section:first-child {
 /* personal play link (playtest page) */
 .link-box { width: 100%; margin-top: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.18);
   background: rgba(0,0,0,.35); color: inherit; font: 13px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* Shop */
+.steam-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.steam-chip img {
+  border-radius: 7px;
+}
+
+.steam-chip div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.steam-chip strong {
+  font-size: 15px;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  font-size: 15px;
+}
+
+.banner-error {
+  border-color: var(--error);
+  background: var(--paper);
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.shop-game {
+  margin-bottom: 56px;
+}
+
+.shop-game h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.item-art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.item-art-empty {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+
+.item-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px;
+  flex: 1;
+}
+
+.item-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.item-price strong {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.shop-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 56px 28px;
+  text-align: center;
+}
+
+.shop-empty p {
+  max-width: 460px;
+}
+
+.shop-how {
+  margin-top: 72px;
+  padding-top: 56px;
+  border-top: 1px solid var(--line);
+}
+
+.shop-steps {
+  margin-top: 8px;
+}
+
+.receipt {
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.receipt > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  font-size: 15px;
+}
+
+.receipt > div + div {
+  border-top: 1px solid var(--line);
+}
+
+.receipt dt {
+  color: var(--muted);
+}
+
+.receipt dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.modal .btn {
+  width: 100%;
+}
