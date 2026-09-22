@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Logo from './Logo';
 import ConnectButton from './ConnectButton';
+import ThemeToggle from './ThemeToggle';
 import { LINKS, TOKEN_TICKER } from '../lib/config';
 
 const DESCRIPTION =
@@ -28,6 +29,7 @@ export default function Layout({ children }) {
           </Link>
 
           <nav className="nav">
+            <Link href="/games">Games</Link>
             <Link href="/token">Token</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/shop">Shop</Link>
@@ -37,7 +39,10 @@ export default function Layout({ children }) {
             </a>
           </nav>
 
-          <ConnectButton className="btn btn-primary btn-sm" label="Connect" />
+          <div className="header-actions">
+            <ThemeToggle />
+            <ConnectButton className="btn btn-primary btn-sm" label="Connect" />
+          </div>
         </div>
       </header>
 
@@ -53,6 +58,7 @@ export default function Layout({ children }) {
             </p>
           </div>
           <div className="footer-links">
+            <Link href="/games">Games</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/shop">Shop</Link>
             <Link href="/reviews">Reviews</Link>
