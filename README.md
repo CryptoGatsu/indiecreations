@@ -34,7 +34,7 @@ The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
 - `RPC_URL` (optional) — private RPC for balance checks.
 - `NEXT_PUBLIC_WC_PROJECT_ID` (optional) — enables WalletConnect for mobile wallets.
 
-- `GAME_TICKET_KEY` - base64 of the RSA private key that signs in-game holder tickets (`/api/game/ticket`). Required in production while a build with the in-game check (Project TJR) is live; the matching public key is compiled into the game.
+- `GAME_TICKET_KEY` - base64 of the RSA private key that signs in-game holder tickets (`/api/game/ticket`). Required in production while a build with the in-game check is live; the matching public key is compiled into the game.
 
 How the gate works: the holder connects a wallet and signs a free message, the server verifies the signature and the on-chain balance, then sets a signed session cookie. `middleware.js` blocks everything under `/game/` without that cookie, so the build cannot be loaded by URL alone. The game also checks for itself: it asks `/api/game/ticket` for a short-lived ticket signed with `GAME_TICKET_KEY` (the balance is re-checked each time) and refuses to run without one, so a copy of the build hosted elsewhere does not work and a wallet that sells below the threshold is out within minutes. Which build is live is set in `lib/build.js`; while it is `null`, holders see a "no build live" message and the game files stay closed.
 

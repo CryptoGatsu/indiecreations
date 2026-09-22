@@ -7,7 +7,7 @@ import { MIN_TOKENS } from '../../../lib/config';
 // GET -> a short-lived, RSA-signed "holder ticket" for the game itself.
 //
 // middleware.js keeps the build files behind the holder session, but a holder could still copy those files and host
-// them somewhere else. So the game (Assets/TJR/Scripts/Net/HolderGate.cs) refuses to run until it has a ticket signed
+// them somewhere else. So the game refuses to run until it has a ticket signed
 // with GAME_TICKET_KEY, and asks for a fresh one every few minutes. Only this site holds the private key; the matching
 // public key is compiled into the game. The balance is re-checked here each time, so a wallet that sells below the
 // threshold is out within minutes rather than at the end of its 6 hour session.

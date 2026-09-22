@@ -254,13 +254,20 @@ export default function Playtest() {
   if (!ACTIVE_BUILD) {
     return (
       <div className="container page">
-        <Gate title="No build live right now">
+        <div className="page-head">
+          <div>
+            <p className="eyebrow">Playtest</p>
+            <h1>No playtest live right now</h1>
+            <p className="muted">When a build goes live, it plays right here.</p>
+          </div>
           <span className="pill pill-solid">Holder verified</span>
-          <p className="muted">
-            You're in. There is no playtest build live at the moment. When the next one drops, it
-            will be playable right here.
-          </p>
-        </Gate>
+        </div>
+
+        <div className="game-frame game-frame-empty">
+          <Mark size={44} />
+          <h3>Check back later</h3>
+          <p className="muted">There is no playtest build live at the moment.</p>
+        </div>
       </div>
     );
   }

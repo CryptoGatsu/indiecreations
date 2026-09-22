@@ -1022,3 +1022,14 @@ main > .section:first-child {
     min-height: 220px;
   }
 }
+
+/* Playtest: the frame with nothing in it */
+.game-frame-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  background: var(--soft);
+}
