@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import TokenSection from '../components/TokenSection';
 import { TOKEN_TICKER } from '../lib/config';
+import { GAMES } from '../lib/games';
 
 const PERKS = [
   {
@@ -49,6 +50,39 @@ export default function Home() {
           <div className="board" aria-hidden="true">
             {BOARD.map((on, i) => (
               <span key={i} className={on ? 'tile tile-on' : 'tile'} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* GAMES */}
+      <section className="section">
+        <div className="container">
+          <p className="eyebrow">In the studio now</p>
+          <h2>What we&apos;re making.</h2>
+          <div className="games-grid">
+            {GAMES.map((game) => (
+              <article className="game-card" key={game.slug}>
+                <Link href={`/games/${game.slug}`} className="game-card-art" aria-label={game.name}>
+                  <img src={game.hero} alt="" loading="lazy" />
+                </Link>
+                <div className="game-card-body">
+                  <span className="pill">
+                    <span className="dot" />
+                    {game.status}
+                  </span>
+                  <h3>{game.name}</h3>
+                  <p className="muted">{game.tagline}</p>
+                  <div className="actions">
+                    <Link href={`/games/${game.slug}`} className="btn btn-primary btn-sm">
+                      About the game
+                    </Link>
+                    <Link href={`/shop?game=${game.slug}`} className="btn btn-ghost btn-sm">
+                      Cosmetics
+                    </Link>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         </div>

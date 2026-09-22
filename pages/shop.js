@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { erc20Abi } from 'viem';
 import { useAccount, useReadContract, useSwitchChain, useWriteContract } from 'wagmi';
 import ConnectButton from '../components/ConnectButton';
 import { Mark } from '../components/Logo';
 import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, robinhoodChain, shortAddress } from '../lib/config';
+import { GAMES, gameByName } from '../lib/games';
 
 // A payment that has been sent but not yet confirmed survives a reload / closed tab through this key.
 const PENDING_KEY = 'ic_shop_pending';
@@ -280,14 +283,27 @@ export default function Shop() {
     load();
   };
 
-  const games = useMemo(() => {
+  // Every game has its own shop: items grouped by game, in the studio's game order, picked with tabs (?game=<slug>).
+  const router = useRouter();
+  const allGames = useMemo(() => {
     const byGame = new Map();
     for (const item of data?.items || []) {
       if (!byGame.has(item.game)) byGame.set(item.game, []);
       byGame.get(item.game).push(item);
     }
-    return [...byGame.entries()];
+    const order = (name) => {
+      const i = GAMES.findIndex((g) => g.name === name);
+      return i < 0 ? GAMES.length : i;
+    };
+    return [...byGame.entries()].sort((a, b) => order(a[0]) - order(b[0]));
   }, [data]);
+  const wanted = typeof router.query.game === 'string' ? router.query.game : null;
+  const current = allGames.find(([name]) => gameByName(name)?.slug === wanted)?.[0] || allGames[0]?.[0] || null;
+  const games = allGames.filter(([name]) => name === current);
+  const pickGame = (name) => {
+    const slug = gameByName(name)?.slug;
+    router.replace({ pathname: '/shop', query: slug ? { game: slug } : {} }, undefined, { shallow: true, scroll: false });
+  };
 
   const steam = data?.steam;
   const open = data?.status?.open;
@@ -336,6 +352,22 @@ export default function Shop() {
         </div>
       )}
 
+      {allGames.length > 1 && (
+        <div className="shop-tabs" role="tablist">
+          {allGames.map(([name]) => (
+            <button
+              key={name}
+              role="tab"
+              aria-selected={name === current}
+              className={`shop-tab ${name === current ? 'shop-tab-on' : ''}`}
+              onClick={() => pickGame(name)}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {data && games.length === 0 && (
         <div className="card shop-empty">
           <Mark size={44} />
@@ -349,7 +381,14 @@ export default function Shop() {
 
       {games.map(([game, items]) => (
         <section key={game} className="shop-game">
-          <h2>{game}</h2>
+          <div className="shop-game-head">
+            <h2>{game}</h2>
+            {gameByName(game) && (
+              <Link href={`/games/${gameByName(game).slug}`} className="muted small">
+                About the game
+              </Link>
+            )}
+          </div>
           <div className="item-grid">
             {items.map((item) => (
               <article key={item.id} className="item">
