@@ -126,9 +126,9 @@ function PlaytestBanner() {
   return (
     <img
       className="playtest-banner"
-      src="/games/my-favorite-sheep/playtest.jpg"
-      width={1344}
-      height={752}
+      src="/games/my-favorite-sheep/playtest-live.jpg"
+      width={1600}
+      height={893}
       alt="My Favorite Sheep - private online playtest, exclusive for $creations holders"
     />
   );
