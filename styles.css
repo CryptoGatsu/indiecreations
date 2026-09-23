@@ -1127,3 +1127,13 @@ main > .section:first-child {
 .howto ol { margin: 10px 0 0; padding-left: 22px; }
 .howto li { margin: 0 0 10px; line-height: 1.55; }
 .howto li:last-child { margin-bottom: 0; }
+
+.playtest-banner {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.playtest-banner + .gate { margin-top: 28px; }

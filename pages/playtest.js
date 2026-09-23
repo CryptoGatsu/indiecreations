@@ -121,6 +121,19 @@ function ReviewForm() {
   );
 }
 
+// The playtest key art: what the gate is guarding, and a header once you're in.
+function PlaytestBanner() {
+  return (
+    <img
+      className="playtest-banner"
+      src="/games/my-favorite-sheep/playtest.jpg"
+      width={1344}
+      height={752}
+      alt="My Favorite Sheep - private online playtest, exclusive for $creations holders"
+    />
+  );
+}
+
 // A game that doesn't run in the browser: a personal download link, how to get going, and the review form.
 function DownloadView({ address, onSignOut }) {
   const b = DOWNLOAD_BUILD;
@@ -134,6 +147,8 @@ function DownloadView({ address, onSignOut }) {
         </div>
         <span className="pill pill-solid">Holder verified{address ? ` · ${shortAddress(address)}` : ''}</span>
       </div>
+
+      <PlaytestBanner />
 
       <div className="card download-card">
         <h3>Download the playtest</h3>
@@ -266,6 +281,7 @@ export default function Playtest() {
     const linkProblem = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('link') : null;
     return (
       <div className="container page">
+        {DOWNLOAD_BUILD && <PlaytestBanner />}
         <Gate title="Holders only">
           <p className="muted">
             The playtest area is reserved for wallets holding at least {MIN_TOKENS.toLocaleString()}{' '}
