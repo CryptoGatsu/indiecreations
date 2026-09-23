@@ -3,7 +3,7 @@ import { useAccount, useSignMessage } from 'wagmi';
 import ConnectButton from '../components/ConnectButton';
 import { Mark } from '../components/Logo';
 import { buildSignInMessage } from '../lib/authMessage';
-import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, MIN_TOKENS, shortAddress } from '../lib/config';
+import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, MIN_TOKENS, shortAddress, isAllowlisted } from '../lib/config';
 import { ACTIVE_BUILD, DOWNLOAD_BUILD } from '../lib/build';
 
 function Gate({ title, children }) {
@@ -121,6 +121,71 @@ function ReviewForm() {
   );
 }
 
+// The download counter: public totals, or (for the studio's own wallets) the totals plus the recent log.
+function useDownloadStats(detail) {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    if (!DOWNLOAD_BUILD) return;
+    fetch(detail ? '/api/playtest/stats?detail=1' : '/api/playtest/stats')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && !d.unavailable && setStats(d))
+      .catch(() => {});
+  }, [detail]);
+  return stats;
+}
+
+const plural = (n, one, many) => `${n.toLocaleString()} ${n === 1 ? one : many}`;
+
+function DownloadCount({ stats }) {
+  if (!stats || !stats.total) return null;
+  return (
+    <p className="download-stats">
+      <strong>{plural(stats.total, 'download', 'downloads')}</strong>
+      <span>{plural(stats.holders, 'holder', 'holders')}</span>
+      {stats.lastDay > 0 && <span>{stats.lastDay.toLocaleString()} in the last 24 hours</span>}
+    </p>
+  );
+}
+
+function ago(date) {
+  const s = Math.max(0, Math.round((Date.now() - new Date(date).getTime()) / 1000));
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+  return `${Math.floor(s / 86400)} d ago`;
+}
+
+// Only the studio's allowlisted wallets get this (the API checks too).
+function DownloadLog({ stats }) {
+  if (!stats || !stats.recent) return null;
+  return (
+    <div className="card download-log">
+      <h3>Download tracker</h3>
+      <p className="muted small">Only studio wallets see this. A repeat click within two minutes counts once.</p>
+      <div className="download-log-totals">
+        <div><strong>{stats.total.toLocaleString()}</strong><span>downloads</span></div>
+        <div><strong>{stats.holders.toLocaleString()}</strong><span>holders</span></div>
+        <div><strong>{stats.lastDay.toLocaleString()}</strong><span>last 24 hours</span></div>
+      </div>
+      {stats.recent.length > 0 ? (
+        <table className="download-log-table">
+          <thead><tr><th>Wallet</th><th>When</th></tr></thead>
+          <tbody>
+            {stats.recent.map((r, i) => (
+              <tr key={i}>
+                <td><a href={`${LINKS.explorer}/address/${r.wallet}`} target="_blank" rel="noreferrer">{shortAddress(r.wallet)}</a></td>
+                <td title={new Date(r.date).toLocaleString()}>{ago(r.date)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="muted small">No downloads yet.</p>
+      )}
+    </div>
+  );
+}
+
 // The playtest key art: what the gate is guarding, and a header once you're in.
 function PlaytestBanner() {
   return (
@@ -137,6 +202,8 @@ function PlaytestBanner() {
 // A game that doesn't run in the browser: a personal download link, how to get going, and the review form.
 function DownloadView({ address, onSignOut }) {
   const b = DOWNLOAD_BUILD;
+  const studio = isAllowlisted(address);
+  const stats = useDownloadStats(studio);
   return (
     <div className="container page">
       <div className="page-head">
@@ -162,7 +229,10 @@ function DownloadView({ address, onSignOut }) {
             <button type="button" className="btn btn-ghost btn-sm" onClick={onSignOut}>Sign out</button>
           )}
         </div>
+        <DownloadCount stats={stats} />
       </div>
+
+      {studio && <DownloadLog stats={stats} />}
 
       <div className="card howto">
         <h3>How to play</h3>
@@ -188,6 +258,7 @@ function DownloadView({ address, onSignOut }) {
 
 export default function Playtest() {
   const { address, isConnected } = useAccount();
+  const publicStats = useDownloadStats(false);
   const { signMessageAsync } = useSignMessage();
 
   const [mounted, setMounted] = useState(false);
@@ -287,6 +358,7 @@ export default function Playtest() {
             The playtest area is reserved for wallets holding at least {MIN_TOKENS.toLocaleString()}{' '}
             {TOKEN_TICKER} on Robinhood Chain.
           </p>
+          <DownloadCount stats={publicStats} />
 
           {!isConnected ? (
             <ConnectButton />

@@ -1137,3 +1137,18 @@ main > .section:first-child {
   border-radius: var(--radius);
 }
 .playtest-banner + .gate { margin-top: 28px; }
+
+/* ---------- download tracker ---------- */
+.download-stats { display: flex; flex-wrap: wrap; justify-content: inherit; gap: 6px 14px; margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+.gate .download-stats { justify-content: center; margin: 0; }
+.download-stats strong { color: var(--ink); }
+.download-stats span::before { content: '·'; margin-right: 14px; }
+.download-log { margin-bottom: 20px; }
+.download-log-totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+.download-log-totals div { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); display: flex; flex-direction: column; }
+.download-log-totals strong { font-size: 26px; line-height: 1.1; }
+.download-log-totals span { font-size: 13px; color: var(--muted); }
+.download-log-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.download-log-table th { text-align: left; font-weight: 600; color: var(--muted); padding: 6px 0; border-bottom: 1px solid var(--line); }
+.download-log-table td { padding: 7px 0; border-bottom: 1px solid var(--line); }
+.download-log-table td:last-child, .download-log-table th:last-child { text-align: right; }

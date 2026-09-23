@@ -2,6 +2,7 @@ import { issueSignedToken, presignUrl } from '@vercel/blob';
 import { SESSION_COOKIE, readSessionToken } from '../../../lib/session';
 import { checkHolder } from '../../../lib/holder';
 import { DOWNLOAD_BUILD } from '../../../lib/build';
+import { recordDownload } from '../../../lib/downloadStore';
 
 // The playtest download. The zip lives in a private Blob store, so it can't be fetched by URL; a verified holder
 // is redirected to a signed link for that one file, good for five minutes. Share it and it soon stops working.
@@ -22,6 +23,13 @@ export default async function handler(req, res) {
     if (!holder) return res.redirect(302, '/playtest?link=notholder');
   } catch (err) {
     console.error('holder re-check failed, using the session:', err);
+  }
+
+  // Count it for the tracker. Logging never holds up a download: a slow or failed write is skipped.
+  try {
+    await Promise.race([recordDownload(session.address, DOWNLOAD_BUILD), new Promise((r) => setTimeout(r, 2000))]);
+  } catch (err) {
+    console.error('logging the download failed:', err);
   }
 
   try {
