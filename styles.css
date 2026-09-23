@@ -1119,3 +1119,11 @@ main > .section:first-child {
 :root[data-theme='dark'] .shots img {
   filter: brightness(0.92);
 }
+
+/* ---------- playtest download ---------- */
+.download-card { margin-bottom: 20px; }
+.download-card .actions { margin-top: 14px; }
+.howto { margin-bottom: 20px; }
+.howto ol { margin: 10px 0 0; padding-left: 22px; }
+.howto li { margin: 0 0 10px; line-height: 1.55; }
+.howto li:last-child { margin-bottom: 0; }

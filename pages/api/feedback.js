@@ -1,5 +1,5 @@
 import { SESSION_COOKIE, readSessionToken } from '../../lib/session';
-import { ACTIVE_BUILD } from '../../lib/build';
+import { REVIEW_BUILD } from '../../lib/build';
 import { saveReview, listReviews } from '../../lib/feedbackStore';
 
 // Reviews are kept in Supabase when it is configured (see lib/feedbackStore.js), in memory otherwise.
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     const session = await readSessionToken(req.cookies[SESSION_COOKIE]);
     if (!session) return res.status(401).json({ error: 'Verify your wallet first.' });
 
-    if (!ACTIVE_BUILD) return res.status(409).json({ error: 'No build is live to review.' });
+    if (!REVIEW_BUILD) return res.status(409).json({ error: 'No build is live to review.' });
 
     const { rating, feedback } = req.body || {};
     const text = typeof feedback === 'string' ? feedback.trim() : '';
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     try {
       await saveReview({
         wallet: session.address,
-        game: `${ACTIVE_BUILD.name} ${ACTIVE_BUILD.version}`,
+        game: `${REVIEW_BUILD.name} ${REVIEW_BUILD.version}`,
         rating: stars,
         feedback: text,
       });

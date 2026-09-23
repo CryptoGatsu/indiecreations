@@ -4,7 +4,7 @@ import ConnectButton from '../components/ConnectButton';
 import { Mark } from '../components/Logo';
 import { buildSignInMessage } from '../lib/authMessage';
 import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, MIN_TOKENS, shortAddress } from '../lib/config';
-import { ACTIVE_BUILD } from '../lib/build';
+import { ACTIVE_BUILD, DOWNLOAD_BUILD } from '../lib/build';
 
 function Gate({ title, children }) {
   return (
@@ -121,6 +121,56 @@ function ReviewForm() {
   );
 }
 
+// A game that doesn't run in the browser: a personal download link, how to get going, and the review form.
+function DownloadView({ address, onSignOut }) {
+  const b = DOWNLOAD_BUILD;
+  return (
+    <div className="container page">
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">Playtest</p>
+          <h1>{b.name}</h1>
+          <p className="muted">{b.version} · {b.platform}</p>
+        </div>
+        <span className="pill pill-solid">Holder verified{address ? ` · ${shortAddress(address)}` : ''}</span>
+      </div>
+
+      <div className="card download-card">
+        <h3>Download the playtest</h3>
+        <p className="muted small">
+          A {b.sizeMb} MB zip for {b.platform}. The link is made just for you and stops working after a few
+          minutes, so if a download fails, come back here for a fresh one. Please don't share the build.
+        </p>
+        <div className="actions">
+          <a className="btn btn-primary" href="/api/playtest/download">Download for Windows ({b.sizeMb} MB)</a>
+          {onSignOut && (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={onSignOut}>Sign out</button>
+          )}
+        </div>
+      </div>
+
+      <div className="card howto">
+        <h3>How to play</h3>
+        <ol>
+          <li>Unzip the download anywhere, open the <b>My Favorite Sheep</b> folder and run <b>MyFavoriteSheep.exe</b>.</li>
+          <li>
+            Windows may show <i>Windows protected your PC</i>, because playtest builds aren't signed yet. Click{' '}
+            <b>More info</b>, then <b>Run anyway</b>.
+          </li>
+          <li>New to the farm? Start with <b>Tutorial</b> on the main menu - it takes about five minutes.</li>
+          <li>
+            To play together (2-4 players): one person opens <b>Play online</b> and picks <b>Host a game</b>, then
+            shares the join code. Everyone else types it under <b>Join with a code</b>. One of you is secretly the wolf.
+          </li>
+          <li>Found a bug or have thoughts? Leave a review below - every one gets read.</li>
+        </ol>
+      </div>
+
+      <ReviewForm />
+    </div>
+  );
+}
+
 export default function Playtest() {
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -196,6 +246,9 @@ export default function Playtest() {
   }
 
   // Signed in through a personal link: there is no wallet in this browser, and none is needed to play.
+  if (sessionAddress && !isConnected && !ACTIVE_BUILD && DOWNLOAD_BUILD) {
+    return <DownloadView address={sessionAddress} onSignOut={signOut} />;
+  }
   if (sessionAddress && !isConnected && ACTIVE_BUILD) {
     return (
       <div className="container page">
@@ -250,6 +303,8 @@ export default function Playtest() {
       </div>
     );
   }
+
+  if (!ACTIVE_BUILD && DOWNLOAD_BUILD) return <DownloadView address={address} onSignOut={signOut} />;
 
   if (!ACTIVE_BUILD) {
     return (
