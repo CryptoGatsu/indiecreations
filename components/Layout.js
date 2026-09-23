@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Logo from './Logo';
 import ConnectButton from './ConnectButton';
 import ThemeToggle from './ThemeToggle';
+import SocialIcons from './Socials';
 import { LINKS, TOKEN_TICKER } from '../lib/config';
 
 const DESCRIPTION =
@@ -34,12 +35,10 @@ export default function Layout({ children }) {
             <Link href="/playtest">Playtest</Link>
             <Link href="/shop">Shop</Link>
             <Link href="/reviews">Reviews</Link>
-            <a href={LINKS.x} target="_blank" rel="noreferrer">
-              X
-            </a>
           </nav>
 
           <div className="header-actions">
+            <SocialIcons />
             <ThemeToggle />
             <ConnectButton className="btn btn-primary btn-sm" label="Connect" />
           </div>
@@ -64,6 +63,12 @@ export default function Layout({ children }) {
             <Link href="/reviews">Reviews</Link>
             <a href={LINKS.x} target="_blank" rel="noreferrer">
               X (Twitter)
+            </a>
+            <a href={LINKS.twitch} target="_blank" rel="noreferrer">
+              Twitch
+            </a>
+            <a href={LINKS.tiktok} target="_blank" rel="noreferrer">
+              TikTok
             </a>
             <a href={LINKS.pons} target="_blank" rel="noreferrer">
               PONS Launchpad

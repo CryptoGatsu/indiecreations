@@ -1152,3 +1152,20 @@ main > .section:first-child {
 .download-log-table th { text-align: left; font-weight: 600; color: var(--muted); padding: 6px 0; border-bottom: 1px solid var(--line); }
 .download-log-table td { padding: 7px 0; border-bottom: 1px solid var(--line); }
 .download-log-table td:last-child, .download-log-table th:last-child { text-align: right; }
+
+/* ---------- social channels (header icons) ---------- */
+.socials { display: flex; align-items: center; gap: 4px; }
+.social-link {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  color: var(--muted);
+  transition: color 0.15s, background 0.15s;
+}
+.social-link:hover { color: var(--ink); background: var(--soft); }
+/* on a phone the header row is tight: the channels stay in the footer */
+@media (max-width: 560px) {
+  .header-actions .socials { display: none; }
+}
