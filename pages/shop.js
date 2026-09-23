@@ -250,10 +250,17 @@ function PurchaseBanner({ state, onDismiss }) {
   );
 }
 
+const SORTS = [
+  ['featured', 'Featured'],
+  ['low', 'Price: low to high'],
+  ['high', 'Price: high to low'],
+];
+
 export default function Shop() {
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [steamFailed, setSteamFailed] = useState(false);
+  const [sort, setSort] = useState('featured'); // featured (catalog order) | low | high
 
   const load = useCallback(() => {
     fetch('/api/shop/catalog')
@@ -307,6 +314,10 @@ export default function Shop() {
 
   const steam = data?.steam;
   const open = data?.status?.open;
+
+  // price sort keeps the catalog order among items that cost the same (Array sort is stable)
+  const sorted = (items) =>
+    sort === 'featured' ? items : [...items].sort((a, b) => (sort === 'low' ? a.usd - b.usd : b.usd - a.usd));
 
   return (
     <div className="container page">
@@ -383,14 +394,30 @@ export default function Shop() {
         <section key={game} className="shop-game">
           <div className="shop-game-head">
             <h2>{game}</h2>
-            {gameByName(game) && (
-              <Link href={`/games/${gameByName(game).slug}`} className="muted small">
-                About the game
-              </Link>
-            )}
+            <div className="shop-game-tools">
+              <div className="shop-sort" role="group" aria-label="Sort items">
+                <span className="muted small">Sort</span>
+                {SORTS.map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={sort === key}
+                    className={`shop-sort-btn ${sort === key ? 'shop-sort-btn-on' : ''}`}
+                    onClick={() => setSort(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {gameByName(game) && (
+                <Link href={`/games/${gameByName(game).slug}`} className="muted small">
+                  About the game
+                </Link>
+              )}
+            </div>
           </div>
           <div className="item-grid">
-            {items.map((item) => (
+            {sorted(items).map((item) => (
               <article key={item.id} className="item">
                 <ItemArt item={item} />
                 <div className="item-body">

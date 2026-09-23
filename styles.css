@@ -1027,6 +1027,45 @@ main > .section:first-child {
   margin-bottom: 0;
 }
 
+.shop-game-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.shop-sort {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shop-sort .muted {
+  margin-right: 2px;
+}
+
+.shop-sort-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.shop-sort-btn:hover {
+  border-color: var(--ink);
+}
+
+.shop-sort-btn-on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
 @media (max-width: 860px) {
   .game-card,
   .game-about,
