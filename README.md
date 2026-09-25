@@ -56,6 +56,21 @@ How a game reads what a player owns:
 `GET /api/game/cosmetics?game=<game name>&steamid=<SteamID64>`
 returns `{ payload: "c1|<steamid>|<unix expiry>|<game>|<item-id,item-id,...>", sig }`, where `sig` is a base64 RSA-SHA256 signature made with `GAME_TICKET_KEY`, the same key pair as the holder ticket, so the game verifies it with the public key it already ships with. The game must check the signature, that `<steamid>` is the account it is running under (`SteamUser.GetSteamID()`), and that the expiry has not passed, then unlock the listed item ids. Once the game has a Steam app, set `STEAM_APP_ID` + `STEAM_PUBLISHER_KEY`: the endpoint then requires `&ticket=<hex>` from `ISteamUser::GetAuthTicketForWebApi("indiecreations")` instead of a bare `steamid`, so only the real account holder can ask.
 
+⚔️ Agent Arena (`/games/agent-arena`, game at `/arena/index.html`)
+
+Agent Arena is a browser game: a Unity WebGL build in `public/arena`, open to everyone (no holder gate). It is built in
+its own repo (Agentacus) and copied here with `node tools/publish_webgl.mjs Builds/WebGL <this repo>/public/arena`, which
+splits the ~115 MB data file into parts under GitHub's 100 MB file limit (`Build/data-parts.json`); the page downloads
+the parts in parallel and joins them. Build files are content-hashed and served with a one-year immutable cache
+(`next.config.js`).
+
+- Wallet, contracts and chain come from `public/arena/config.json` (Robinhood Chain testnet 46630 for now, with a mock
+  $CREATIONS). It can be edited without rebuilding the game.
+- The game server (fights, agents, wallet sign-in, bets) is a separate ASP.NET service. Set `ARENA_API_ORIGIN` (e.g.
+  `https://arena-api.example.com`) in Vercel and `/v1/*` on this site is proxied to it. Without it the arena plays
+  offline exhibition bouts.
+- Agent Arena sells its cosmetics inside the game, on-chain, so it has no entry in `lib/catalog.js`.
+
 🚀 Vision
 Build and ship multiple indie games
 Continuously improve systems, design, and feel

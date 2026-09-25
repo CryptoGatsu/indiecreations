@@ -1,0 +1,62 @@
+{
+  "_notes": [
+    "Runtime config for the Agent Arena host page. The build copies this file (with contract addresses filled from contracts/deployments/<chain>.json when present) next to index.html; it can be edited after deployment without rebuilding Unity.",
+    "profile: the default profile. With allowProfileOverride, ?profile=<name> selects another profile defined here (only these; a link can never inject an arbitrary server or contract).",
+    "apiBase: game server origin. Empty = the page's own origin (serve the build and the API from one host, or reverse-proxy /v1). The testnet profile points at the DigitalOcean server (server/deploy).",
+    "Network values for Robinhood Chain testnet (46630) are from https://docs.robinhood.com/chain/connecting as recorded in contracts/README.md. There is deliberately no mainnet (4663) profile: mainnet needs explicit developer approval.",
+    "contracts.*: leave empty until deployed. Empty addresses disable that feature in the wallet layer with a clear error."
+  ],
+  "version": "0.1.0",
+  "profile": "testnet",
+  "allowProfileOverride": true,
+  "profiles": {
+    "testnet": {
+      "apiBase": "https://arena-api.indiecreations.fun",
+      "chainId": 46630,
+      "chainName": "Robinhood Chain Testnet",
+      "rpcUrl": "https://rpc.testnet.chain.robinhood.com",
+      "explorerUrl": "https://explorer.testnet.chain.robinhood.com",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH",
+        "decimals": 18
+      },
+      "contracts": {
+        "token": "0x7fa905ac3eCb8EB962763297a52eed4387F0149F",
+        "shop": "0x01B26428a1b78A9f6630B2eFB57c50FF9A34bD7C",
+        "escrow": "0xF3a92639A3Ef6074D3E8eDB050746164883212Eb",
+        "spectatorPool": "0xC8A55C8C7Ca41D58D233A7B022D5D6F299f65Fbe"
+      },
+      "deploymentFile": "46630.json",
+      "tokenSymbol": "$CREATIONS",
+      "tokenDecimals": 18,
+      "dev": false,
+      "bettingEnabled": true,
+      "shopEnabled": true
+    },
+    "local": {
+      "apiBase": "http://localhost:5080",
+      "chainId": 31337,
+      "chainName": "Hardhat Local",
+      "rpcUrl": "http://127.0.0.1:8545",
+      "explorerUrl": "",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH",
+        "decimals": 18
+      },
+      "contracts": {
+        "token": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+        "shop": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        "escrow": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+        "spectatorPool": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
+      },
+      "deploymentFile": "localhost.json",
+      "tokenSymbol": "mCREATIONS",
+      "tokenDecimals": 18,
+      "dev": true,
+      "bettingEnabled": true,
+      "shopEnabled": true
+    }
+  }
+}

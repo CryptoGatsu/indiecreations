@@ -16,7 +16,7 @@ export default function GamePage({ game }) {
   return (
     <>
       <Head>
-        <title>{game.name} - Indie Creations</title>
+        <title>{`${game.name} - Indie Creations`}</title>
         <meta name="description" content={game.tagline} />
         <meta property="og:title" content={game.name} />
         <meta property="og:description" content={game.tagline} />
@@ -32,10 +32,16 @@ export default function GamePage({ game }) {
             <p className="muted">{game.tagline}</p>
           </div>
           <div className="actions">
-            <Link href={shopHref} className="btn btn-primary">
-              Cosmetics
-            </Link>
-            {game.steam ? (
+            {game.play ? (
+              <a href={game.play} className="btn btn-primary">
+                Play in browser
+              </a>
+            ) : (
+              <Link href={shopHref} className="btn btn-primary">
+                Cosmetics
+              </Link>
+            )}
+            {game.play ? null : game.steam ? (
               <a className="btn btn-ghost" href={game.steam} target="_blank" rel="noreferrer">
                 Steam
               </a>
@@ -55,17 +61,31 @@ export default function GamePage({ game }) {
             <p className="muted small">{game.players}</p>
           </div>
 
-          <aside className="card game-shop-card">
-            <span className="card-index">Shop</span>
-            <h3>Hats, outfits, tool skins, titles, emotes</h3>
-            <p className="muted">
-              Priced in dollars, paid in {TOKEN_TICKER}, tied to your Steam account. None of it changes how the game
-              plays.
-            </p>
-            <Link href={shopHref} className="btn btn-primary">
-              Open the {game.name} shop
-            </Link>
-          </aside>
+          {game.shop === 'in-game' ? (
+            <aside className="card game-shop-card">
+              <span className="card-index">Play</span>
+              <h3>Runs in your browser</h3>
+              <p className="muted">
+                Watch live fights for free. Connect a wallet to recruit gladiators, bet and buy cosmetics with{' '}
+                {TOKEN_TICKER}, all inside the arena. Desktop Chrome, Edge or Firefox recommended.
+              </p>
+              <a href={game.play} className="btn btn-primary">
+                Enter the arena
+              </a>
+            </aside>
+          ) : (
+            <aside className="card game-shop-card">
+              <span className="card-index">Shop</span>
+              <h3>Hats, outfits, tool skins, titles, emotes</h3>
+              <p className="muted">
+                Priced in dollars, paid in {TOKEN_TICKER}, tied to your Steam account. None of it changes how the game
+                plays.
+              </p>
+              <Link href={shopHref} className="btn btn-primary">
+                Open the {game.name} shop
+              </Link>
+            </aside>
+          )}
         </div>
 
         <div className="shots">

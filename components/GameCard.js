@@ -18,9 +18,15 @@ export default function GameCard({ game }) {
           <Link href={`/games/${game.slug}`} className="btn btn-primary btn-sm">
             About the game
           </Link>
-          <Link href={`/shop?game=${game.slug}`} className="btn btn-ghost btn-sm">
-            Cosmetics
-          </Link>
+          {game.play ? (
+            <a href={game.play} className="btn btn-ghost btn-sm">
+              Play in browser
+            </a>
+          ) : (
+            <Link href={`/shop?game=${game.slug}`} className="btn btn-ghost btn-sm">
+              Cosmetics
+            </Link>
+          )}
         </div>
       </div>
     </article>
