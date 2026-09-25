@@ -1,0 +1,14 @@
+{
+  "name": "agent-arena-reference-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reference agent for Agent Arena: heuristic or Claude-powered gladiator control via the public API.",
+  "bin": { "arena-agent": "agent.mjs" },
+  "scripts": { "start": "node agent.mjs" },
+  "engines": { "node": ">=20" },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "zod": "^3.25.0"
+  }
+}
