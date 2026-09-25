@@ -99,12 +99,12 @@
         document.addEventListener('agentarena:unity-ready', hideLoader);
 
         var buildUrl = 'Build';
-        var loaderUrl = buildUrl + '/7db114bb26dd8139bb152b9ba563bd53.loader.js';
+        var loaderUrl = buildUrl + '/cd49576a8476da47f32b32d2d66dd436.loader.js';
         var config = {
           arguments: [],
-          dataUrl: buildUrl + '/5b58a483494f2dd07c8202119489c68f.data.unityweb',
-          frameworkUrl: buildUrl + '/a723f7821d3a6021be131d27737885c9.framework.js.unityweb',
-          codeUrl: buildUrl + '/9901feb0b5d1da144a364a0cdc0d02c2.wasm.unityweb',
+          dataUrl: buildUrl + '/bf67e5765c64527a0eff7ae7877468f2.data.unityweb',
+          frameworkUrl: buildUrl + '/e3ebcda317f543b83c5455439cb65bff.framework.js.unityweb',
+          codeUrl: buildUrl + '/2ecd3d88d79046dc269196bb0f05529d.wasm.unityweb',
           streamingAssetsUrl: 'StreamingAssets',
           companyName: "Indie Creations",
           productName: "Agentacus",
@@ -150,8 +150,11 @@
               }).then(function (data) {
                 config.dataUrl = URL.createObjectURL(data);
                 // Unity's own data cache keys on the URL, and a blob URL is new on every visit: it would store another
-                // copy each time. The parts are already in the HTTP cache (content-hashed, immutable).
-                config.cacheControl = function (url) { return url.indexOf('blob:') === 0 ? 'no-store' : 'immutable'; };
+                // copy each time. The parts are already in the HTTP cache (content-hashed, immutable). The cache also
+                // sees every UnityWebRequest, so only the content-hashed build files may be cached: API calls never.
+                config.cacheControl = function (url) {
+                  return url.indexOf('blob:') !== 0 && url.indexOf('/Build/') >= 0 ? 'immutable' : 'no-store';
+                };
                 unityProgress = function (p) { setProgress(0.85 + 0.15 * p); };
               });
             });
@@ -170,8 +173,23 @@
           });
         }
 
+        // Builds before 2026-09-25 let Unity's cache keep API answers (stale ludus, empty key list): drop that cache
+        // once. The build files come back from the browser's HTTP cache, so this costs no download.
+        function purgeStaleCache() {
+          return new Promise(function (resolve) {
+            var flag = 'agentacus-cache-v2';
+            try { if (localStorage.getItem(flag)) return resolve(); } catch (e) { return resolve(); }
+            var done = function () { try { localStorage.setItem(flag, '1'); } catch (e) {} resolve(); };
+            try {
+              var req = indexedDB.deleteDatabase('UnityCache');
+              req.onsuccess = req.onerror = req.onblocked = done;
+              setTimeout(done, 2000);
+            } catch (e) { done(); }
+          });
+        }
+
         function start() {
-          loadDataParts().then(startUnity, function (e) {
+          purgeStaleCache().then(loadDataParts).then(startUnity, function (e) {
             console.warn('[Agent Arena] data parts:', e);
             showError('The game files could not be downloaded. Check your connection and try again.');
           });
