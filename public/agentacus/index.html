@@ -16,6 +16,11 @@
   <body>
     <div id="stage">
       <canvas id="unity-canvas" tabindex="-1" aria-label="Agentacus"></canvas>
+      <div id="rotate" aria-live="polite">
+        <div class="rotate-phone"></div>
+        <p>Turn your phone sideways</p>
+        <small>Agentacus is played in landscape.</small>
+      </div>
     </div>
 
     <div id="loader" class="loader" role="status" aria-live="polite">
@@ -99,19 +104,20 @@
         document.addEventListener('agentarena:unity-ready', hideLoader);
 
         var buildUrl = 'Build';
-        var loaderUrl = buildUrl + '/1b7da99c3c33f422c81acdf5de01170d.loader.js';
+        var loaderUrl = buildUrl + '/540330141a6803b2ca05ac1991bbf0ba.loader.js';
         var config = {
           arguments: [],
-          dataUrl: buildUrl + '/74155b238fa529931fd8531845a3380b.data.unityweb',
-          frameworkUrl: buildUrl + '/4ec157d54366fbd5a00045acdcd5f90e.framework.js.unityweb',
-          codeUrl: buildUrl + '/be42d1d60440d6efd3e0f0abf6b8d792.wasm.unityweb',
+          dataUrl: buildUrl + '/2a99547e1e6a57e103f2d1976acfd8c3.data.unityweb',
+          frameworkUrl: buildUrl + '/52b465778cd4f79c6e3ecd878c39b672.framework.js.unityweb',
+          codeUrl: buildUrl + '/9578cdbf37e7d0bdeebebee5060e801b.wasm.unityweb',
           streamingAssetsUrl: 'StreamingAssets',
           companyName: "Indie Creations",
           productName: "Agentacus",
           productVersion: "0.1.0",
-          // one canvas pixel per CSS pixel: HiDPI laptops at 150-200 % scaling would otherwise render 2-4x the pixels;
-          // sharpness is the graphics tier's job (render scale), not the display's
-          devicePixelRatio: 1,
+          // The canvas matches the display's pixel density (capped at 3x) so text and UI are sharp on phones and HiDPI
+          // screens; the 3D scene renders at the graphics tier's scale of CSS pixels (GraphicsQuality divides the URP
+          // render scale by this ratio), so the GPU cost of the arena doesn't grow with the display's density.
+          devicePixelRatio: (window.__aaPixelRatio = Math.min(3, Math.max(1, window.devicePixelRatio || 1))),
           matchWebGLToCanvasSize: true,
           showBanner: function (msg, type) {
             if (type === 'error') showError(msg);

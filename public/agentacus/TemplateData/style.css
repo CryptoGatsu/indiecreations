@@ -233,3 +233,18 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .loader-rays, .loader-glow, .loader-bar-fill::after, .loader-tip, .loader-emblem { animation: none; }
 }
+
+/* Portrait phones: the arena and its screens are landscape; ask to turn the phone (the game keeps running behind). */
+#rotate { display: none; }
+@media (orientation: portrait) and (pointer: coarse) {
+  #rotate {
+    position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; background: #0b0706; color: #f6e8c8; font-family: 'Cinzel', Georgia, serif; text-align: center; padding: 24px;
+  }
+  #rotate p { margin: 18px 0 0; font-size: 22px; letter-spacing: 3px; text-transform: uppercase; color: #ffd98a; }
+  #rotate small { font-size: 15px; color: #c9b48c; letter-spacing: 1px; }
+  .rotate-phone {
+    width: 56px; height: 96px; border: 4px solid #e8ba5c; border-radius: 12px; animation: aa-rotate 2.4s ease-in-out infinite;
+  }
+  @keyframes aa-rotate { 0%, 25% { transform: rotate(0deg); } 60%, 100% { transform: rotate(-90deg); } }
+}
