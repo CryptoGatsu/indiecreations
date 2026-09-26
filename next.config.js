@@ -15,6 +15,7 @@ const nextConfig = {
       { source: '/arena/index.html', destination: '/agentacus', permanent: true },
       { source: '/games/agent-arena', destination: '/games/agentacus', permanent: true },
       { source: '/agent-arena', destination: '/games/agentacus', permanent: true },
+      { source: '/sheep', destination: '/my-favorite-sheep', permanent: false },
     ];
   },
   async rewrites() {
@@ -23,6 +24,8 @@ const nextConfig = {
       { source: '/play', destination: '/game/index.html' },
       // Agentacus at a clean URL; its index.html carries <base href="/agentacus/"> so its files resolve in the folder
       { source: '/agentacus', destination: '/agentacus/index.html' },
+      // My Favorite Sheep in the browser, same arrangement (<base href="/my-favorite-sheep/">)
+      { source: '/my-favorite-sheep', destination: '/my-favorite-sheep/index.html' },
     ];
     if (ARENA_API_ORIGIN) rules.push({ source: '/v1/:path*', destination: `${ARENA_API_ORIGIN}/v1/:path*` });
     return rules;
@@ -33,6 +36,9 @@ const nextConfig = {
       { source: '/agentacus/Build/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
       { source: '/agentacus/Build/data-parts.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
       { source: '/agentacus/config.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
+      { source: '/my-favorite-sheep/Build/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+      { source: '/my-favorite-sheep/Build/data-parts.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
+      { source: '/my-favorite-sheep/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
     ];
   },
   webpack: (config) => {

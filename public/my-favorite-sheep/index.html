@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <base href="/my-favorite-sheep/">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1b130c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="My Favorite Sheep: one of the flock is a wolf in sheep's clothing. Play free in your browser, solo or online with up to four players.">
+    <meta property="og:title" content="My Favorite Sheep">
+    <meta property="og:description" content="One of the flock is a wolf in sheep's clothing. Play free in your browser.">
+    <meta property="og:image" content="https://www.indiecreations.fun/games/my-favorite-sheep/hero.jpg">
+    <title>My Favorite Sheep</title>
+    <link rel="icon" type="image/png" href="TemplateData/favicon.png">
+    <link rel="apple-touch-icon" href="TemplateData/favicon.png">
+    <link rel="preload" href="TemplateData/fonts/Display.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <script src="TemplateData/mfs.js"></script>
+  </head>
+  <body>
+    <div id="stage">
+      <canvas id="unity-canvas" tabindex="-1" aria-label="My Favorite Sheep"></canvas>
+      <div id="rotate" aria-live="polite">
+        <div class="rotate-phone"></div>
+        <p>Turn your phone sideways</p>
+        <small>My Favorite Sheep is played in landscape.</small>
+      </div>
+    </div>
+
+    <section id="wallet-view" hidden>
+      <header><img src="TemplateData/favicon.png" alt=""><h1>My Favorite Sheep</h1></header>
+      <div class="wv-body"></div>
+      <footer>Turn your phone sideways to play here instead.</footer>
+    </section>
+
+    <div id="loader" class="loader" role="status" aria-live="polite">
+      <div class="loader-art"></div>
+      <div class="loader-shade"></div>
+      <div class="loader-center">
+        <div class="loader-sign">
+          <h1 class="loader-title">My Favorite Sheep</h1>
+          <p class="loader-tagline">One of the flock is a wolf in sheep's clothing</p>
+        </div>
+        <div class="loader-bar" aria-hidden="true"><div class="loader-bar-fill" id="loader-fill"></div></div>
+        <div class="loader-status">
+          <span id="loader-text">Rounding up the flock</span>
+          <span id="loader-pct">0%</span>
+        </div>
+        <p class="loader-tip" id="loader-tip"></p>
+      </div>
+      <div class="loader-error" id="loader-error" hidden>
+        <h2>The gate's stuck</h2>
+        <p id="loader-error-text"></p>
+        <button type="button" id="loader-retry">Try again</button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var canvas = document.getElementById('unity-canvas');
+        var loader = document.getElementById('loader');
+        var fill = document.getElementById('loader-fill');
+        var pctEl = document.getElementById('loader-pct');
+        var textEl = document.getElementById('loader-text');
+        var tipEl = document.getElementById('loader-tip');
+        var errorBox = document.getElementById('loader-error');
+        var errorText = document.getElementById('loader-error-text');
+
+        var tips = [
+          'Read the ear tags up close - the wolf wears one too.',
+          'Examine a body to learn which sheep were close enough to have done it.',
+          'Compare bodies. One clue narrows it a little; three narrow it a lot.',
+          'A bush thrashing in an empty field is something no sheep can do.',
+          'At midnight the whole flock is re-tagged. Old notes go stale.',
+          'Frozen with fear? Mash to shake it off - or have a friend shake you out of it.',
+          'The wolf tires too. When it pants, run it down.',
+          'Hit an innocent sheep and everyone will know you did it.',
+          'Coins buy kit at the tool shed: binoculars, radar, a stun stick, a scarecrow.'
+        ];
+        var tip = Math.floor(Math.random() * tips.length);
+        function nextTip() { tipEl.textContent = tips[tip % tips.length]; tip++; }
+        nextTip();
+        var tipTimer = setInterval(nextTip, 6000);
+
+        function setProgress(p) {
+          var v = Math.max(0, Math.min(1, p));
+          fill.style.width = (v * 100).toFixed(1) + '%';
+          pctEl.textContent = Math.round(v * 100) + '%';
+          textEl.textContent = v < 0.9 ? 'Rounding up the flock' : v < 1 ? 'Counting the sheep' : 'Opening the gate';
+        }
+
+        function showError(message) {
+          clearInterval(tipTimer);
+          errorText.textContent = message || 'The game could not start in this browser.';
+          errorBox.hidden = false;
+          loader.classList.add('failed');
+        }
+        document.getElementById('loader-retry').addEventListener('click', function () { window.location.reload(); });
+
+        function hideLoader() {
+          if (loader.classList.contains('done')) return;
+          clearInterval(tipTimer);
+          loader.classList.add('done');
+          setTimeout(function () { loader.style.display = 'none'; }, 900);
+        }
+        document.addEventListener('mfs:unity-ready', hideLoader);
+
+        // Browser zoom or a move to another monitor changes the pixel density: follow it, so the canvas stays sharp and
+        // the game (which reads window.__mfsPixelRatio every frame) re-lays its UI out.
+        (function watchDensity() {
+          if (!window.matchMedia) return;
+          var mq = window.matchMedia('(resolution: ' + (window.devicePixelRatio || 1) + 'dppx)');
+          var onChange = function () {
+            var r = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+            window.__mfsPixelRatio = r;
+            var u = window.unityInstance;
+            if (u && u.Module) u.Module.devicePixelRatio = r;
+            window.dispatchEvent(new Event('resize'));
+            watchDensity();
+          };
+          if (mq.addEventListener) mq.addEventListener('change', onChange, { once: true });
+          else if (mq.addListener) mq.addListener(onChange);
+        })();
+
+        // No WebGL 2, no game: say so plainly instead of a cryptic error.
+        try {
+          var probe = document.createElement('canvas').getContext('webgl2');
+          if (!probe) { showError('This browser has no WebGL 2 (or it is switched off). Try an up-to-date Chrome, Edge, Firefox or Safari.'); return; }
+        } catch (e) {}
+
+        // absolute URLs: Unity resolves some of these against the page address, not the base address (clean URL /my-favorite-sheep)
+        var baseUrl = document.baseURI;
+        var buildUrl = new URL('Build', baseUrl).href;
+        var loaderUrl = buildUrl + '/0220ca2d177b9d84d63617f86dfa3f9b.loader.js';
+        var config = {
+          arguments: [],
+          dataUrl: buildUrl + '/edbcd78b4ab9020a9f9f9bc517bf6535.data.unityweb',
+          frameworkUrl: buildUrl + '/1424db881165f97abe1772ff3af00e6e.framework.js.unityweb',
+          codeUrl: buildUrl + '/0f0984e6a0bf496d77fbb2ae3183a9fc.wasm.unityweb',
+          streamingAssetsUrl: new URL('StreamingAssets', baseUrl).href,
+          companyName: "DefaultCompany",
+          productName: "My Favorite Sheep",
+          productVersion: "0.1.0",
+          // The canvas matches the display's pixel density (capped at 3x), so text and UI are sharp on phones and HiDPI
+          // screens; the 3D scene renders at a fraction of that (GraphicsQuality divides the URP render scale by this
+          // ratio), so the GPU cost doesn't grow with the display's density.
+          devicePixelRatio: (window.__mfsPixelRatio = Math.min(3, Math.max(1, window.devicePixelRatio || 1))),
+          matchWebGLToCanvasSize: true,
+          showBanner: function (msg, type) {
+            if (type === 'error') showError(msg);
+            else console.warn('[MFS]', msg);
+          }
+        };
+
+        // Hosts with a per-file size cap (a Git-deployed site: 100 MB) get the data file split into parts, listed in
+        // Build/data-parts.json. The parts download in parallel and are joined for the Unity loader.
+        var unityProgress = setProgress;
+        function loadDataParts() {
+          return fetch(buildUrl + '/data-parts.json', { cache: 'no-cache' }).then(function (res) {
+            if (!res.ok) return null;
+            return res.json().then(function (manifest) {
+              var total = manifest.size || 0, got = manifest.parts.map(function () { return 0; });
+              function tick() {
+                var sum = got.reduce(function (a, b) { return a + b; }, 0);
+                if (total) setProgress(0.85 * sum / total);
+              }
+              return Promise.all(manifest.parts.map(function (name, i) {
+                return fetch(buildUrl + '/' + name).then(function (r) {
+                  if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + name);
+                  if (!r.body || !r.body.getReader) return r.blob().then(function (b) { got[i] = b.size; tick(); return b; });
+                  var reader = r.body.getReader(), chunks = [];
+                  return (function pump() {
+                    return reader.read().then(function (step) {
+                      if (step.done) return new Blob(chunks);
+                      chunks.push(step.value); got[i] += step.value.length; tick();
+                      return pump();
+                    });
+                  })();
+                });
+              })).then(function (blobs) {
+                return nativeGunzip(new Blob(blobs, { type: 'application/octet-stream' }));
+              }).then(function (data) {
+                config.dataUrl = URL.createObjectURL(data);
+                // Unity's data cache keys on the URL, and a blob URL is new every visit: the parts are already in the
+                // HTTP cache (content-hashed, immutable), so only content-hashed build files may be cached. API calls never.
+                config.cacheControl = function (url) {
+                  return url.indexOf('blob:') !== 0 && url.indexOf('/Build/') >= 0 ? 'immutable' : 'no-store';
+                };
+                unityProgress = function (p) { setProgress(0.85 + 0.15 * p); };
+              });
+            });
+          }, function () { return null; });
+        }
+
+        // A gzip build is unpacked by the browser's native DecompressionStream (much faster than Unity's JavaScript
+        // fallback); Unity then finds no compression marker and uses the data as is.
+        function nativeGunzip(blob) {
+          if (!window.DecompressionStream || !blob.stream) return Promise.resolve(blob);
+          return blob.slice(0, 2).arrayBuffer().then(function (head) {
+            var b = new Uint8Array(head);
+            if (b[0] !== 0x1f || b[1] !== 0x8b) return blob;
+            textEl.textContent = 'Counting the sheep';
+            return new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+          });
+        }
+
+        function startUnity() {
+          var script = document.createElement('script');
+          script.src = loaderUrl;
+          script.onerror = function () { showError('The game files could not be downloaded. Check your connection and try again.'); };
+          script.onload = function () {
+            createUnityInstance(canvas, config, function (p) { unityProgress(p); }).then(function (instance) {
+              window.unityInstance = instance;
+              setProgress(1);
+              setTimeout(hideLoader, 6000);   // the game says when its first screen is up; this is the fallback
+            }).catch(function (message) { showError(String(message)); });
+          };
+          document.body.appendChild(script);
+        }
+
+        loadDataParts().then(startUnity, function (e) {
+          console.warn('[MFS] data parts:', e);
+          showError('The game files could not be downloaded. Check your connection and try again.');
+        });
+
+        // Keyboard focus stays on the game (a click anywhere on it takes it back from the page).
+        canvas.addEventListener('pointerdown', function () { if (document.activeElement !== canvas) canvas.focus(); });
+      })();
+    </script>
+  </body>
+</html>

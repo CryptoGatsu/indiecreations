@@ -432,7 +432,11 @@ export default function Shop() {
                     )}
                   </div>
 
-                  {item.owned ? (
+                  {gameByName(item.game)?.shop === 'in-game' && gameByName(item.game)?.play ? (
+                    <a className="btn btn-primary btn-sm" href={gameByName(item.game).play}>
+                      Buy in the game
+                    </a>
+                  ) : item.owned ? (
                     <span className="pill pill-solid">Owned</span>
                   ) : !item.available ? (
                     <span className="pill">Coming soon</span>
