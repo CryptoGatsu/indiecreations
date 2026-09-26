@@ -10,8 +10,8 @@ const PERKS = [
     body: `${TOKEN_TICKER} is the currency of the whole studio. Every Indie Creations game runs on the same coin, so what you hold works in the game you play today and every game we ship after it.`,
   },
   {
-    title: 'Cosmetics everywhere',
-    body: `Hats, outfits, tool skins, armour finishes, emotes and banners are all bought with ${TOKEN_TICKER}. Shop items are priced in dollars, paid at the live price and tied to your Steam account. Cosmetics are for looking good, never for winning.`,
+    title: 'Cosmetics in every game',
+    body: `Every game has its own cosmetics, all bought with ${TOKEN_TICKER}: hats, outfits and tool skins in My Favorite Sheep, armour finishes, emotes and banners in Agentacus. Some are tied to your Steam account, others are bought and kept inside the game itself. Cosmetics are for looking good, never for winning.`,
   },
   {
     title: 'In the game, every day',
@@ -117,8 +117,8 @@ export default function Home() {
               <dd>Hoodlock</dd>
             </div>
             <div>
-              <dt>Locked until</dt>
-              <dd>Dec 2026</dd>
+              <dt>Network</dt>
+              <dd>Robinhood Chain</dd>
             </div>
           </dl>
         </div>
