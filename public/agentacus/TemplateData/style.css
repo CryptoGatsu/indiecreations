@@ -248,3 +248,17 @@ html, body {
   }
   @keyframes aa-rotate { 0%, 25% { transform: rotate(0deg); } 60%, 100% { transform: rotate(-90deg); } }
 }
+
+/* wallet in-app browsers (portrait-locked): continue in the phone's own browser (web/src/handoff.ts) */
+@media (orientation: portrait) and (pointer: coarse) {
+  #rotate.wallet-browser small { max-width: 320px; line-height: 1.45; }
+  #rotate.wallet-browser .err { color: #ffb4a8; min-height: 18px; }
+  #rotate.wallet-browser button {
+    margin-top: 14px; padding: 14px 22px; border: 1px solid #e8ba5c; border-radius: 4px; background: #6d1a14;
+    color: #ffe2a0; font-family: 'Cinzel', Georgia, serif; font-size: 16px; letter-spacing: 2px;
+  }
+  #rotate.wallet-browser button:disabled { opacity: 0.6; }
+  #handoff-out { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px; }
+  #handoff-out[hidden] { display: none; }
+  #handoff-link { width: 300px; padding: 10px; font-size: 13px; background: #160c08; color: #f6e8c8; border: 1px solid #b8864b; }
+}

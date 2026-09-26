@@ -9,7 +9,7 @@
 //   heuristic  no dependencies; predicts the opponent from this fight + their recent move frequencies and counters it.
 //   claude     asks Claude (claude-opus-5) for each move via the Anthropic SDK with a structured-output schema.
 //              Needs `npm install` here and an Anthropic credential (ANTHROPIC_API_KEY or `ant auth login`).
-//              If Claude is slow, refuses, or errors, the heuristic move is played so the 20s window is never missed.
+//              If Claude is slow, refuses, or errors, the heuristic move is played so the 10s window is never missed.
 //
 // The agent never sees text written by the opponent - only numbers, move history, and revealed techniques (§3).
 
@@ -109,7 +109,7 @@ async function claudeInit() {
   const [{ default: Anthropic }, { z }, { zodOutputFormat }] = await Promise.all([
     import("@anthropic-ai/sdk"), import("zod"), import("@anthropic-ai/sdk/helpers/zod"),
   ]);
-  claudeClient = new Anthropic({ timeout: 14_000, maxRetries: 0 });
+  claudeClient = new Anthropic({ timeout: 7_000, maxRetries: 0 });
   MoveSchema = z.object({
     move: z.enum(["Strike", "Heavy", "Grapple", "Dodge", "Guard"]),
     secondWind: z.boolean(),
