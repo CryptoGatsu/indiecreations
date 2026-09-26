@@ -1,13 +1,25 @@
 import Link from 'next/link';
 import TokenSection from '../components/TokenSection';
-import { TOKEN_TICKER } from '../lib/config';
+import { TOKEN_TICKER, MIN_TOKENS } from '../lib/config';
 import { GAMES } from '../lib/games';
 import GameCard from '../components/GameCard';
 
 const PERKS = [
   {
+    title: 'One coin, every game',
+    body: `${TOKEN_TICKER} is the currency of the whole studio. Every Indie Creations game runs on the same coin, so what you hold works in the game you play today and every game we ship after it.`,
+  },
+  {
+    title: 'Cosmetics everywhere',
+    body: `Hats, outfits, tool skins, armour finishes, emotes and banners are all bought with ${TOKEN_TICKER}. Shop items are priced in dollars, paid at the live price and tied to your Steam account. Cosmetics are for looking good, never for winning.`,
+  },
+  {
+    title: 'In the game, every day',
+    body: `${TOKEN_TICKER} is spent inside the games, not just held. In Agentacus, lanistas stake it on their gladiators and spectators bet from the stands, and half of every losing bet is burned. The beta runs on testnet for now.`,
+  },
+  {
     title: 'Playtest access',
-    body: 'Holders get into the playtest area and play builds while they are still being made.',
+    body: `Hold ${MIN_TOKENS.toLocaleString('en-US')} ${TOKEN_TICKER} to get into the playtest area and play builds while they are still being made.`,
   },
   {
     title: 'Reviews that matter',
@@ -33,10 +45,12 @@ export default function Home() {
               <span className="dot" />
               Live on Robinhood Chain
             </span>
-            <h1>Indie games, shaped by the people who hold them.</h1>
+            <h1>Indie games that share one coin.</h1>
             <p className="lead">
-              Indie Creations is a tokenized indie game studio. Hold {TOKEN_TICKER} to get into
-              playtests, review every build, and play each release free.
+              Indie Creations is an independent studio making a family of games that all run on{' '}
+              {TOKEN_TICKER}. Spend it on cosmetics and in-game play across every title, and hold it
+              to get into playtests, review builds and play each release free. Half of the total
+              supply is locked.
             </p>
             <div className="actions">
               <Link href="/playtest" className="btn btn-primary">
@@ -72,8 +86,13 @@ export default function Home() {
       {/* HOLDER PERKS */}
       <section className="section">
         <div className="container">
-          <p className="eyebrow">What holders get</p>
-          <h2>Hold {TOKEN_TICKER}. Get a seat in the studio.</h2>
+          <p className="eyebrow">What {TOKEN_TICKER} is for</p>
+          <h2>The coin behind every game we make.</h2>
+          <p className="lead">
+            {TOKEN_TICKER} is first of all the everyday coin of the Indie Creations ecosystem: what
+            players spend on cosmetics and in-game across all of our games. Holding it also gets you
+            into the studio itself, from early playtests to free releases.
+          </p>
           <div className="grid-3">
             {PERKS.map((perk, i) => (
               <div className="card" key={perk.title}>
@@ -83,6 +102,25 @@ export default function Home() {
               </div>
             ))}
           </div>
+
+          <dl className="facts">
+            <div>
+              <dt>Total supply</dt>
+              <dd>1,000,000,000</dd>
+            </div>
+            <div>
+              <dt>Locked</dt>
+              <dd>50% of supply</dd>
+            </div>
+            <div>
+              <dt>Locked on</dt>
+              <dd>Hoodlock</dd>
+            </div>
+            <div>
+              <dt>Locked until</dt>
+              <dd>Dec 2026</dd>
+            </div>
+          </dl>
         </div>
       </section>
 

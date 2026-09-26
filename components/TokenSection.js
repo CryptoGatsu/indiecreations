@@ -43,9 +43,10 @@ export default function TokenSection() {
           <p className="eyebrow">The token</p>
           <h2>{TOKEN_TICKER}</h2>
           <p className="muted">
-            {TOKEN_TICKER} is the access pass to everything Indie Creations makes. It is a
-            fixed-supply token live on Robinhood Chain, launched through PONS Launchpad.
-            Hold at least {MIN_TOKENS.toLocaleString()} to unlock the playtest area.
+            {TOKEN_TICKER} is the ecosystem coin for everything Indie Creations makes: cosmetics
+            and in-game play in every title, plus holder access to the studio. It is a fixed-supply
+            token live on Robinhood Chain, launched through PONS Launchpad, with 50% of the total
+            supply locked. Hold at least {MIN_TOKENS.toLocaleString()} to unlock the playtest area.
           </p>
 
           <p className="label">Contract address</p>
