@@ -1169,3 +1169,49 @@ main > .section:first-child {
 @media (max-width: 560px) {
   .header-actions .socials { display: none; }
 }
+
+/* Holder rewards (/rewards) */
+.rewards-claim {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.rewards-claim .receipt {
+  width: 100%;
+  margin: 0;
+  background: var(--paper);
+}
+
+.rewards-history-head {
+  margin-top: 72px;
+  font-size: 28px;
+}
+
+.rewards-history {
+  margin-top: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.rewards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  padding: 14px 18px;
+  font-size: 15px;
+}
+
+.rewards-row + .rewards-row {
+  border-top: 1px solid var(--line);
+}
+
+.rewards-foot {
+  margin-top: 40px;
+}
+
+@media (max-width: 720px) {
+  .rewards-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

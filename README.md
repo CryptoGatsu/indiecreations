@@ -56,6 +56,27 @@ How a game reads what a player owns:
 `GET /api/game/cosmetics?game=<game name>&steamid=<SteamID64>`
 returns `{ payload: "c1|<steamid>|<unix expiry>|<game>|<item-id,item-id,...>", sig }`, where `sig` is a base64 RSA-SHA256 signature made with `GAME_TICKET_KEY`, the same key pair as the holder ticket, so the game verifies it with the public key it already ships with. The game must check the signature, that `<steamid>` is the account it is running under (`SteamUser.GetSteamID()`), and that the expiry has not passed, then unlock the listed item ids. Once the game has a Steam app, set `STEAM_APP_ID` + `STEAM_PUBLISHER_KEY`: the endpoint then requires `&ticket=<hex>` from `ISteamUser::GetAuthTicketForWebApi("indiecreations")` instead of a bare `steamid`, so only the real account holder can ask.
 
+💸 Holder revenue share (`/rewards`)
+
+25% of cosmetic shop sales goes back to $creations holders every month, split by how much each wallet held and for how long. Holders never stake, lock or deposit anything: tokens stay in their wallet and can be moved at any time; a wallet simply earns less for the part of the month it did not hold.
+
+How a wallet's cut is worked out: pool x (its balance averaged over every second of the month) / (the same for every counted wallet). The treasury, the RevenueShare contract, the zero/dead addresses and every address with contract code (the trading pool, the Hoodlock lockers, the launchpad) are not counted, so a lock contract never earns on the tokens it holds. `REVSHARE_EXCLUDE` / `REVSHARE_INCLUDE` adjust that list.
+
+One-time setup:
+
+1. Deploy `contracts/RevenueShare.sol` on Robinhood Chain (Remix works: compile with 0.8.20+, deploy with the $creations CA and the owner wallet). The owner should ideally be a multisig.
+2. Set `NEXT_PUBLIC_REVSHARE_ADDRESS` in Vercel to the deployed address. Until it is set, `/rewards` explains the programme but shows nothing to claim.
+
+Every month, after it closes (dates are UTC):
+
+1. `node scripts/revshare-epoch.mjs --month 2026-10` (needs `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`; set `RPC_URL` to a private RPC for speed and `REVSHARE_FROM_BLOCK` to the token's deploy block). It is a dry run: check the revenue, the excluded contracts and the top earners.
+2. Run it again with `--write`. It updates `public/revshare/tree.json` (every wallet's running total and the Merkle tree) and appends the month to `public/revshare/epochs.json`. Commit and push both: they are the public record anyone can check the payout against.
+3. From the owner wallet: send the printed amount of $creations to the RevenueShare contract, then call `publish(root, totalAllocated)` with the printed values. `publish` refuses a root the contract does not hold enough tokens to pay out in full.
+
+Holders then claim on `/rewards` whenever they like. Totals are cumulative, so unclaimed months add up and nothing expires. The contract has no withdraw function: tokens sent to it only ever leave through claims.
+
+Revenue counted today is paid `/shop` orders. Agentacus sells its cosmetics in-game on-chain, so its sales are not included yet.
+
 ⚔️ Agentacus (`/games/agentacus`, game at `/agentacus`)
 
 Agentacus is a browser game: a Unity WebGL build in `public/agentacus`, open to everyone (no holder gate). It is built in
