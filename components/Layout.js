@@ -7,7 +7,7 @@ import SocialIcons from './Socials';
 import { LINKS, TOKEN_TICKER } from '../lib/config';
 
 const DESCRIPTION =
-  'Indie Creations is a tokenized indie game studio. Hold $CREATIONS on Robinhood Chain to playtest, review, and play every release.';
+  'Indie Creations is an independent game studio. $CREATIONS on Robinhood Chain buys cosmetics in every game, opens playtests, and shares game revenue with holders.';
 
 export default function Layout({ children }) {
   return (
@@ -52,8 +52,9 @@ export default function Layout({ children }) {
           <div>
             <Logo />
             <p className="muted small footer-note">
-              {TOKEN_TICKER} is a community access token for Indie Creations games. It is not an
-              investment product and nothing on this site is financial advice.
+              {TOKEN_TICKER} is the ecosystem coin of Indie Creations games. Holder rewards come from game
+              revenue: they vary from month to month and can be zero. Crypto assets are risky and can lose value.
+              Nothing on this site is financial advice.
             </p>
           </div>
           <div className="footer-links">
