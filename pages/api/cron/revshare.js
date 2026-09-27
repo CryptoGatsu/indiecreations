@@ -21,8 +21,13 @@ export default async function handler(req, res) {
 
   const started = Date.now();
   try {
-    const index = await indexTransfers({ deadline: started + 200_000 });
-    const result = await settle({ dryRun: Boolean(req.query.dry) });
+    // Copying transfers gets at most two minutes. A month is only closed by a run that caught up early, so the
+    // payout itself always has the rest of the time limit; otherwise it waits for the next run.
+    const index = await indexTransfers({ deadline: started + 120_000 });
+    const result =
+      index.caughtUp && Date.now() - started < 60_000
+        ? await settle({ dryRun: Boolean(req.query.dry) })
+        : { waiting: 'still copying transfers; the payout step runs once the copy is caught up' };
     const treasury = await treasuryReadiness().catch(() => null);
     return json(res, 200, { index, settle: result, treasury, ms: Date.now() - started });
   } catch (err) {

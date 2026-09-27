@@ -115,7 +115,10 @@ language sql stable as $$
   order by game
 $$;
 
--- Keep the functions server-only, like the tables.
+-- Keep the functions server-only, like the tables: only the service role (the site's server) may call them.
 revoke execute on function public.revshare_balances_at(timestamptz) from public, anon, authenticated;
 revoke execute on function public.transfers_total(text[], text[], timestamptz, timestamptz) from public, anon, authenticated;
 revoke execute on function public.shop_revenue(timestamptz, timestamptz) from public, anon, authenticated;
+grant execute on function public.revshare_balances_at(timestamptz) to service_role;
+grant execute on function public.transfers_total(text[], text[], timestamptz, timestamptz) to service_role;
+grant execute on function public.shop_revenue(timestamptz, timestamptz) to service_role;
