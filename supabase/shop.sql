@@ -8,7 +8,7 @@
 
 create table if not exists public.shop_orders (
   id          uuid        primary key,
-  steam_id    text        not null check (steam_id ~ '^([0-9]{17}|0x[0-9a-f]{40})$')  -- SteamID64, or wallet (browser games),
+  steam_id    text        not null check (steam_id ~ '^([0-9]{17}|0x[0-9a-f]{40})$'),  -- SteamID64, or wallet (browser games)
   item_id     text        not null check (item_id ~ '^[a-z0-9-]{1,64}$'),
   game        text        not null check (char_length(game) between 1 and 120),
   wallet      text        not null check (wallet ~ '^0x[0-9a-f]{40}$'),
@@ -28,7 +28,7 @@ create unique index if not exists shop_orders_tx_hash_key on public.shop_orders 
 create index if not exists shop_orders_lookup_idx on public.shop_orders (steam_id, item_id, wallet, status);
 
 create table if not exists public.shop_entitlements (
-  steam_id    text        not null check (steam_id ~ '^([0-9]{17}|0x[0-9a-f]{40})$')  -- SteamID64, or wallet (browser games),
+  steam_id    text        not null check (steam_id ~ '^([0-9]{17}|0x[0-9a-f]{40})$'),  -- SteamID64, or wallet (browser games)
   item_id     text        not null check (item_id ~ '^[a-z0-9-]{1,64}$'),
   game        text        not null,
   order_id    uuid        references public.shop_orders (id),

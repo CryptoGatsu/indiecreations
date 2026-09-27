@@ -178,16 +178,19 @@ function ByGame({ stats }) {
       {GAMES.map((game) => {
         const r = revenue.get(game.name);
         const b = burns.get(game.name) || 0n;
-        const testnet = game.shop === 'in-game' && !r && b === 0n;
+        // a game whose own contracts are not listed yet (Agentacus on testnet) has nothing on-chain to count
+        const waiting = game.chain && !game.chain.revenue?.length && !game.chain.burners?.length && !r;
         return (
           <div className="rewards-row" key={game.slug}>
             <span>{game.name}</span>
             <span className="muted">
-              {testnet
-                ? 'On testnet: sales and burns count from mainnet launch'
+              {waiting
+                ? /testnet/i.test(game.status)
+                  ? 'On testnet: sales and burns count from mainnet launch'
+                  : 'In-game sales count once its contracts are listed'
                 : `${r ? r.orders : 0} sale${r?.orders === 1 ? '' : 's'} · ${tokens(b, d)} ${TOKEN_TICKER} burned`}
             </span>
-            <strong>{testnet ? '—' : `${dollars(r?.usdCents)} revenue`}</strong>
+            <strong>{waiting ? '—' : `${dollars(r?.usdCents)} revenue`}</strong>
           </div>
         );
       })}

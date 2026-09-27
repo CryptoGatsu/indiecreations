@@ -63,7 +63,7 @@ returns `{ payload: "c1|<steamid>|<unix expiry>|<game>|<item-id,item-id,...>", s
 How it runs: a Vercel Cron job (`vercel.json`, daily) calls `/api/cron/revshare`, which
 
 1. copies every new $CREATIONS transfer from Robinhood Chain into Supabase (`token_transfers`); burns and balances are read from that copy;
-2. once a month has closed, adds up its revenue: paid `/shop` orders plus $CREATIONS sent to each game's on-chain revenue contracts (`GAME_CONTRACTS` in `lib/revshare.js`);
+2. once a month has closed, adds up its revenue: paid `/shop` orders (the site's shop and the browser games' wardrobes) plus $CREATIONS sent to each game's own revenue contracts (its `chain` entry in `lib/games.js`);
 3. if the revenue since the last payout is under the minimum (`NEXT_PUBLIC_REVSHARE_MIN_USD`, default $100), saves the month as carried: nothing is paid and its revenue rolls into the next month;
 4. otherwise takes 25% of it as the pool and splits it by what each wallet held at 4 random moments in the month's last 14 days. The moments come from the hash of the first block mined after the month ends, so nobody, the studio included, can know them in advance, and anyone can recompute them from the payout's `seed`;
 5. stores every wallet's claim and publishes the new running totals on the RevenueShare contract from the publisher wallet. The contract pulls the pool from the treasury in the same transaction.
@@ -83,7 +83,7 @@ One-time setup:
 5. In Vercel, set: `NEXT_PUBLIC_REVSHARE_ADDRESS` (the contract), `REVSHARE_PUBLISHER_KEY` (the publisher's private key; server-only, never `NEXT_PUBLIC_`), `REVSHARE_START_MONTH` (the first month that pays, `YYYY-MM`), `REVSHARE_FROM_BLOCK` (the block $CREATIONS was deployed in), `CRON_SECRET` (a long random string), and optionally `NEXT_PUBLIC_REVSHARE_MIN_USD`. `RPC_URL` should point at a private RPC.
 6. The first run copies the whole transfer history, which can take several runs. To speed it up, call the job by hand: `curl -H "Authorization: Bearer $CRON_SECRET" https://www.indiecreations.fun/api/cron/revshare` until `caughtUp` is true. Add `?dry=1` to see the next month's split without saving or publishing it.
 
-When a game starts selling or burning on mainnet inside the game itself (Agentacus at launch), add its contracts to `GAME_CONTRACTS` in `lib/revshare.js`: `revenue` for contracts that receive its sales, `burners` for contracts whose burns count as its burns. Burns by anyone else still count in the total, shown as "Other burns".
+New games join automatically: any sale through the site's checkout counts, whichever game it is for. A game that also sells or burns in its own contracts on mainnet (Agentacus at launch) lists them in its entry in `lib/games.js`: `chain: { revenue: [...], burners: [...] }` (`revenue` for contracts that receive its sales, `burners` for contracts whose burns count as its burns); they count from then on. Burns by anyone else still count in the total, shown as "Other burns".
 
 ⚔️ Agentacus (`/games/agentacus`, game at `/agentacus`)
 
