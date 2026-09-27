@@ -58,22 +58,25 @@ returns `{ payload: "c1|<steamid>|<unix expiry>|<game>|<item-id,item-id,...>", s
 
 💸 Holder revenue share (`/rewards`)
 
-25% of cosmetic shop sales goes back to $creations holders every month, split by how much each wallet held and for how long. Holders never stake, lock or deposit anything: tokens stay in their wallet and can be moved at any time; a wallet simply earns less for the part of the month it did not hold.
+25% of cosmetic shop sales goes back to $creations holders every month, paid from the treasury wallet `0x901fC42f24adc138F73BaC931557Ab17AfCA7093`. Holders never stake, lock or deposit anything: tokens stay in their wallet and can be moved at any time.
 
-How a wallet's cut is worked out: pool x (its balance averaged over every second of the month) / (the same for every counted wallet). The treasury, the RevenueShare contract, the zero/dead addresses and every address with contract code (the trading pool, the Hoodlock lockers, the launchpad) are not counted, so a lock contract never earns on the tokens it holds. `REVSHARE_EXCLUDE` / `REVSHARE_INCLUDE` adjust that list.
+How the pool is split: 4 snapshots of every balance are taken at random moments in the last 14 days of the month, and each wallet earns pool x (its balances added up over the snapshots) / (the same for every counted wallet). The moments are worked out from the hash of the first block mined after the month ends, so nobody, the studio included, can know them in advance, and anyone can recompute them from the `seed` saved in `epochs.json`. `REVSHARE_SNAPSHOTS` changes the count.
+
+The treasury, the RevenueShare contract, the zero/dead addresses and every address with contract code (the trading pool, the Hoodlock lockers, the launchpad) are not counted, so a lock contract never earns on the tokens it holds. `REVSHARE_EXCLUDE` / `REVSHARE_INCLUDE` adjust that list.
 
 One-time setup:
 
-1. Deploy `contracts/RevenueShare.sol` on Robinhood Chain (Remix works: compile with 0.8.20+, deploy with the $creations CA and the owner wallet). The owner should ideally be a multisig.
-2. Set `NEXT_PUBLIC_REVSHARE_ADDRESS` in Vercel to the deployed address. Until it is set, `/rewards` explains the programme but shows nothing to claim.
+1. Deploy `contracts/RevenueShare.sol` on Robinhood Chain (Remix works: compile with 0.8.20+, deploy with the $creations CA, the treasury `0x901fC42f24adc138F73BaC931557Ab17AfCA7093` and the owner wallet, which can be the treasury itself).
+2. From the treasury wallet, `approve` the contract on the $creations token for the amount you are willing to pay out (a large allowance saves doing it monthly).
+3. Set `NEXT_PUBLIC_REVSHARE_ADDRESS` in Vercel to the deployed address. Until it is set, `/rewards` explains the programme but shows nothing to claim.
 
 Every month, after it closes (dates are UTC):
 
-1. `node scripts/revshare-epoch.mjs --month 2026-10` (needs `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`; set `RPC_URL` to a private RPC for speed and `REVSHARE_FROM_BLOCK` to the token's deploy block). It is a dry run: check the revenue, the excluded contracts and the top earners.
+1. `node scripts/revshare-epoch.mjs --month 2026-10` (needs `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` and `NEXT_PUBLIC_REVSHARE_ADDRESS`; set `RPC_URL` to a private RPC for speed and `REVSHARE_FROM_BLOCK` to the token's deploy block). It is a dry run: check the revenue, the snapshot times, the excluded contracts and the top earners. It warns if the treasury's balance or allowance cannot cover the month.
 2. Run it again with `--write`. It updates `public/revshare/tree.json` (every wallet's running total and the Merkle tree) and appends the month to `public/revshare/epochs.json`. Commit and push both: they are the public record anyone can check the payout against.
-3. From the owner wallet: send the printed amount of $creations to the RevenueShare contract, then call `publish(root, totalAllocated)` with the printed values. `publish` refuses a root the contract does not hold enough tokens to pay out in full.
+3. From the owner wallet, call `publish(root, totalAllocated)` with the printed values. It pulls the month's pool from the treasury in the same transaction, and reverts if the treasury cannot cover it.
 
-Holders then claim on `/rewards` whenever they like. Totals are cumulative, so unclaimed months add up and nothing expires. The contract has no withdraw function: tokens sent to it only ever leave through claims.
+Holders then claim on `/rewards` whenever they like. Totals are cumulative, so unclaimed months add up and nothing expires. The contract has no withdraw function: tokens only ever leave it through claims.
 
 Revenue counted today is paid `/shop` orders. Agentacus sells its cosmetics in-game on-chain, so its sales are not included yet.
 

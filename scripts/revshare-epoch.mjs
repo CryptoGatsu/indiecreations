@@ -6,11 +6,17 @@
 //
 // Needs SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (to read paid shop orders). Optional: RPC_URL, REVSHARE_BPS
 // (default 2500 = 25%), NEXT_PUBLIC_REVSHARE_ADDRESS, REVSHARE_EXCLUDE / REVSHARE_INCLUDE (comma-separated wallets),
-// REVSHARE_FROM_BLOCK (block the token was deployed in, to skip scanning empty history).
+// REVSHARE_FROM_BLOCK (block the token was deployed in, to skip scanning empty history), REVSHARE_SNAPSHOTS (default 4).
 //
-// The split: each wallet earns pool x (its balance averaged over every second of the month) / (the same for all
-// counted wallets). Buying the day before the month ends earns about 1/30 of a full month, and selling mid-month
-// keeps what was earned while holding. Nobody locks or deposits anything.
+// The split: REVSHARE_SNAPSHOTS snapshots of every balance are taken at random moments in the last 14 days of the
+// month, and each wallet earns pool x (its balances added up over the snapshots) / (the same for all counted wallets).
+// Holding through the whole fortnight catches every snapshot; holding for part of it catches some. Nobody locks or
+// deposits anything.
+//
+// The moments are random but checkable: they come from the hash of the first block mined after the month ends,
+// which nobody (the studio included) can know in advance, and anyone can recompute them from epochs.json.
+//
+// The payout itself comes from the treasury: publish() on the contract pulls the month's pool from it.
 //
 // Not counted: the treasury, the RevenueShare contract, the zero and dead addresses, REVSHARE_EXCLUDE, and every
 // address with contract code (the trading pool, the Hoodlock lockers, the launchpad) unless listed in
@@ -18,7 +24,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createPublicClient, formatUnits, getAddress, http, isAddress, parseAbiItem } from 'viem';
+import {
+  createPublicClient, encodePacked, erc20Abi, formatUnits, getAddress, http, isAddress, keccak256, parseAbiItem,
+} from 'viem';
 import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -33,6 +41,8 @@ const RPC = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || 'https://r
 const BPS = BigInt(process.env.REVSHARE_BPS || 2500);
 const REVSHARE = process.env.NEXT_PUBLIC_REVSHARE_ADDRESS || '';
 const FROM_BLOCK = BigInt(process.env.REVSHARE_FROM_BLOCK || 0);
+const SNAPSHOTS = Number(process.env.REVSHARE_SNAPSHOTS || 4);
+const WINDOW_SECONDS = 14 * 24 * 60 * 60; // the last two weeks of the month
 
 const addrList = (s) => (s || '').split(',').map((a) => a.trim()).filter((a) => isAddress(a)).map((a) => a.toLowerCase());
 const EXCLUDE = new Set([
@@ -162,37 +172,41 @@ async function main() {
   console.log(`${month}: ${revenue.orders} paid orders, ${fmt(revenue.total)} $creations revenue`);
   console.log(`Holder pool (${Number(BPS) / 100}%): ${fmt(pool)} $creations`);
 
-  const startBlock = await firstBlockAtOrAfter(startTs);
+  // The random snapshot moments, seeded by the first block after the month.
   const endBlock = await firstBlockAtOrAfter(endTs); // first block NOT in the month
-  console.log(`Blocks ${startBlock} to ${endBlock - 1n}; reading transfers...`);
-  const logs = await transferLogs(FROM_BLOCK, endBlock - 1n);
-  const monthBlocks = [...new Set(logs.filter((l) => l.blockNumber >= startBlock).map((l) => l.blockNumber))];
-  await mapLimit(monthBlocks, 8, timestampOf);
+  if (endBlock > (await client.getBlockNumber())) throw new Error('Wait for the first block after the month ends.');
+  const seed = (await client.getBlock({ blockNumber: endBlock })).hash;
+  const windowStart = endTs - WINDOW_SECONDS;
+  const snapshots = Array.from({ length: SNAPSHOTS }, (_, i) =>
+    windowStart + Number(BigInt(keccak256(encodePacked(['bytes32', 'uint256'], [seed, BigInt(i)]))) % BigInt(WINDOW_SECONDS))
+  ).sort((a, b) => a - b);
+  console.log(`Snapshots (seeded by block ${endBlock}, ${seed}):`);
+  for (const t of snapshots) console.log(`  ${new Date(t * 1000).toISOString()}`);
 
-  // Replay every transfer. Before the month only balances matter; inside it, each wallet accrues
-  // balance x seconds held, settled every time its balance changes and once more at the end of the month.
+  const windowBlock = await firstBlockAtOrAfter(windowStart);
+  console.log('Reading transfers...');
+  const logs = await transferLogs(FROM_BLOCK, endBlock - 1n);
+  const windowBlocks = [...new Set(logs.filter((l) => l.blockNumber >= windowBlock).map((l) => l.blockNumber))];
+  await mapLimit(windowBlocks, 8, timestampOf);
+
+  // Replay every transfer in order. Each snapshot records every balance as it stood at that second: transfers mined
+  // at or before it count, later ones do not. A wallet's weight is its balances added up over all the snapshots.
   const balance = new Map();
   const weight = new Map();
-  const since = new Map();
-  const settle = (a, t) => {
-    const b = balance.get(a) || 0n;
-    const from = since.get(a) ?? startTs;
-    if (b > 0n && t > from) weight.set(a, (weight.get(a) || 0n) + b * BigInt(t - from));
-    since.set(a, t);
+  let next = 0;
+  const takeSnapshotsBefore = (t) => {
+    for (; next < snapshots.length && snapshots[next] < t; next++) {
+      for (const [a, b] of balance) if (b > 0n) weight.set(a, (weight.get(a) || 0n) + b);
+    }
   };
   for (const log of logs) {
+    if (log.blockNumber >= windowBlock) takeSnapshotsBefore(await timestampOf(log.blockNumber));
     const from = log.args.from.toLowerCase();
     const to = log.args.to.toLowerCase();
-    const value = log.args.value;
-    if (log.blockNumber >= startBlock) {
-      const t = await timestampOf(log.blockNumber);
-      settle(from, t);
-      settle(to, t);
-    }
-    balance.set(from, (balance.get(from) || 0n) - value);
-    balance.set(to, (balance.get(to) || 0n) + value);
+    balance.set(from, (balance.get(from) || 0n) - log.args.value);
+    balance.set(to, (balance.get(to) || 0n) + log.args.value);
   }
-  for (const a of balance.keys()) settle(a, endTs);
+  takeSnapshotsBefore(Infinity);
 
   // Drop the addresses that are not holders.
   const excludedContracts = [];
@@ -207,9 +221,8 @@ async function main() {
 
   const totalWeight = counted.reduce((s, [, w]) => s + w, 0n);
   if (totalWeight === 0n) throw new Error('No holders to pay.');
-  const monthSeconds = BigInt(endTs - startTs);
   for (const [a, w] of excludedContracts.sort((x, y) => (x[1] < y[1] ? 1 : -1))) {
-    console.log(`  not counted (contract): ${a}  avg balance ${fmt(w / monthSeconds)}`);
+    console.log(`  not counted (contract): ${a}  avg balance ${fmt(w / BigInt(SNAPSHOTS))}`);
   }
 
   // Each holder's cut, rounded down, added to what previous months already owed them.
@@ -243,6 +256,19 @@ async function main() {
   console.log(`\nMerkle root:      ${tree.root}`);
   console.log(`Total allocated:  ${totalAllocated} (base units)`);
 
+  // publish() pulls the month from the treasury: warn now if that would fail.
+  if (isAddress(REVSHARE)) {
+    const [held, allowed] = await Promise.all([
+      client.readContract({ address: TOKEN, abi: erc20Abi, functionName: 'balanceOf', args: [TREASURY] }),
+      client.readContract({ address: TOKEN, abi: erc20Abi, functionName: 'allowance', args: [TREASURY, REVSHARE] }),
+    ]);
+    if (held < paidOut) console.log(`\nWARNING: the treasury holds only ${fmt(held)} $creations.`);
+    if (allowed < paidOut) {
+      console.log(`\nWARNING: the treasury has approved the contract for only ${fmt(allowed)} $creations.` +
+        ` Approve it (from the treasury wallet) before publishing.`);
+    }
+  }
+
   if (!write) {
     console.log('\nDry run: nothing written. Re-run with --write to save the files.');
     return;
@@ -260,14 +286,16 @@ async function main() {
     holders,
     root: tree.root,
     totalAllocatedRaw: totalAllocated.toString(),
-    blocks: [startBlock.toString(), (endBlock - 1n).toString()],
+    seedBlock: endBlock.toString(),
+    seed,
+    snapshots: snapshots.map((t) => new Date(t * 1000).toISOString()),
   });
   fs.writeFileSync(EPOCHS_FILE, JSON.stringify(history, null, 2) + '\n');
 
   console.log(`\nWrote ${path.relative(ROOT, TREE_FILE)} and ${path.relative(ROOT, EPOCHS_FILE)}. Next:`);
   console.log(`  1. commit and push both files`);
-  console.log(`  2. send ${paidOut} base units (${fmt(paidOut)} $creations) to the RevenueShare contract`);
-  console.log(`  3. call publish(${tree.root}, ${totalAllocated}) from the owner wallet`);
+  console.log(`  2. call publish(${tree.root}, ${totalAllocated}) from the owner wallet;`);
+  console.log(`     it pulls ${fmt(paidOut)} $creations from the treasury ${TREASURY}`);
 }
 
 main().catch((err) => {

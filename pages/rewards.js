@@ -13,11 +13,11 @@ const monthName = (m) =>
 const HOW = [
   {
     title: 'Cosmetics sell',
-    body: `Every cosmetic bought with ${TOKEN_TICKER} in the shop adds to the month's revenue. ${REVSHARE_PERCENT}% of it becomes the holder pool.`,
+    body: `Every cosmetic bought with ${TOKEN_TICKER} in the shop adds to the month's revenue. ${REVSHARE_PERCENT}% of it becomes the holder pool, paid from the ${TOKEN_TICKER} treasury.`,
   },
   {
-    title: 'The pool is split by holdings',
-    body: 'Your share is your balance averaged over every second of the month, against everyone else. Hold all month, earn a full share. Hold half the month, earn half.',
+    title: 'Random snapshots decide the split',
+    body: 'Snapshots of every wallet are taken at random moments in the last two weeks of the month. Your share of the pool matches your share of the holdings across those snapshots. Hold through the fortnight to be in every one.',
   },
   {
     title: 'Claim whenever you like',
@@ -162,8 +162,9 @@ export default function Rewards() {
           <p className="eyebrow">Holder rewards</p>
           <h1>A share of every cosmetic sold.</h1>
           <p className="muted">
-            {REVSHARE_PERCENT}% of cosmetic sales goes back to {TOKEN_TICKER} holders every month, split by how much
-            you hold. No staking and no locking: your tokens never leave your wallet.
+            {REVSHARE_PERCENT}% of cosmetic sales goes back to {TOKEN_TICKER} holders every month, paid from the
+            treasury and split by what you hold at random snapshots in the month&apos;s last two weeks. No staking and
+            no locking: your tokens never leave your wallet.
           </p>
         </div>
       </div>
@@ -226,7 +227,8 @@ export default function Rewards() {
       )}
 
       <p className="muted small rewards-foot">
-        Every month&apos;s numbers are public: the full list of what each wallet is owed is published with the payout,
+        Every month&apos;s numbers are public. The snapshot times come from the first block mined after the month ends,
+        so nobody can know them in advance, and the full list of what each wallet is owed is published with the payout
         so anyone can check it.
         {live && (
           <>
