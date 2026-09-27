@@ -74,6 +74,8 @@ Not counted as holders: the treasury, the payout contract, burn addresses, `REVS
 
 Guard rails on the contract, because the publisher key lives on a server: at most one payout every 20 days, never more than the treasury has approved, totals can only go up, no withdraw function, and the treasury can replace the publisher at any time (`transferOwnership` from the treasury wallet).
 
+Deployed (see `contracts/deployments.json`): RevenueShare `0xF1b05A7177F0E466e613AF4A0817D6A0B0F0A003` on Robinhood Chain, owned by the publisher wallet `0x8f323DfFE45Bd36935B9fef599a0d2E80482C50B`, paying out from the treasury `0x901fC42f24adc138F73BaC931557Ab17AfCA7093`. First payout month: October 2026.
+
 One-time setup:
 
 1. Run `supabase/revshare.sql` in the Supabase SQL editor (after `supabase/shop.sql`).

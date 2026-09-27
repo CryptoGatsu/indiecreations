@@ -1,0 +1,17 @@
+{
+  "robinhood-mainnet": {
+    "chainId": 4663,
+    "RevenueShare": {
+      "address": "0xF1b05A7177F0E466e613AF4A0817D6A0B0F0A003",
+      "txHash": "0xc46a83897a8216975dc5c9fc93d0bcc674d5a573ce4b3e2f8f112009d490bea1",
+      "block": 73635103,
+      "constructor": {
+        "token": "0xB9195597f91f179EBB05D3F1765B35C3d8491aCb",
+        "treasury": "0x901fC42f24adc138F73BaC931557Ab17AfCA7093",
+        "owner": "0x8f323DfFE45Bd36935B9fef599a0d2E80482C50B"
+      },
+      "compiler": "solc 0.8.24, optimizer on, 200 runs, evm paris"
+    },
+    "creationsMintBlock": 66696161
+  }
+}
