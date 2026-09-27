@@ -1,5 +1,4 @@
-import { indexTransfers } from '../../../lib/chainIndex';
-import { settle, treasuryReadiness } from '../../../lib/revshareJob';
+import { runJob } from '../../../lib/revshareJob';
 import { persistent } from '../../../lib/revshareStore';
 
 // The holder revenue share's daily job (vercel.json schedules it): copy new $CREATIONS transfers from the chain, then
@@ -19,17 +18,8 @@ export default async function handler(req, res) {
   if (!secret || req.headers.authorization !== `Bearer ${secret}`) return json(res, 401, { error: 'Unauthorized' });
   if (!persistent) return json(res, 503, { error: 'Supabase is not configured.' });
 
-  const started = Date.now();
   try {
-    // Copying transfers gets at most two minutes. A month is only closed by a run that caught up early, so the
-    // payout itself always has the rest of the time limit; otherwise it waits for the next run.
-    const index = await indexTransfers({ deadline: started + 120_000 });
-    const result =
-      index.caughtUp && Date.now() - started < 60_000
-        ? await settle({ dryRun: Boolean(req.query.dry) })
-        : { waiting: 'still copying transfers; the payout step runs once the copy is caught up' };
-    const treasury = await treasuryReadiness().catch(() => null);
-    return json(res, 200, { index, settle: result, treasury, ms: Date.now() - started });
+    return json(res, 200, await runJob({ dryRun: Boolean(req.query.dry) }));
   } catch (err) {
     console.error('revshare cron failed:', err);
     return json(res, 500, { error: err.shortMessage || err.message });

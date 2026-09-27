@@ -70,7 +70,7 @@ How it runs: a Vercel Cron job (`vercel.json`, daily) calls `/api/cron/revshare`
 
 Holders claim on `/rewards` whenever they like; unclaimed payouts add up and never expire. The full list of what each wallet is owed is public at `/api/rewards/tree?month=YYYY-MM`. Each run does at most one month and every step is safe to repeat, so a failed or missed run just catches up the next day (e.g. if the treasury is short, the payout waits and is retried daily).
 
-Not counted as holders: the treasury, the payout contract, burn addresses, `REVSHARE_EXCLUDE`, and every address with contract code (the trading pool, the Hoodlock lockers, the launchpad) unless listed in `REVSHARE_INCLUDE`.
+Not counted as holders: the treasury, the payout contract, burn addresses, `REVSHARE_EXCLUDE`, and every address with contract code (the trading pool, the Hoodlock lockers, the PONS liquidity locker, the launchpad) unless listed in `REVSHARE_INCLUDE`.
 
 Guard rails on the contract, because the publisher key lives on a server: at most one payout every 20 days, never more than the treasury has approved, totals can only go up, no withdraw function, and the treasury can replace the publisher at any time (`transferOwnership` from the treasury wallet).
 
@@ -86,6 +86,16 @@ One-time setup:
 6. The first run copies the whole transfer history, which can take several runs. To speed it up, call the job by hand: `curl -H "Authorization: Bearer $CRON_SECRET" https://www.indiecreations.fun/api/cron/revshare` until `caughtUp` is true. Add `?dry=1` to see the next month's split without saving or publishing it.
 
 New games join automatically: any sale through the site's checkout counts, whichever game it is for. A game that also sells or burns in its own contracts on mainnet (Agentacus at launch) lists them in its entry in `lib/games.js`: `chain: { revenue: [...], burners: [...] }` (`revenue` for contracts that receive its sales, `burners` for contracts whose burns count as its burns); they count from then on. Burns by anyone else still count in the total, shown as "Other burns".
+
+🔑 Studio admin (`/admin`)
+
+A private page for the studio (not linked from the site, and hidden from search engines). Sign in with the treasury wallet, the dev wallet, or any wallet listed in `ADMIN_WALLETS`, by signing a free message; the admin session lasts 2 hours. It shows anything that would stop the next payout, and lets you:
+
+- **Approve payouts:** with the treasury wallet connected, set how much $CREATIONS the payout contract may take from the treasury (or revoke it). Setting it replaces the previous amount.
+- **Watch the payouts:** revenue waiting for the next payout, what it would take from the treasury, when the contract allows the next one, what holders have claimed, and every closed month with its transaction and public tree.
+- **Run the daily job now,** or preview the next payout without saving anything.
+- **Check the payout wallet:** its ETH for gas, and that the key in Vercel belongs to it. With the treasury connected, replace it if its key may have leaked.
+- **See recent shop orders and playtest downloads.**
 
 ⚔️ Agentacus (`/games/agentacus`, game at `/agentacus`)
 

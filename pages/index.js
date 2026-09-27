@@ -116,8 +116,8 @@ export default function Home() {
               <dd>50% of supply</dd>
             </div>
             <div>
-              <dt>Locked on</dt>
-              <dd>Hoodlock</dd>
+              <dt>Where it is locked</dt>
+              <dd>42% Hoodlock · 8% PONS liquidity locker</dd>
             </div>
             <div>
               <dt>Network</dt>
