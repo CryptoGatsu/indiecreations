@@ -4,7 +4,9 @@ import ConnectButton from '../components/ConnectButton';
 import { Mark } from '../components/Logo';
 import { buildSignInMessage } from '../lib/authMessage';
 import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, MIN_TOKENS, shortAddress, isAllowlisted } from '../lib/config';
+import Link from 'next/link';
 import { ACTIVE_BUILD, DOWNLOAD_BUILD } from '../lib/build';
+import { GAMES } from '../lib/games';
 
 function Gate({ title, children }) {
   return (
@@ -256,7 +258,36 @@ function DownloadView({ address, onSignOut }) {
   );
 }
 
+// No playtest build on offer (lib/build.js): everyone sees this, no wallet needed.
+function ComingSoon() {
+  const browserGame = GAMES.find((g) => g.play);
+  return (
+    <div className="container page">
+      <Gate title="Coming soon">
+        <p className="muted">
+          The next playtest is being prepared. When it opens, {TOKEN_TICKER} holders play it here first, and their
+          reviews decide what gets fixed and built next.
+        </p>
+        <div className="actions">
+          {browserGame && (
+            <a href={browserGame.play} className="btn btn-primary">
+              Play {browserGame.name} now
+            </a>
+          )}
+          <Link href="/token" className="btn btn-ghost">
+            Get {TOKEN_TICKER}
+          </Link>
+        </div>
+      </Gate>
+    </div>
+  );
+}
+
 export default function Playtest() {
+  return ACTIVE_BUILD || DOWNLOAD_BUILD ? <PlaytestArea /> : <ComingSoon />;
+}
+
+function PlaytestArea() {
   const { address, isConnected } = useAccount();
   const publicStats = useDownloadStats(false);
   const { signMessageAsync } = useSignMessage();
