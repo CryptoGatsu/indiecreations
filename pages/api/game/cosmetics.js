@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import { listOwned } from '../../../lib/shop';
+import { readPlayerWallet } from '../../../lib/session';
 
+// GET ?game=<name>&owner=session  (browser games: the wallet signed in on this browser, see /api/game/signin)
 // GET ?game=<name>&ticket=<hex Steam session ticket>   (or &steamid=<SteamID64> while there is no Steam app yet)
 //  -> the cosmetics that Steam account owns for that game, signed so the game can trust the list.
 //
@@ -48,7 +50,11 @@ export default async function handler(req, res) {
 
   try {
     let steamId = null;
-    if (process.env.STEAM_PUBLISHER_KEY && process.env.STEAM_APP_ID) {
+    if (req.query.owner === 'session') {
+      // the owner is the signed-in wallet; the game checks the address in the payload is the one it signed in as
+      steamId = await readPlayerWallet(req.cookies);
+      if (!steamId) return res.status(401).json({ error: 'Not signed in.' });
+    } else if (process.env.STEAM_PUBLISHER_KEY && process.env.STEAM_APP_ID) {
       const ticket = typeof req.query.ticket === 'string' ? req.query.ticket : '';
       if (!/^[0-9a-fA-F]{16,4096}$/.test(ticket)) return res.status(401).json({ error: 'Missing Steam ticket.' });
       steamId = await steamIdFromTicket(ticket);

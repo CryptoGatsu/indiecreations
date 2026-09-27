@@ -64,13 +64,10 @@ export default function GamePage({ game }) {
           {game.shop === 'in-game' ? (
             <aside className="card game-shop-card">
               <span className="card-index">Play</span>
-              <h3>Runs in your browser</h3>
-              <p className="muted">
-                Watch live fights for free. Connect a wallet to recruit gladiators, bet and buy cosmetics with{' '}
-                {TOKEN_TICKER}, all inside the arena. Desktop Chrome, Edge or Firefox recommended.
-              </p>
+              <h3>{game.playCard?.title || 'Runs in your browser'}</h3>
+              <p className="muted">{game.playCard?.text}</p>
               <a href={game.play} className="btn btn-primary">
-                Enter the arena
+                {game.playCard?.cta || 'Play'}
               </a>
             </aside>
           ) : (

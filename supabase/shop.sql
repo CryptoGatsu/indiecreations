@@ -1,4 +1,6 @@
--- Cosmetics shop for Indie Creations: orders paid in $creations and the cosmetics each Steam account owns.
+-- Cosmetics shop for Indie Creations: orders paid in $CREATIONS and the cosmetics each owner has. The owner (steam_id
+-- column, kept for history) is a SteamID64 for Steam games or the paying wallet's lowercase address for browser games
+-- (migration shop_wallet_owners, 2026-09-26).
 -- Run once in the Supabase SQL editor (or as a migration) for the project whose URL / service key the site uses.
 --
 -- Like `feedback`, these tables are touched ONLY by the site's server with the service-role key. Row Level Security
@@ -6,7 +8,7 @@
 
 create table if not exists public.shop_orders (
   id          uuid        primary key,
-  steam_id    text        not null check (steam_id ~ '^[0-9]{17}$'),
+  steam_id    text        not null check (steam_id ~ '^([0-9]{17}|0x[0-9a-f]{40})$')  -- SteamID64, or wallet (browser games),
   item_id     text        not null check (item_id ~ '^[a-z0-9-]{1,64}$'),
   game        text        not null check (char_length(game) between 1 and 120),
   wallet      text        not null check (wallet ~ '^0x[0-9a-f]{40}$'),
@@ -26,7 +28,7 @@ create unique index if not exists shop_orders_tx_hash_key on public.shop_orders 
 create index if not exists shop_orders_lookup_idx on public.shop_orders (steam_id, item_id, wallet, status);
 
 create table if not exists public.shop_entitlements (
-  steam_id    text        not null check (steam_id ~ '^[0-9]{17}$'),
+  steam_id    text        not null check (steam_id ~ '^([0-9]{17}|0x[0-9a-f]{40})$')  -- SteamID64, or wallet (browser games),
   item_id     text        not null check (item_id ~ '^[a-z0-9-]{1,64}$'),
   game        text        not null,
   order_id    uuid        references public.shop_orders (id),
