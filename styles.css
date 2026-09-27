@@ -1439,3 +1439,283 @@ main > .section:first-child {
   grid-template-columns: 1.5fr 1fr 1fr 1fr;
   min-width: 0;
 }
+
+/* Shop, revamped: revenue share band, game bar, type filters, grouped grid */
+.shop-revshare {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  margin: 8px 0 40px;
+  padding: 22px 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--soft);
+}
+
+.shop-revshare-big {
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.shop-revshare-text strong {
+  display: block;
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.shop-revshare-text a {
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.shop-revshare-stats {
+  display: flex;
+  gap: 28px;
+  margin: 0;
+}
+
+.shop-revshare-stats dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.shop-revshare-stats dd {
+  margin: 2px 0 0;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.shop-game-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.shop-game-bar h2 {
+  font-size: 30px;
+  margin-bottom: 4px;
+}
+
+.shop-game-bar .muted a {
+  text-decoration: underline;
+}
+
+.shop-filters {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 -4px 8px;
+  padding: 12px 4px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shop-chip-n {
+  margin-left: 6px;
+  opacity: 0.55;
+  font-size: 12px;
+}
+
+.shop-sort-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shop-sort-select select {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.shop-section {
+  margin-top: 28px;
+}
+
+.shop-section-head {
+  margin-bottom: 14px;
+  font-size: 18px;
+}
+
+.shop-game .item-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.shop-game .item-body {
+  gap: 6px;
+  padding: 16px;
+}
+
+.shop-game .item-body h3 {
+  font-size: 17px;
+}
+
+.item-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.item-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.item-foot .item-price {
+  margin-top: 0;
+  padding-top: 0;
+  flex-direction: column;
+  gap: 0;
+}
+
+.item-foot .item-price strong {
+  font-size: 18px;
+}
+
+.item-tag {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* art tiles for items without a picture */
+.item-art-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  text-align: center;
+  color: var(--ink);
+}
+
+.item-art-kind {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.item-art-name {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.item-art-title {
+  background: linear-gradient(160deg, var(--soft), color-mix(in srgb, #b45309 12%, var(--soft)));
+}
+
+.item-art-player {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.item-art-titletext {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.item-art-emote {
+  background: linear-gradient(160deg, var(--soft), color-mix(in srgb, #2563eb 12%, var(--soft)));
+}
+
+.item-art-aura {
+  background:
+    radial-gradient(circle at 50% 45%, color-mix(in srgb, #a855f7 28%, transparent), transparent 62%),
+    var(--soft);
+}
+
+.item-art-skin {
+  background: linear-gradient(160deg, var(--soft), color-mix(in srgb, #16a34a 12%, var(--soft)));
+}
+
+@media (max-width: 720px) {
+  .shop-revshare {
+    grid-template-columns: auto 1fr;
+    padding: 18px;
+    gap: 16px;
+  }
+
+  .shop-revshare-big {
+    font-size: 34px;
+  }
+
+  .shop-revshare-stats {
+    grid-column: 1 / -1;
+  }
+
+  .shop-game .item-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .shop-game .item-body {
+    padding: 12px;
+  }
+
+  .shop-game .item-body h3 {
+    font-size: 15px;
+  }
+
+  .item-art-name {
+    font-size: 18px;
+  }
+
+  .item-art-titletext {
+    font-size: 14px;
+  }
+
+  .shop-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .shop-chips {
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    max-width: calc(100vw - 48px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .shop-chips button {
+    flex: none;
+  }
+}

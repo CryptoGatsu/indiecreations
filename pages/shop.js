@@ -7,6 +7,10 @@ import ConnectButton from '../components/ConnectButton';
 import { Mark } from '../components/Logo';
 import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, robinhoodChain, shortAddress } from '../lib/config';
 import { GAMES, gameByName } from '../lib/games';
+import { ITEM_TYPES } from '../lib/catalog';
+import { REVSHARE_PERCENT } from '../lib/revshare';
+import { dollars, tokens, useEconomyStats } from '../components/EconomyStats';
+import PlayerCount, { usePlayerCounts } from '../components/PlayerCount';
 
 // A payment that has been sent but not yet confirmed survives a reload / closed tab through this key.
 const PENDING_KEY = 'ic_shop_pending';
@@ -81,11 +85,29 @@ function useConfirmation(onDelivered) {
   return { state, watch, clear };
 }
 
+// Items without art (titles, emotes, auras) get a tile that says what they are instead of an empty box.
 function ItemArt({ item }) {
   if (item.image) return <img className="item-art" src={item.image} alt="" loading="lazy" />;
+  if (item.type === 'title') {
+    const title = item.name.replace(/^Title:\s*/i, '');
+    return (
+      <div className="item-art item-art-tile item-art-title" aria-hidden="true">
+        <span className="item-art-player">Farmer</span>
+        <span className="item-art-titletext">{title}</span>
+      </div>
+    );
+  }
+  const label = { emote: 'Emote', aura: 'Aura', skin: 'Tool skin' }[item.type];
   return (
-    <div className="item-art item-art-empty" aria-hidden="true">
-      <Mark size={56} />
+    <div className={`item-art item-art-tile item-art-${item.type}`} aria-hidden="true">
+      {label ? (
+        <>
+          <span className="item-art-kind">{label}</span>
+          <span className="item-art-name">{item.name.replace(/^(Emote|Aura):\s*/i, '')}</span>
+        </>
+      ) : (
+        <Mark size={56} />
+      )}
     </div>
   );
 }
@@ -256,11 +278,75 @@ const SORTS = [
   ['high', 'Price: high to low'],
 ];
 
+// 25% of every sale goes to holders: the shop says so up front, with the live totals when there are any.
+function RevenueShareBand() {
+  const stats = useEconomyStats();
+  const sold = stats?.revenue?.usdCents || 0;
+  const paid = stats ? BigInt(stats.payouts?.paidRaw || 0) : 0n;
+  return (
+    <aside className="shop-revshare">
+      <div className="shop-revshare-big">{REVSHARE_PERCENT}%</div>
+      <div className="shop-revshare-text">
+        <strong>of every cosmetic sale goes back to {TOKEN_TICKER} holders.</strong>
+        <p className="muted small">
+          Paid out automatically from the treasury, split across everyone holding {TOKEN_TICKER}. No staking, no
+          locking. <Link href="/rewards">How holder rewards work</Link>
+        </p>
+      </div>
+      {stats && (sold > 0 || paid > 0n) && (
+        <dl className="shop-revshare-stats">
+          <div>
+            <dt>Sold so far</dt>
+            <dd>{dollars(sold)}</dd>
+          </div>
+          <div>
+            <dt>Paid to holders</dt>
+            <dd>
+              {tokens(paid, stats.decimals)} {TOKEN_TICKER}
+            </dd>
+          </div>
+        </dl>
+      )}
+    </aside>
+  );
+}
+
+// How buying works differs per game: in the game's own wardrobe (browser games), or here with Steam.
+function HowItWorks({ inGame, gameInfo }) {
+  const steps = inGame
+    ? [
+        [`Open ${gameInfo?.name || 'the game'}`, 'It plays free in your browser on desktop, phone or tablet. Sign in with your wallet, free and without a transaction.'],
+        [`Pay in ${TOKEN_TICKER}`, `Pick a cosmetic in the wardrobe. Its dollar price is converted at the live ${TOKEN_TICKER} price and paid from your wallet.`],
+        ['Yours in every game you play', 'It belongs to your wallet: sign in on any device and it is there. Nothing you buy changes how the game plays.'],
+      ]
+    : [
+        ['Sign in through Steam', "You log in on Steam's own site. We only learn which Steam account is yours, never your password."],
+        [`Pay in ${TOKEN_TICKER}`, `Items have a dollar price. At checkout it is converted at the live ${TOKEN_TICKER} price and held for ten minutes.`],
+        ['Wear it in the game', 'Once the payment confirms, the cosmetic is tied to your Steam account and shows up the next time you launch the game.'],
+      ];
+  return (
+    <section className="shop-how">
+      <p className="eyebrow">How buying works</p>
+      <div className="grid-3 shop-steps">
+        {steps.map(([title, body], i) => (
+          <div className="card" key={title}>
+            <span className="card-index">0{i + 1}</span>
+            <h3>{title}</h3>
+            <p className="muted">{body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Shop() {
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null);
   const [steamFailed, setSteamFailed] = useState(false);
   const [sort, setSort] = useState('featured'); // featured (catalog order) | low | high
+  const [kind, setKind] = useState('all'); // an ITEM_TYPES key, or all
+  const counts = usePlayerCounts();
 
   const load = useCallback(() => {
     fetch('/api/shop/catalog')
@@ -306,8 +392,11 @@ export default function Shop() {
   }, [data]);
   const wanted = typeof router.query.game === 'string' ? router.query.game : null;
   const current = allGames.find(([name]) => gameByName(name)?.slug === wanted)?.[0] || allGames[0]?.[0] || null;
-  const games = allGames.filter(([name]) => name === current);
+  const items = allGames.find(([name]) => name === current)?.[1] || [];
+  const gameInfo = current ? gameByName(current) : null;
+  const inGame = gameInfo?.shop === 'in-game' && Boolean(gameInfo?.play);
   const pickGame = (name) => {
+    setKind('all');
     const slug = gameByName(name)?.slug;
     router.replace({ pathname: '/shop', query: slug ? { game: slug } : {} }, undefined, { shallow: true, scroll: false });
   };
@@ -316,38 +405,49 @@ export default function Shop() {
   const open = data?.status?.open;
 
   // price sort keeps the catalog order among items that cost the same (Array sort is stable)
-  const sorted = (items) =>
-    sort === 'featured' ? items : [...items].sort((a, b) => (sort === 'low' ? a.usd - b.usd : b.usd - a.usd));
+  const sorted = (list) =>
+    sort === 'featured' ? list : [...list].sort((a, b) => (sort === 'low' ? a.usd - b.usd : b.usd - a.usd));
+  const kinds = ITEM_TYPES.filter(([k]) => items.some((i) => i.type === k));
+  const sections = kinds
+    .filter(([k]) => kind === 'all' || kind === k)
+    .map(([k, label]) => [k, label, sorted(items.filter((i) => i.type === k))]);
+
+  const action = (item) => {
+    if (inGame) return <span className="item-tag">In the game&apos;s wardrobe</span>;
+    if (item.owned) return <span className="pill pill-solid">Owned</span>;
+    if (!item.available) return <span className="pill">Coming soon</span>;
+    if (!steam) {
+      return (
+        <a className="btn btn-ghost btn-sm" href="/api/steam/login">
+          Sign in to buy
+        </a>
+      );
+    }
+    return (
+      <button
+        className="btn btn-primary btn-sm"
+        disabled={!open || confirmation.state?.phase === 'confirming'}
+        onClick={() => setSelected(item)}
+      >
+        Buy
+      </button>
+    );
+  };
 
   return (
     <div className="container page">
-      <div className="page-head">
+      <div className="page-head shop-head">
         <div>
           <p className="eyebrow">Shop</p>
           <h1>Cosmetics</h1>
           <p className="muted">
-            Priced in dollars, paid in {TOKEN_TICKER}, delivered straight to your Steam account.
+            Hats, outfits, titles, emotes and auras for every Indie Creations game. Priced in dollars, paid in{' '}
+            {TOKEN_TICKER}. Cosmetics are for looking good, never for winning.
           </p>
         </div>
-
-        {data &&
-          (steam ? (
-            <div className="steam-chip">
-              {steam.avatar && <img src={steam.avatar} alt="" width={32} height={32} />}
-              <div>
-                <strong>{steam.name || 'Steam account'}</strong>
-                <span className="muted small">{steam.steamId}</span>
-              </div>
-              <button className="btn btn-ghost btn-sm" onClick={signOut}>
-                Sign out
-              </button>
-            </div>
-          ) : (
-            <a className="btn btn-primary" href="/api/steam/login">
-              Sign in through Steam
-            </a>
-          ))}
       </div>
+
+      <RevenueShareBand />
 
       {steamFailed && (
         <div className="banner banner-error">
@@ -356,12 +456,6 @@ export default function Shop() {
       )}
 
       <PurchaseBanner state={confirmation.state} onDismiss={confirmation.clear} />
-
-      {data && !open && games.length > 0 && (
-        <div className="banner">
-          <p>{data.status.reason} You can browse, and buying opens soon.</p>
-        </div>
-      )}
 
       {allGames.length > 1 && (
         <div className="shop-tabs" role="tablist">
@@ -379,7 +473,7 @@ export default function Shop() {
         </div>
       )}
 
-      {data && games.length === 0 && (
+      {data && allGames.length === 0 && (
         <div className="card shop-empty">
           <Mark size={44} />
           <h3>The first drops are on the way</h3>
@@ -390,104 +484,112 @@ export default function Shop() {
         </div>
       )}
 
-      {games.map(([game, items]) => (
-        <section key={game} className="shop-game">
-          <div className="shop-game-head">
-            <h2>{game}</h2>
-            <div className="shop-game-tools">
-              <div className="shop-sort" role="group" aria-label="Sort items">
-                <span className="muted small">Sort</span>
-                {SORTS.map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={sort === key}
-                    className={`shop-sort-btn ${sort === key ? 'shop-sort-btn-on' : ''}`}
-                    onClick={() => setSort(key)}
-                  >
-                    {label}
+      {current && (
+        <section className="shop-game">
+          <div className="shop-game-bar">
+            <div>
+              <h2>{current}</h2>
+              <p className="muted small">
+                {items.length} cosmetics
+                {inGame ? ' · bought in the game with your wallet' : ' · delivered to your Steam account'}
+                {gameInfo && (
+                  <>
+                    {' · '}
+                    <Link href={`/games/${gameInfo.slug}`}>About the game</Link>
+                  </>
+                )}
+              </p>
+              {gameInfo?.play && <PlayerCount slug={gameInfo.slug} counts={counts} />}
+            </div>
+            {inGame ? (
+              <a className="btn btn-primary" href={gameInfo.play}>
+                Play and shop in the game
+              </a>
+            ) : (
+              data &&
+              (steam ? (
+                <div className="steam-chip">
+                  {steam.avatar && <img src={steam.avatar} alt="" width={32} height={32} />}
+                  <div>
+                    <strong>{steam.name || 'Steam account'}</strong>
+                    <span className="muted small">{steam.steamId}</span>
+                  </div>
+                  <button className="btn btn-ghost btn-sm" onClick={signOut}>
+                    Sign out
                   </button>
+                </div>
+              ) : (
+                <a className="btn btn-primary" href="/api/steam/login">
+                  Sign in through Steam
+                </a>
+              ))
+            )}
+          </div>
+
+          {!inGame && data && !open && (
+            <div className="banner">
+              <p>{data.status.reason} You can browse, and buying opens soon.</p>
+            </div>
+          )}
+
+          <div className="shop-filters">
+            <div className="shop-chips" role="group" aria-label="Show">
+              {[['all', 'All'], ...kinds].map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={kind === k}
+                  className={`shop-sort-btn ${kind === k ? 'shop-sort-btn-on' : ''}`}
+                  onClick={() => setKind(k)}
+                >
+                  {label}
+                  <span className="shop-chip-n">{k === 'all' ? items.length : items.filter((i) => i.type === k).length}</span>
+                </button>
+              ))}
+            </div>
+            <label className="shop-sort-select">
+              <span className="muted small">Sort</span>
+              <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                {SORTS.map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {sections.map(([k, label, list]) => (
+            <div className="shop-section" key={k}>
+              {kind === 'all' && <h3 className="shop-section-head">{label}</h3>}
+              <div className="item-grid">
+                {list.map((item) => (
+                  <article key={item.id} className="item">
+                    <ItemArt item={item} />
+                    <div className="item-body">
+                      <h3>{item.name.replace(/^(Title|Emote|Aura):\s*/i, '')}</h3>
+                      {item.description && <p className="muted small item-desc">{item.description}</p>}
+                      <div className="item-foot">
+                        <div className="item-price">
+                          <strong>{usd(item.usd)}</strong>
+                          {item.tokens && (
+                            <span className="muted small">
+                              ≈ {item.tokens.toLocaleString('en-US')} {TOKEN_TICKER}
+                            </span>
+                          )}
+                        </div>
+                        {action(item)}
+                      </div>
+                    </div>
+                  </article>
                 ))}
               </div>
-              {gameByName(game) && (
-                <Link href={`/games/${gameByName(game).slug}`} className="muted small">
-                  About the game
-                </Link>
-              )}
             </div>
-          </div>
-          <div className="item-grid">
-            {sorted(items).map((item) => (
-              <article key={item.id} className="item">
-                <ItemArt item={item} />
-                <div className="item-body">
-                  <h3>{item.name}</h3>
-                  {item.description && <p className="muted small">{item.description}</p>}
-                  <div className="item-price">
-                    <strong>{usd(item.usd)}</strong>
-                    {item.tokens && (
-                      <span className="muted small">
-                        ≈ {item.tokens.toLocaleString('en-US')} {TOKEN_TICKER}
-                      </span>
-                    )}
-                  </div>
-
-                  {gameByName(item.game)?.shop === 'in-game' && gameByName(item.game)?.play ? (
-                    <a className="btn btn-primary btn-sm" href={gameByName(item.game).play}>
-                      Buy in the game
-                    </a>
-                  ) : item.owned ? (
-                    <span className="pill pill-solid">Owned</span>
-                  ) : !item.available ? (
-                    <span className="pill">Coming soon</span>
-                  ) : !steam ? (
-                    <a className="btn btn-ghost btn-sm" href="/api/steam/login">
-                      Sign in to buy
-                    </a>
-                  ) : (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      disabled={!open || confirmation.state?.phase === 'confirming'}
-                      onClick={() => setSelected(item)}
-                    >
-                      Buy
-                    </button>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
+          ))}
         </section>
-      ))}
+      )}
 
-      <section className="shop-how">
-        <p className="eyebrow">How it works</p>
-        <div className="grid-3 shop-steps">
-          <div className="card">
-            <span className="card-index">01</span>
-            <h3>Sign in through Steam</h3>
-            <p className="muted">
-              You log in on Steam's own site. We only learn which Steam account is yours, never your password.
-            </p>
-          </div>
-          <div className="card">
-            <span className="card-index">02</span>
-            <h3>Pay in {TOKEN_TICKER}</h3>
-            <p className="muted">
-              Items have a dollar price. At checkout it is converted at the live {TOKEN_TICKER} price and held for ten
-              minutes.
-            </p>
-          </div>
-          <div className="card">
-            <span className="card-index">03</span>
-            <h3>Wear it in game</h3>
-            <p className="muted">
-              Once the payment confirms, the cosmetic is tied to your Steam account and shows up the next time you
-              launch the game.
-            </p>
-          </div>
-        </div>
-      </section>
+      <HowItWorks inGame={inGame} gameInfo={gameInfo} />
 
       {selected && steam && (
         <Checkout

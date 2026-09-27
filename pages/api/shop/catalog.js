@@ -1,4 +1,4 @@
-import { CATALOG } from '../../../lib/catalog';
+import { CATALOG, typeOf } from '../../../lib/catalog';
 import { getTokenPriceUsd } from '../../../lib/price';
 import { shopStatus, tokensForUsd, listOwned } from '../../../lib/shop';
 import { STEAM_COOKIE, readSteamToken } from '../../../lib/session';
@@ -31,6 +31,7 @@ export default async function handler(req, res) {
     items: CATALOG.map((item) => ({
       id: item.id,
       game: item.game,
+      type: typeOf(item),
       name: item.name,
       description: item.description || '',
       usd: item.usd,
