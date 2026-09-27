@@ -8,9 +8,9 @@ Indie Creations is a small, independent development initiative focused on buildi
 The goal is simple:
 Create fun, evolving games while documenting the journey from idea → playable → polished.
 
-🪙 $creations
+🪙 $CREATIONS
 
-Indie Creations is a tokenized indie game studio. $creations is a fixed-supply ERC-20 (1,000,000,000 supply) live on Robinhood Chain (chain ID 4663), launched through PONS Launchpad.
+Indie Creations is a tokenized indie game studio. $CREATIONS is a fixed-supply ERC-20 (1,000,000,000 supply) live on Robinhood Chain (chain ID 4663), launched through PONS Launchpad.
 
 Holders get:
 - Access to the playtest area
@@ -28,7 +28,7 @@ X: https://x.com/IndieCreations_
 
 The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
 
-- `NEXT_PUBLIC_TOKEN_ADDRESS` (optional) — overrides the $creations CA, which is already the default in `lib/config.js`.
+- `NEXT_PUBLIC_TOKEN_ADDRESS` (optional) — overrides the $CREATIONS CA, which is already the default in `lib/config.js`.
 - `NEXT_PUBLIC_MIN_TOKENS` — tokens required to unlock playtests (default 5,000,000).
 - `SESSION_SECRET` — long random string, required in production.
 - `RPC_URL` (optional) — private RPC for balance checks.
@@ -40,11 +40,11 @@ How the gate works: the holder connects a wallet and signs a free message, the s
 
 🛍️ Cosmetics shop (`/shop`)
 
-Every Indie Creations game sells its cosmetics here. Items are priced in USD, paid in $creations, and tied to the buyer's Steam account.
+Every Indie Creations game sells its cosmetics here. Items are priced in USD, paid in $CREATIONS, and tied to the buyer's Steam account.
 
 1. The buyer signs in through Steam (Steam's own OpenID login; the site only ever learns the SteamID).
-2. At checkout the USD price is converted at the live $creations price (DexScreener and GeckoTerminal must agree within 15%, otherwise checkout pauses) and held for 10 minutes.
-3. The buyer sends that exact amount of $creations from their wallet to `SHOP_TREASURY_ADDRESS`.
+2. At checkout the USD price is converted at the live $CREATIONS price (DexScreener and GeckoTerminal must agree within 15%, otherwise checkout pauses) and held for 10 minutes.
+3. The buyer sends that exact amount of $CREATIONS from their wallet to `SHOP_TREASURY_ADDRESS`.
 4. The server finds the transfer on Robinhood Chain and only then records the cosmetic against the SteamID. The payment must come from the quoted wallet, go to the treasury, match the amount to the wei (each order's amount ends in a few random wei), and be newer than the order. One transaction can settle one order, ever.
 
 Payments go to the treasury wallet `0x901fC42f24adc138F73BaC931557Ab17AfCA7093` (the default in `lib/shop.js`; `SHOP_TREASURY_ADDRESS` overrides it). Checkout needs `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` and the tables from `supabase/shop.sql`; without them the shop is browse-only in production. Set `SITE_URL` in production so the Steam sign-in always returns to the real domain.
@@ -58,12 +58,12 @@ returns `{ payload: "c1|<steamid>|<unix expiry>|<game>|<item-id,item-id,...>", s
 
 💸 Holder revenue share and the economy numbers (`/rewards`)
 
-25% of revenue from every Indie Creations game goes back to $creations holders, paid from the treasury wallet `0x901fC42f24adc138F73BaC931557Ab17AfCA7093`, fully automatically. Holders never stake, lock or deposit anything. The site also shows, live, total revenue from all games and total $creations burned (home page and `/rewards`).
+25% of revenue from every Indie Creations game goes back to $CREATIONS holders, paid from the treasury wallet `0x901fC42f24adc138F73BaC931557Ab17AfCA7093`, fully automatically. Holders never stake, lock or deposit anything. The site also shows, live, total revenue from all games and total $CREATIONS burned (home page and `/rewards`).
 
 How it runs: a Vercel Cron job (`vercel.json`, daily) calls `/api/cron/revshare`, which
 
-1. copies every new $creations transfer from Robinhood Chain into Supabase (`token_transfers`); burns and balances are read from that copy;
-2. once a month has closed, adds up its revenue: paid `/shop` orders plus $creations sent to each game's on-chain revenue contracts (`GAME_CONTRACTS` in `lib/revshare.js`);
+1. copies every new $CREATIONS transfer from Robinhood Chain into Supabase (`token_transfers`); burns and balances are read from that copy;
+2. once a month has closed, adds up its revenue: paid `/shop` orders plus $CREATIONS sent to each game's on-chain revenue contracts (`GAME_CONTRACTS` in `lib/revshare.js`);
 3. if the revenue since the last payout is under the minimum (`NEXT_PUBLIC_REVSHARE_MIN_USD`, default $100), saves the month as carried: nothing is paid and its revenue rolls into the next month;
 4. otherwise takes 25% of it as the pool and splits it by what each wallet held at 4 random moments in the month's last 14 days. The moments come from the hash of the first block mined after the month ends, so nobody, the studio included, can know them in advance, and anyone can recompute them from the payout's `seed`;
 5. stores every wallet's claim and publishes the new running totals on the RevenueShare contract from the publisher wallet. The contract pulls the pool from the treasury in the same transaction.
@@ -78,9 +78,9 @@ One-time setup:
 
 1. Run `supabase/revshare.sql` in the Supabase SQL editor (after `supabase/shop.sql`).
 2. Create a fresh wallet to be the publisher. It only needs a little ETH for gas. Keep its private key for step 5.
-3. Deploy `contracts/RevenueShare.sol` on Robinhood Chain (Remix works: compile with 0.8.20+, deploy with the $creations CA, the treasury address and the publisher wallet's address).
-4. From the treasury wallet, `approve` the contract on the $creations token. The allowance is the most the automation can ever pay out, so a few months' worth, topped up now and then, is safer than unlimited.
-5. In Vercel, set: `NEXT_PUBLIC_REVSHARE_ADDRESS` (the contract), `REVSHARE_PUBLISHER_KEY` (the publisher's private key; server-only, never `NEXT_PUBLIC_`), `REVSHARE_START_MONTH` (the first month that pays, `YYYY-MM`), `REVSHARE_FROM_BLOCK` (the block $creations was deployed in), `CRON_SECRET` (a long random string), and optionally `NEXT_PUBLIC_REVSHARE_MIN_USD`. `RPC_URL` should point at a private RPC.
+3. Deploy `contracts/RevenueShare.sol` on Robinhood Chain (Remix works: compile with 0.8.20+, deploy with the $CREATIONS CA, the treasury address and the publisher wallet's address).
+4. From the treasury wallet, `approve` the contract on the $CREATIONS token. The allowance is the most the automation can ever pay out, so a few months' worth, topped up now and then, is safer than unlimited.
+5. In Vercel, set: `NEXT_PUBLIC_REVSHARE_ADDRESS` (the contract), `REVSHARE_PUBLISHER_KEY` (the publisher's private key; server-only, never `NEXT_PUBLIC_`), `REVSHARE_START_MONTH` (the first month that pays, `YYYY-MM`), `REVSHARE_FROM_BLOCK` (the block $CREATIONS was deployed in), `CRON_SECRET` (a long random string), and optionally `NEXT_PUBLIC_REVSHARE_MIN_USD`. `RPC_URL` should point at a private RPC.
 6. The first run copies the whole transfer history, which can take several runs. To speed it up, call the job by hand: `curl -H "Authorization: Bearer $CRON_SECRET" https://www.indiecreations.fun/api/cron/revshare` until `caughtUp` is true. Add `?dry=1` to see the next month's split without saving or publishing it.
 
 When a game starts selling or burning on mainnet inside the game itself (Agentacus at launch), add its contracts to `GAME_CONTRACTS` in `lib/revshare.js`: `revenue` for contracts that receive its sales, `burners` for contracts whose burns count as its burns. Burns by anyone else still count in the total, shown as "Other burns".

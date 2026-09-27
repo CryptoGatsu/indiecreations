@@ -2,7 +2,7 @@ import { indexTransfers } from '../../../lib/chainIndex';
 import { settle, treasuryReadiness } from '../../../lib/revshareJob';
 import { persistent } from '../../../lib/revshareStore';
 
-// The holder revenue share's daily job (vercel.json schedules it): copy new $creations transfers from the chain, then
+// The holder revenue share's daily job (vercel.json schedules it): copy new $CREATIONS transfers from the chain, then
 // close and publish the next finished month if there is one. Safe to run any number of times.
 //
 // Vercel Cron calls it with `Authorization: Bearer <CRON_SECRET>`. The same header works by hand, e.g. to catch the
