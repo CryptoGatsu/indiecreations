@@ -350,6 +350,22 @@ function Orders({ s }) {
   );
 }
 
+function Players({ s }) {
+  const rows = Object.entries(s.players || {});
+  return (
+    <section className="card admin-card admin-wide">
+      <h2>Players</h2>
+      <p className="muted small">Browsers with a game loaded and in front. At most 3 per internet connection count, so nobody can pad the numbers.</p>
+      <div className="admin-table">
+        <div className="admin-tr admin-tr-4 admin-th"><span>Game</span><span>Playing now</span><span>Last 24 hours</span><span>Last 30 days</span></div>
+        {rows.map(([slug, c]) => (
+          <div className="admin-tr admin-tr-4" key={slug}><span>{slug}</span><span>{c.now}</span><span>{c.day}</span><span>{c.month}</span></div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Downloads({ s }) {
   if (!s.downloads) return null;
   const { build, stats, recent } = s.downloads;
@@ -424,6 +440,7 @@ export default function Admin() {
             <Treasury s={status} refresh={load} />
             <Job s={status} refresh={load} />
             <Publisher s={status} refresh={load} />
+            <Players s={status} />
             <Months s={status} />
             <Orders s={status} />
             <Downloads s={status} />

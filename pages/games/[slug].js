@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { GAMES, findGame } from '../../lib/games';
 import { TOKEN_TICKER } from '../../lib/config';
+import PlayerCount, { usePlayerCounts } from '../../components/PlayerCount';
 
 export async function getStaticPaths() {
   return { paths: GAMES.map((g) => ({ params: { slug: g.slug } })), fallback: false };
@@ -12,6 +13,7 @@ export async function getStaticProps({ params }) {
 }
 
 export default function GamePage({ game }) {
+  const counts = usePlayerCounts();
   const shopHref = `/shop?game=${game.slug}`;
   return (
     <>
@@ -66,6 +68,7 @@ export default function GamePage({ game }) {
               <span className="card-index">Play</span>
               <h3>{game.playCard?.title || 'Runs in your browser'}</h3>
               <p className="muted">{game.playCard?.text}</p>
+              <PlayerCount slug={game.slug} counts={counts} detailed />
               <a href={game.play} className="btn btn-primary">
                 {game.playCard?.cta || 'Play'}
               </a>

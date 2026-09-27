@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import PlayerCount, { usePlayerCounts } from './PlayerCount';
 
 // One game, as shown on the home page and the games list: art, status, tagline, and the two places to go next.
 export default function GameCard({ game }) {
+  const counts = usePlayerCounts();
   return (
     <article className="game-card">
       <Link href={`/games/${game.slug}`} className="game-card-art" aria-label={game.name}>
@@ -14,6 +16,7 @@ export default function GameCard({ game }) {
         </span>
         <h3>{game.name}</h3>
         <p className="muted">{game.tagline}</p>
+        {game.play && <PlayerCount slug={game.slug} counts={counts} />}
         <div className="actions">
           <Link href={`/games/${game.slug}`} className="btn btn-primary btn-sm">
             About the game

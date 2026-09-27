@@ -34,6 +34,7 @@ export default function Layout({ children }) {
             <Link href="/token">Token</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/shop">Shop</Link>
+            <Link href="/rewards">Rewards</Link>
             <Link href="/reviews">Reviews</Link>
           </nav>
 
@@ -61,6 +62,7 @@ export default function Layout({ children }) {
             <Link href="/games">Games</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/shop">Shop</Link>
+            <Link href="/rewards">Rewards</Link>
             <Link href="/reviews">Reviews</Link>
             <a href={LINKS.x} target="_blank" rel="noreferrer">
               X (Twitter)

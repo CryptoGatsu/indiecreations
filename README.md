@@ -87,6 +87,12 @@ One-time setup:
 
 New games join automatically: any sale through the site's checkout counts, whichever game it is for. A game that also sells or burns in its own contracts on mainnet (Agentacus at launch) lists them in its entry in `lib/games.js`: `chain: { revenue: [...], burners: [...] }` (`revenue` for contracts that receive its sales, `burners` for contracts whose burns count as its burns); they count from then on. Burns by anyone else still count in the total, shown as "Other burns".
 
+👥 Players per game
+
+Each browser game page includes `<script src="/presence.js" data-game="<slug>" defer></script>`. Once the game has loaded and while its tab is in front, it pings `/api/presence` once a minute with an anonymous id kept in the browser (no wallet; the IP is stored only as a salted hash, and at most 3 ids per IP count). The game cards, each game's page and `/admin` show players right now (last 2 minutes), in the last 24 hours and in the last 30 days. Table and counting function: `supabase/presence.sql`.
+
+**When republishing a Unity build, keep that script line in its `index.html`** (it sits just before `</body>`), or put it in the game repo's WebGL template so it is always there. A new browser game only needs the same line with its own slug.
+
 🔑 Studio admin (`/admin`)
 
 A private page for the studio (not linked from the site, and hidden from search engines). Sign in with the treasury wallet, the dev wallet, or any wallet listed in `ADMIN_WALLETS`, by signing a free message; the admin session lasts 2 hours. It shows anything that would stop the next payout, and lets you:

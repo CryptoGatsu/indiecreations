@@ -662,7 +662,8 @@ textarea:focus {
   .nav {
     order: 3;
     width: 100%;
-    gap: 22px;
+    flex-wrap: wrap;
+    gap: 8px 20px;
     font-size: 14px;
   }
 
@@ -1400,4 +1401,41 @@ main > .section:first-child {
   .admin-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Players: "12 playing now" on game cards and pages */
+.player-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.player-count .muted {
+  font-weight: 400;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #16a34a 25%, transparent);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, #16a34a 5%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}
+
+.admin-tr-4 {
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  min-width: 0;
 }
