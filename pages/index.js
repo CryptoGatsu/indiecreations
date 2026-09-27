@@ -3,6 +3,7 @@ import TokenSection from '../components/TokenSection';
 import { TOKEN_TICKER, MIN_TOKENS } from '../lib/config';
 import { GAMES } from '../lib/games';
 import GameCard from '../components/GameCard';
+import EconomyStats, { useEconomyStats } from '../components/EconomyStats';
 
 const PERKS = [
   {
@@ -35,6 +36,8 @@ const PERKS = [
 const BOARD = [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0];
 
 export default function Home() {
+  const economy = useEconomyStats();
+
   return (
     <>
       {/* HERO */}
@@ -123,6 +126,26 @@ export default function Home() {
           </dl>
         </div>
       </section>
+
+      {/* ECONOMY: live totals, shown once there is data */}
+      {economy && (
+        <section className="section">
+          <div className="container">
+            <p className="eyebrow">The economy so far</p>
+            <h2>Every game, one set of books.</h2>
+            <p className="lead">
+              Revenue from every Indie Creations game and every {TOKEN_TICKER} burned, counted live from the shop and
+              the chain. A share of that revenue goes back to holders.
+            </p>
+            <EconomyStats stats={economy} />
+            <div className="actions">
+              <Link href="/rewards" className="btn btn-ghost">
+                See holder rewards
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <TokenSection />
     </>

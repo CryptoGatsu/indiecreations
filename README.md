@@ -56,29 +56,34 @@ How a game reads what a player owns:
 `GET /api/game/cosmetics?game=<game name>&steamid=<SteamID64>`
 returns `{ payload: "c1|<steamid>|<unix expiry>|<game>|<item-id,item-id,...>", sig }`, where `sig` is a base64 RSA-SHA256 signature made with `GAME_TICKET_KEY`, the same key pair as the holder ticket, so the game verifies it with the public key it already ships with. The game must check the signature, that `<steamid>` is the account it is running under (`SteamUser.GetSteamID()`), and that the expiry has not passed, then unlock the listed item ids. Once the game has a Steam app, set `STEAM_APP_ID` + `STEAM_PUBLISHER_KEY`: the endpoint then requires `&ticket=<hex>` from `ISteamUser::GetAuthTicketForWebApi("indiecreations")` instead of a bare `steamid`, so only the real account holder can ask.
 
-💸 Holder revenue share (`/rewards`)
+💸 Holder revenue share and the economy numbers (`/rewards`)
 
-25% of cosmetic shop sales goes back to $creations holders every month, paid from the treasury wallet `0x901fC42f24adc138F73BaC931557Ab17AfCA7093`. Holders never stake, lock or deposit anything: tokens stay in their wallet and can be moved at any time.
+25% of revenue from every Indie Creations game goes back to $creations holders, paid from the treasury wallet `0x901fC42f24adc138F73BaC931557Ab17AfCA7093`, fully automatically. Holders never stake, lock or deposit anything. The site also shows, live, total revenue from all games and total $creations burned (home page and `/rewards`).
 
-How the pool is split: 4 snapshots of every balance are taken at random moments in the last 14 days of the month, and each wallet earns pool x (its balances added up over the snapshots) / (the same for every counted wallet). The moments are worked out from the hash of the first block mined after the month ends, so nobody, the studio included, can know them in advance, and anyone can recompute them from the `seed` saved in `epochs.json`. `REVSHARE_SNAPSHOTS` changes the count.
+How it runs: a Vercel Cron job (`vercel.json`, daily) calls `/api/cron/revshare`, which
 
-The treasury, the RevenueShare contract, the zero/dead addresses and every address with contract code (the trading pool, the Hoodlock lockers, the launchpad) are not counted, so a lock contract never earns on the tokens it holds. `REVSHARE_EXCLUDE` / `REVSHARE_INCLUDE` adjust that list.
+1. copies every new $creations transfer from Robinhood Chain into Supabase (`token_transfers`); burns and balances are read from that copy;
+2. once a month has closed, adds up its revenue: paid `/shop` orders plus $creations sent to each game's on-chain revenue contracts (`GAME_CONTRACTS` in `lib/revshare.js`);
+3. if the revenue since the last payout is under the minimum (`NEXT_PUBLIC_REVSHARE_MIN_USD`, default $100), saves the month as carried: nothing is paid and its revenue rolls into the next month;
+4. otherwise takes 25% of it as the pool and splits it by what each wallet held at 4 random moments in the month's last 14 days. The moments come from the hash of the first block mined after the month ends, so nobody, the studio included, can know them in advance, and anyone can recompute them from the payout's `seed`;
+5. stores every wallet's claim and publishes the new running totals on the RevenueShare contract from the publisher wallet. The contract pulls the pool from the treasury in the same transaction.
+
+Holders claim on `/rewards` whenever they like; unclaimed payouts add up and never expire. The full list of what each wallet is owed is public at `/api/rewards/tree?month=YYYY-MM`. Each run does at most one month and every step is safe to repeat, so a failed or missed run just catches up the next day (e.g. if the treasury is short, the payout waits and is retried daily).
+
+Not counted as holders: the treasury, the payout contract, burn addresses, `REVSHARE_EXCLUDE`, and every address with contract code (the trading pool, the Hoodlock lockers, the launchpad) unless listed in `REVSHARE_INCLUDE`.
+
+Guard rails on the contract, because the publisher key lives on a server: at most one payout every 20 days, never more than the treasury has approved, totals can only go up, no withdraw function, and the treasury can replace the publisher at any time (`transferOwnership` from the treasury wallet).
 
 One-time setup:
 
-1. Deploy `contracts/RevenueShare.sol` on Robinhood Chain (Remix works: compile with 0.8.20+, deploy with the $creations CA, the treasury `0x901fC42f24adc138F73BaC931557Ab17AfCA7093` and the owner wallet, which can be the treasury itself).
-2. From the treasury wallet, `approve` the contract on the $creations token for the amount you are willing to pay out (a large allowance saves doing it monthly).
-3. Set `NEXT_PUBLIC_REVSHARE_ADDRESS` in Vercel to the deployed address. Until it is set, `/rewards` explains the programme but shows nothing to claim.
+1. Run `supabase/revshare.sql` in the Supabase SQL editor (after `supabase/shop.sql`).
+2. Create a fresh wallet to be the publisher. It only needs a little ETH for gas. Keep its private key for step 5.
+3. Deploy `contracts/RevenueShare.sol` on Robinhood Chain (Remix works: compile with 0.8.20+, deploy with the $creations CA, the treasury address and the publisher wallet's address).
+4. From the treasury wallet, `approve` the contract on the $creations token. The allowance is the most the automation can ever pay out, so a few months' worth, topped up now and then, is safer than unlimited.
+5. In Vercel, set: `NEXT_PUBLIC_REVSHARE_ADDRESS` (the contract), `REVSHARE_PUBLISHER_KEY` (the publisher's private key; server-only, never `NEXT_PUBLIC_`), `REVSHARE_START_MONTH` (the first month that pays, `YYYY-MM`), `REVSHARE_FROM_BLOCK` (the block $creations was deployed in), `CRON_SECRET` (a long random string), and optionally `NEXT_PUBLIC_REVSHARE_MIN_USD`. `RPC_URL` should point at a private RPC.
+6. The first run copies the whole transfer history, which can take several runs. To speed it up, call the job by hand: `curl -H "Authorization: Bearer $CRON_SECRET" https://www.indiecreations.fun/api/cron/revshare` until `caughtUp` is true. Add `?dry=1` to see the next month's split without saving or publishing it.
 
-Every month, after it closes (dates are UTC):
-
-1. `node scripts/revshare-epoch.mjs --month 2026-10` (needs `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` and `NEXT_PUBLIC_REVSHARE_ADDRESS`; set `RPC_URL` to a private RPC for speed and `REVSHARE_FROM_BLOCK` to the token's deploy block). It is a dry run: check the revenue, the snapshot times, the excluded contracts and the top earners. It warns if the treasury's balance or allowance cannot cover the month.
-2. Run it again with `--write`. It updates `public/revshare/tree.json` (every wallet's running total and the Merkle tree) and appends the month to `public/revshare/epochs.json`. Commit and push both: they are the public record anyone can check the payout against.
-3. From the owner wallet, call `publish(root, totalAllocated)` with the printed values. It pulls the month's pool from the treasury in the same transaction, and reverts if the treasury cannot cover it.
-
-Holders then claim on `/rewards` whenever they like. Totals are cumulative, so unclaimed months add up and nothing expires. The contract has no withdraw function: tokens only ever leave it through claims.
-
-Revenue counted today is paid `/shop` orders. Agentacus sells its cosmetics in-game on-chain, so its sales are not included yet.
+When a game starts selling or burning on mainnet inside the game itself (Agentacus at launch), add its contracts to `GAME_CONTRACTS` in `lib/revshare.js`: `revenue` for contracts that receive its sales, `burners` for contracts whose burns count as its burns. Burns by anyone else still count in the total, shown as "Other burns".
 
 ⚔️ Agentacus (`/games/agentacus`, game at `/agentacus`)
 

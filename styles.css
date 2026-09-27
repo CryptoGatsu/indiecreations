@@ -1215,3 +1215,57 @@ main > .section:first-child {
     gap: 4px;
   }
 }
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+
+.economy-facts {
+  margin-top: 40px;
+}
+
+.economy-facts > div > span {
+  display: block;
+  margin-top: 2px;
+}
+
+.next-payout {
+  margin-top: 32px;
+}
+
+.next-payout-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.next-payout-head h3 {
+  margin: 0;
+}
+
+.meter {
+  height: 10px;
+  margin: 16px 0 12px;
+  border-radius: 999px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.meter > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  border-radius: 999px;
+}
+
+@media (max-width: 720px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

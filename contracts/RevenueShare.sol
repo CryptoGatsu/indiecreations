@@ -3,10 +3,11 @@ pragma solidity ^0.8.20;
 
 // Holder revenue share for $creations: a cumulative Merkle distributor.
 //
-// Each month the studio works out, off-chain, what every holder has earned in total since the start (see
-// scripts/revshare-epoch.mjs) and publishes the Merkle root of the new running totals. Publishing pulls that month's
-// pool straight from the $creations treasury wallet, which approves this contract once. A holder claims whenever they like: the contract pays the difference between their
-// running total and what they have already claimed, so nothing expires and missed months simply add up.
+// After each month the site's automatic job (/api/cron/revshare) works out what every holder has earned in total
+// since the start and publishes the Merkle root of the new running totals from a dedicated publisher wallet (the
+// owner). Publishing pulls the month's pool straight from the $creations treasury wallet, which approves this contract
+// for as much as it is willing to pay out. A holder claims whenever they like: the contract pays the difference
+// between their running total and what they have already claimed, so nothing expires and missed months add up.
 //
 // Holders never lock or deposit anything. Their tokens stay in their own wallet the whole time.
 //
@@ -15,8 +16,10 @@ pragma solidity ^0.8.20;
 //     published: the shortfall is pulled from the treasury in the same transaction, or the publish reverts;
 //   - funds only ever come from the treasury, and only as much as the new root allocates;
 //   - there is no withdraw: tokens sent here can only ever leave through claims;
+//   - the owner's key lives on a server, so its power is fenced in: at most one publish every MIN_INTERVAL, never
+//     more than the treasury's allowance, and the treasury can replace the owner at any time;
 //   - the owner decides who is owed what. That is checked in public instead: the full list of running totals is
-//     published next to the root (public/revshare/tree.json), so anyone can rebuild the root and compare.
+//     published with every root (/api/rewards/tree), so anyone can rebuild the root and compare.
 //
 // Leaves use the same encoding as OpenZeppelin's StandardMerkleTree with types ['address', 'uint256']:
 //   leaf = keccak256(bytes.concat(keccak256(abi.encode(account, cumulativeAmount))))
@@ -33,7 +36,10 @@ contract RevenueShare {
     address public immutable treasury; // where every payout comes from
     address public owner;
 
+    uint256 public constant MIN_INTERVAL = 20 days; // payouts are monthly; this caps the damage of a leaked key
+
     bytes32 public merkleRoot;
+    uint256 public lastPublishedAt;
     uint256 public epoch;            // how many roots have been published
     uint256 public totalAllocated;   // sum of every holder's running total in the current root
     uint256 public totalClaimed;     // sum of everything paid out so far
@@ -46,6 +52,7 @@ contract RevenueShare {
     error NotOwner();
     error ZeroAddress();
     error TotalWentDown();
+    error TooSoon(uint256 nextAllowedAt);
     error NotFunded(uint256 needed, uint256 available);
     error InvalidProof();
     error NothingToClaim();
@@ -64,10 +71,18 @@ contract RevenueShare {
         _;
     }
 
+    modifier onlyOwnerOrTreasury() {
+        if (msg.sender != owner && msg.sender != treasury) revert NotOwner();
+        _;
+    }
+
     // Publish the running totals after a month closes. Whatever the contract is short of paying everything owed and
     // not yet claimed is pulled from the treasury here, so the treasury must have approved at least that much.
     function publish(bytes32 root, uint256 newTotalAllocated) external onlyOwner {
         if (newTotalAllocated < totalAllocated) revert TotalWentDown();
+        if (lastPublishedAt != 0 && block.timestamp < lastPublishedAt + MIN_INTERVAL) {
+            revert TooSoon(lastPublishedAt + MIN_INTERVAL);
+        }
 
         uint256 held = token.balanceOf(address(this)) + totalClaimed;
         uint256 pulled = 0;
@@ -80,6 +95,7 @@ contract RevenueShare {
 
         merkleRoot = root;
         totalAllocated = newTotalAllocated;
+        lastPublishedAt = block.timestamp;
         epoch += 1;
         emit Published(epoch, root, newTotalAllocated, pulled);
     }
@@ -100,7 +116,8 @@ contract RevenueShare {
         emit Claimed(account, amount, cumulativeAmount);
     }
 
-    function transferOwnership(address newOwner) external onlyOwner {
+    // The treasury can always take the publisher role back, e.g. if the server's key is ever exposed.
+    function transferOwnership(address newOwner) external onlyOwnerOrTreasury {
         if (newOwner == address(0)) revert ZeroAddress();
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
