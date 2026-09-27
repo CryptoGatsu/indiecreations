@@ -1,7 +1,7 @@
 import { createQuote, ShopError } from '../../../lib/shop';
 import { STEAM_COOKIE, readSteamToken } from '../../../lib/session';
 
-// POST { itemId, wallet } -> a 10 minute quote: exactly how much $creations to send, from which wallet, to where.
+// POST { itemId, wallet } -> a 10 minute quote: exactly how much $CREATIONS to send, from which wallet, to where.
 // The cosmetic goes to the Steam account signed in on this browser.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();

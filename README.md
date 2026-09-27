@@ -8,9 +8,9 @@ Indie Creations is a small, independent development initiative focused on buildi
 The goal is simple:
 Create fun, evolving games while documenting the journey from idea → playable → polished.
 
-🪙 $creations
+🪙 $CREATIONS
 
-Indie Creations is a tokenized indie game studio. $creations is a fixed-supply ERC-20 (1,000,000,000 supply) live on Robinhood Chain (chain ID 4663), launched through PONS Launchpad.
+Indie Creations is a tokenized indie game studio. $CREATIONS is a fixed-supply ERC-20 (1,000,000,000 supply) live on Robinhood Chain (chain ID 4663), launched through PONS Launchpad.
 
 Holders get:
 - Access to the playtest area
@@ -28,7 +28,7 @@ X: https://x.com/IndieCreations_
 
 The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
 
-- `NEXT_PUBLIC_TOKEN_ADDRESS` (optional) — overrides the $creations CA, which is already the default in `lib/config.js`.
+- `NEXT_PUBLIC_TOKEN_ADDRESS` (optional) — overrides the $CREATIONS CA, which is already the default in `lib/config.js`.
 - `NEXT_PUBLIC_MIN_TOKENS` — tokens required to unlock playtests (default 5,000,000).
 - `SESSION_SECRET` — long random string, required in production.
 - `RPC_URL` (optional) — private RPC for balance checks.
@@ -40,11 +40,11 @@ How the gate works: the holder connects a wallet and signs a free message, the s
 
 🛍️ Cosmetics shop (`/shop`)
 
-Every Indie Creations game sells its cosmetics here. Items are priced in USD, paid in $creations, and tied to the buyer's Steam account.
+Every Indie Creations game sells its cosmetics here. Items are priced in USD, paid in $CREATIONS, and tied to the buyer's Steam account.
 
 1. The buyer signs in through Steam (Steam's own OpenID login; the site only ever learns the SteamID).
-2. At checkout the USD price is converted at the live $creations price (DexScreener and GeckoTerminal must agree within 15%, otherwise checkout pauses) and held for 10 minutes.
-3. The buyer sends that exact amount of $creations from their wallet to `SHOP_TREASURY_ADDRESS`.
+2. At checkout the USD price is converted at the live $CREATIONS price (DexScreener and GeckoTerminal must agree within 15%, otherwise checkout pauses) and held for 10 minutes.
+3. The buyer sends that exact amount of $CREATIONS from their wallet to `SHOP_TREASURY_ADDRESS`.
 4. The server finds the transfer on Robinhood Chain and only then records the cosmetic against the SteamID. The payment must come from the quoted wallet, go to the treasury, match the amount to the wei (each order's amount ends in a few random wei), and be newer than the order. One transaction can settle one order, ever.
 
 Payments go to the treasury wallet `0x901fC42f24adc138F73BaC931557Ab17AfCA7093` (the default in `lib/shop.js`; `SHOP_TREASURY_ADDRESS` overrides it). Checkout needs `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` and the tables from `supabase/shop.sql`; without them the shop is browse-only in production. Set `SITE_URL` in production so the Steam sign-in always returns to the real domain.

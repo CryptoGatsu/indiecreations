@@ -1,4 +1,4 @@
--- Cosmetics shop for Indie Creations: orders paid in $creations and the cosmetics each owner has. The owner (steam_id
+-- Cosmetics shop for Indie Creations: orders paid in $CREATIONS and the cosmetics each owner has. The owner (steam_id
 -- column, kept for history) is a SteamID64 for Steam games or the paying wallet's lowercase address for browser games
 -- (migration shop_wallet_owners, 2026-09-26).
 -- Run once in the Supabase SQL editor (or as a migration) for the project whose URL / service key the site uses.

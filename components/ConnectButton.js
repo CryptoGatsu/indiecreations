@@ -44,7 +44,7 @@ export default function ConnectButton({ className = 'btn btn-primary', label = '
                 ×
               </button>
             </div>
-            <p className="muted small">Use a wallet that holds $creations on Robinhood Chain.</p>
+            <p className="muted small">Use a wallet that holds $CREATIONS on Robinhood Chain.</p>
 
             <div className="connector-list">
               {list.map((connector) => (

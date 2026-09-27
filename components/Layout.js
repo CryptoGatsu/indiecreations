@@ -7,7 +7,7 @@ import SocialIcons from './Socials';
 import { LINKS, TOKEN_TICKER } from '../lib/config';
 
 const DESCRIPTION =
-  'Indie Creations is a tokenized indie game studio. Hold $creations on Robinhood Chain to playtest, review, and play every release.';
+  'Indie Creations is a tokenized indie game studio. Hold $CREATIONS on Robinhood Chain to playtest, review, and play every release.';
 
 export default function Layout({ children }) {
   return (

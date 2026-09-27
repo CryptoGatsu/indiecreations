@@ -194,7 +194,7 @@ function PlaytestBanner() {
       src="/games/my-favorite-sheep/playtest-live.jpg"
       width={1600}
       height={893}
-      alt="My Favorite Sheep - private online playtest, exclusive for $creations holders"
+      alt="My Favorite Sheep - private online playtest, exclusive for $CREATIONS holders"
     />
   );
 }

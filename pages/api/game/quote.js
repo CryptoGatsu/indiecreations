@@ -1,7 +1,7 @@
 import { createQuote, ShopError } from '../../../lib/shop';
 import { readPlayerWallet } from '../../../lib/session';
 
-// POST { itemId } (signed in to the browser games) -> a 10 minute quote: exactly how much $creations to send to the
+// POST { itemId } (signed in to the browser games) -> a 10 minute quote: exactly how much $CREATIONS to send to the
 // treasury, from the signed-in wallet. The cosmetic goes to that same wallet once the payment is seen on-chain
 // (POST /api/shop/confirm { orderId, txHash }).
 export default async function handler(req, res) {
