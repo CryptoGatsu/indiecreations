@@ -89,7 +89,7 @@ New games join automatically: any sale through the site's checkout counts, which
 
 👥 Players per game
 
-Each browser game page includes `<script src="/presence.js" data-game="<slug>" defer></script>`. Once the game has loaded and while its tab is in front, it pings `/api/presence` once a minute with an anonymous id kept in the browser (no wallet; the IP is stored only as a salted hash, and at most 3 ids per IP count). The game cards, each game's page and `/admin` show players right now (last 2 minutes), in the last 24 hours and in the last 30 days. Table and counting function: `supabase/presence.sql`.
+Each browser game page includes `<script src="/presence.js" data-game="<slug>" defer></script>`. Once the game has loaded, it pings `/api/presence` once a minute while its tab is in front and for 5 minutes after the player switches to another tab with an anonymous id kept in the browser (no wallet; the IP is stored only as a salted hash, and at most 3 ids per IP count). The game cards, each game's page and `/admin` show players right now (last 2 minutes), in the last 24 hours and in the last 30 days. Table and counting function: `supabase/presence.sql`.
 
 **When republishing a Unity build, keep that script line in its `index.html`** (it sits just before `</body>`), or put it in the game repo's WebGL template so it is always there. A new browser game only needs the same line with its own slug.
 

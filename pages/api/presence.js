@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       return res.status(204).end();
     }
     if (req.method === 'GET') {
-      res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+      res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate=10'); // a live counter: keep it close to now
       return res.status(200).json(await playerCounts());
     }
     return res.status(405).end();

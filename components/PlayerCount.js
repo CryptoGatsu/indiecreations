@@ -1,18 +1,43 @@
 import { useEffect, useState } from 'react';
 
-// Players per browser game from /api/presence: { [slug]: { now, day, month } }. One request per page, however many
-// cards ask; refreshed after a minute.
-let shared = { at: 0, promise: null };
+// Players per browser game from /api/presence: { [slug]: { now, day, month } }. One request per page however many
+// cards ask, refreshed every 30 seconds while the page is in front, so someone joining shows up without a reload.
+const REFRESH_MS = 30_000;
+const shared = { counts: null, at: 0, loading: null, listeners: new Set(), timer: null };
+
+function refresh() {
+  if (shared.loading) return shared.loading;
+  shared.loading = fetch('/api/presence', { cache: 'no-store' })
+    .then((r) => r.json())
+    .then((c) => {
+      shared.counts = c;
+      shared.at = Date.now();
+      shared.listeners.forEach((fn) => fn(c));
+    })
+    .catch(() => {})
+    .finally(() => {
+      shared.loading = null;
+    });
+  return shared.loading;
+}
+
 export function usePlayerCounts() {
-  const [counts, setCounts] = useState(null);
+  const [counts, setCounts] = useState(shared.counts);
   useEffect(() => {
-    if (!shared.promise || Date.now() - shared.at > 60_000) {
-      shared = { at: Date.now(), promise: fetch('/api/presence').then((r) => r.json()).catch(() => ({})) };
+    shared.listeners.add(setCounts);
+    if (!shared.counts || Date.now() - shared.at > REFRESH_MS) refresh();
+    else setCounts(shared.counts);
+    if (!shared.timer) {
+      shared.timer = setInterval(() => {
+        if (document.visibilityState === 'visible') refresh();
+      }, REFRESH_MS);
     }
-    let live = true;
-    shared.promise.then((c) => live && setCounts(c));
     return () => {
-      live = false;
+      shared.listeners.delete(setCounts);
+      if (!shared.listeners.size && shared.timer) {
+        clearInterval(shared.timer);
+        shared.timer = null;
+      }
     };
   }, []);
   return counts;
