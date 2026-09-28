@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Logo from './Logo';
-import ConnectButton from './ConnectButton';
+import AccountButton from './AccountButton';
 import ThemeToggle from './ThemeToggle';
 import SocialIcons from './Socials';
 import { LINKS, TOKEN_TICKER } from '../lib/config';
@@ -41,7 +41,7 @@ export default function Layout({ children }) {
           <div className="header-actions">
             <SocialIcons />
             <ThemeToggle />
-            <ConnectButton className="btn btn-primary btn-sm" label="Connect" />
+            <AccountButton />
           </div>
         </div>
       </header>

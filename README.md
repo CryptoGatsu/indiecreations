@@ -87,6 +87,12 @@ One-time setup:
 
 New games join automatically: any sale through the site's checkout counts, whichever game it is for. A game that also sells or burns in its own contracts on mainnet (Agentacus at launch) lists them in its entry in `lib/games.js`: `chain: { revenue: [...], burners: [...] }` (`revenue` for contracts that receive its sales, `burners` for contracts whose burns count as its burns); they count from then on. Burns by anyone else still count in the total, shown as "Other burns".
 
+🙂 Player profiles (`/profile`, `/u/<wallet>`)
+
+Anyone can sign in with their wallet (a free signed message, the same sign-in the browser games use, 30 days) and get a profile: a display name (unique, 3 to 24 characters), a bio (280), a picture (resized in the browser to a 256 px square, stored small), favourite games, and their $CREATIONS balance with holder status. Without a picture, a tile pattern made from the wallet address shows instead. Public profiles at `/u/<wallet>` show the name, picture, bio, favourites, a holder badge and recent comments (the exact balance only shows to its owner).
+
+Every game page has a comments section and a favourite button with its count. Comments are plain text (markup shows as text), at most 1,000 characters, one every 20 seconds and 30 a day per wallet. Authors delete their own; a studio admin signed in on `/admin` gets a delete button on every comment. Tables: `supabase/profiles.sql`.
+
 👥 Players per game
 
 Each browser game page includes `<script src="/presence.js" data-game="<slug>" defer></script>`. Once the game has loaded, it pings `/api/presence` once a minute while its tab is in front and for 5 minutes after the player switches to another tab with an anonymous id kept in the browser (no wallet; the IP is stored only as a salted hash, and at most 3 ids per IP count). The game cards, each game's page and `/admin` show players right now (last 2 minutes), in the last 24 hours and in the last 30 days. Table and counting function: `supabase/presence.sql`.

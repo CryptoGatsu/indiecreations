@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { GAMES, findGame } from '../../lib/games';
 import { TOKEN_TICKER } from '../../lib/config';
 import PlayerCount, { usePlayerCounts } from '../../components/PlayerCount';
+import GameComments from '../../components/GameComments';
 
 export async function getStaticPaths() {
   return { paths: GAMES.map((g) => ({ params: { slug: g.slug } })), fallback: false };
@@ -96,6 +97,8 @@ export default function GamePage({ game }) {
             </figure>
           ))}
         </div>
+
+        <GameComments game={game} />
       </div>
     </>
   );
