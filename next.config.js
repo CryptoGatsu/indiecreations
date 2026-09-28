@@ -28,6 +28,8 @@ const nextConfig = {
       { source: '/my-favorite-sheep', destination: '/my-favorite-sheep/index.html' },
       // DeathRace3000 (<base href="/deathrace3000/">); its game server is /api/deathrace/*
       { source: '/deathrace3000', destination: '/deathrace3000/index.html' },
+      // Don't Worry, You're Safe! (<base href="/youre-safe/">); its API is /api/buddy/* plus the shared game shop routes
+      { source: '/youre-safe', destination: '/youre-safe/index.html' },
     ];
     if (ARENA_API_ORIGIN) rules.push({ source: '/v1/:path*', destination: `${ARENA_API_ORIGIN}/v1/:path*` });
     return rules;
@@ -41,6 +43,10 @@ const nextConfig = {
       { source: '/my-favorite-sheep/Build/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
       { source: '/my-favorite-sheep/Build/data-parts.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
       { source: '/my-favorite-sheep/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
+      { source: '/youre-safe/Build/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+      { source: '/youre-safe/Build/data-parts.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
+      { source: '/youre-safe/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
+      { source: '/youre-safe/TemplateData/buddy.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
       // DeathRace3000's build files keep fixed names: browsers revalidate them (a cheap 304 when unchanged)
       { source: '/deathrace3000/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }] },
     ];

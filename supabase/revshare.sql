@@ -122,3 +122,20 @@ revoke execute on function public.shop_revenue(timestamptz, timestamptz) from pu
 grant execute on function public.revshare_balances_at(timestamptz) to service_role;
 grant execute on function public.transfers_total(text[], text[], timestamptz, timestamptz) to service_role;
 grant execute on function public.shop_revenue(timestamptz, timestamptz) to service_role;
+
+-- Burns owed from checkout sales (games with `burnBps` in lib/games.js), one row per month and game. The job records
+-- the burn when the month closes and sends it from the treasury before that month's payout is published.
+--   owed:    worked out, not sent yet (the job burns it through the treasury's allowance, or the treasury burns by hand)
+--   sent:    the burn transaction is out; the job waits for its receipt
+--   burned:  done (tx_hash is null when the treasury burned by hand and the job found it in token_transfers)
+create table if not exists public.revshare_burns (
+  month      text           not null check (month ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'),
+  game       text           not null,
+  amount_raw numeric(78, 0) not null check (amount_raw > 0),
+  status     text           not null default 'owed' check (status in ('owed', 'sent', 'burned')),
+  tx_hash    text           check (tx_hash ~ '^0x[0-9a-f]{64}$'),
+  created_at timestamptz    not null default now(),
+  burned_at  timestamptz,
+  primary key (month, game)
+);
+alter table public.revshare_burns enable row level security;

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/youre-safe/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#dcdad6">
+  <meta name="description" content="Don't Worry, You're Safe! An interactive buddy that remembers everything. Play free in your browser.">
+  <meta property="og:title" content="Don't Worry, You're Safe!">
+  <meta property="og:description" content="An interactive buddy that remembers everything. Play free in your browser.">
+  <meta property="og:image" content="https://www.indiecreations.fun/games/youre-safe/hero.jpg">
+  <title>Don't Worry, You're Safe!</title>
+  <link rel="icon" type="image/png" href="TemplateData/logo.png">
+  <style>
+    html, body { margin: 0; height: 100%; background: #dcdad6; overflow: hidden; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    #unity-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: #dcdad6; outline: none; touch-action: none; }
+    #loader { position: fixed; inset: 0; background: #dcdad6 url("TemplateData/bg.jpg") center / cover no-repeat; display: flex; align-items: center; transition: opacity .45s ease; z-index: 5; }
+    #loader .col { margin-left: 7vw; width: min(520px, 80vw); }
+    #loader img { width: 100%; height: auto; }
+    #loader .tag { color: #5e6573; font-size: 18px; margin: 8px 0 28px 4px; }
+    #bar { height: 14px; border-radius: 7px; background: rgba(90,98,114,.18); overflow: hidden; }
+    #fill { height: 100%; width: 0%; border-radius: 7px; background: #1fa7a3; transition: width .2s ease; }
+    #status { margin-top: 10px; color: #5e6573; font-size: 14px; }
+    #warning { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); z-index: 10; }
+    #warning div { background: #2e3440; color: #fff; padding: 10px 16px; border-radius: 12px; margin-bottom: 6px; font-size: 14px; }
+    .ys-toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); opacity: 0; transition: all .25s ease; background: #2e3440; color: #fff; padding: 12px 18px; border-radius: 14px; font-size: 15px; z-index: 20; pointer-events: none; }
+    .ys-toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .ys-sheet-back { position: fixed; inset: 0; background: rgba(30,34,42,.45); display: flex; align-items: center; justify-content: center; z-index: 30; padding: 16px; }
+    .ys-sheet { background: #f4f3f1; color: #2e3440; border-radius: 22px; padding: 24px 26px; max-width: 460px; width: 100%; box-shadow: 0 18px 50px rgba(0,0,0,.25); }
+    .ys-sheet h2 { margin: 0 0 8px; font-size: 22px; }
+    .ys-sheet p { margin: 0 0 16px; color: #5e6573; line-height: 1.45; }
+    .ys-sheet-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .ys-btn { display: inline-block; border: 0; border-radius: 12px; padding: 11px 16px; background: #1fa7a3; color: #fff; font: 600 15px system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+    .ys-btn.ys-quiet { background: transparent; color: #5e6573; padding-left: 0; }
+  </style>
+  <script src="TemplateData/buddy.js"></script>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="-1" aria-label="Don't Worry, You're Safe!"></canvas>
+  <div id="loader">
+    <div class="col">
+      <img src="TemplateData/logo.png" alt="Don't Worry, You're Safe!">
+      <div class="tag">An interactive buddy that remembers everything.</div>
+      <div id="bar"><div id="fill"></div></div>
+      <div id="status">Waking up your buddy…</div>
+    </div>
+  </div>
+  <div id="warning"></div>
+  <script>
+    (function () {
+      var st = document.getElementById("status"), fill = document.getElementById("fill");
+      function setProgress(p) { fill.style.width = Math.round(Math.max(0, Math.min(1, p)) * 100) + "%"; }
+      function showError(msg) { clearInterval(ticker); st.textContent = "Couldn't start: " + msg; }
+      var lines = ["Waking up your buddy…", "Hiding the anvils…", "Polishing the crate…", "Checking under the couch…", "Don't worry. It's safe."];
+      var li = 0, ticker = setInterval(function () { li = (li + 1) % lines.length; st.textContent = lines[li]; }, 1600);
+
+      try { if (!document.createElement("canvas").getContext("webgl2")) { showError("this browser has no WebGL 2. Try an up-to-date Chrome, Edge, Firefox or Safari."); return; } } catch (e) {}
+
+      // absolute URLs: Unity resolves some of these against the page address, not the base address (clean URL /youre-safe)
+      var baseUrl = document.baseURI;
+      var buildUrl = new URL("Build", baseUrl).href;
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/ea9a0a335d334cfd0ff2c0ee04e15aae.data.unityweb",
+        frameworkUrl: buildUrl + "/09d22a901ee53a5e7a5c53fcae459004.framework.js.unityweb",
+        codeUrl: buildUrl + "/36127266d4eab9bb4e3a95370f06bc0a.wasm.unityweb",
+        streamingAssetsUrl: new URL("StreamingAssets", baseUrl).href,
+        companyName: "Indie Creations",
+        productName: "Don't Worry, You're Safe!",
+        productVersion: "0.9.0",
+        devicePixelRatio: Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
+        webglContextAttributes: { powerPreference: 2 },
+        showBanner: function (msg, type) {
+          var w = document.getElementById("warning");
+          var d = document.createElement("div"); d.textContent = msg; w.appendChild(d);
+          if (type !== "error") setTimeout(function () { d.remove(); }, 5000);
+        }
+      };
+
+      // Hosts with a per-file size cap (a Git-deployed site: 100 MB) get the data file split into parts, listed in
+      // Build/data-parts.json (same scheme as the studio's other browser builds). Without the manifest, the data file
+      // loads as usual.
+      var unityProgress = setProgress;
+      function loadDataParts() {
+        return fetch(buildUrl + "/data-parts.json", { cache: "no-cache" }).then(function (res) {
+          if (!res.ok) return null;
+          return res.json().then(function (manifest) {
+            var total = manifest.size || 0, got = manifest.parts.map(function () { return 0; });
+            return Promise.all(manifest.parts.map(function (name, i) {
+              return fetch(buildUrl + "/" + name).then(function (r) {
+                if (!r.ok) throw new Error("HTTP " + r.status + " for " + name);
+                return r.blob().then(function (b) { got[i] = b.size; if (total) setProgress(0.85 * got.reduce(function (a, c) { return a + c; }, 0) / total); return b; });
+              });
+            })).then(function (blobs) {
+              return nativeGunzip(new Blob(blobs, { type: "application/octet-stream" }));
+            }).then(function (data) {
+              config.dataUrl = URL.createObjectURL(data);
+              config.cacheControl = function (url) { return url.indexOf("blob:") !== 0 && url.indexOf("/Build/") >= 0 ? "immutable" : "no-store"; };
+              unityProgress = function (p) { setProgress(0.85 + 0.15 * p); };
+            });
+          });
+        }, function () { return null; });
+      }
+
+      // A gzip build is unpacked by the browser's native DecompressionStream (much faster than Unity's JavaScript
+      // fallback); Unity then finds no compression marker and uses the data as is.
+      function nativeGunzip(blob) {
+        if (!window.DecompressionStream || !blob.stream) return Promise.resolve(blob);
+        return blob.slice(0, 2).arrayBuffer().then(function (head) {
+          var b = new Uint8Array(head);
+          if (b[0] !== 0x1f || b[1] !== 0x8b) return blob;
+          st.textContent = "Unpacking your buddy…";
+          return new Response(blob.stream().pipeThrough(new DecompressionStream("gzip"))).blob();
+        });
+      }
+
+      function startUnity() {
+        var script = document.createElement("script");
+        script.src = buildUrl + "/ff44e1b8c94b53a18b793617bd128989.loader.js";
+        script.onerror = function () { showError("the game files could not be downloaded. Check your connection and try again."); };
+        script.onload = function () {
+          createUnityInstance(document.querySelector("#unity-canvas"), config, function (p) { unityProgress(p); }).then(function (instance) {
+            window.unityInstance = instance;
+            clearInterval(ticker);
+            var l = document.getElementById("loader");
+            l.style.opacity = "0"; setTimeout(function () { l.remove(); }, 500);
+            document.querySelector("#unity-canvas").focus();
+          }).catch(function (message) { showError(String(message)); });
+        };
+        document.body.appendChild(script);
+      }
+      loadDataParts().then(startUnity, function () { showError("the game files could not be downloaded."); });
+
+      var canvas = document.getElementById("unity-canvas");
+      canvas.addEventListener("pointerdown", function () { if (document.activeElement !== canvas) canvas.focus(); });
+    })();
+  </script>
+  <!-- counts "playing now" on indiecreations.fun -->
+  <script src="/presence.js" data-game="youre-safe" defer></script>
+</body>
+</html>
