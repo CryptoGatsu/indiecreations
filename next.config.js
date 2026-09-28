@@ -26,6 +26,8 @@ const nextConfig = {
       { source: '/agentacus', destination: '/agentacus/index.html' },
       // My Favorite Sheep in the browser, same arrangement (<base href="/my-favorite-sheep/">)
       { source: '/my-favorite-sheep', destination: '/my-favorite-sheep/index.html' },
+      // DeathRace3000 (<base href="/deathrace3000/">); its game server is /api/deathrace/*
+      { source: '/deathrace3000', destination: '/deathrace3000/index.html' },
     ];
     if (ARENA_API_ORIGIN) rules.push({ source: '/v1/:path*', destination: `${ARENA_API_ORIGIN}/v1/:path*` });
     return rules;
@@ -39,7 +41,13 @@ const nextConfig = {
       { source: '/my-favorite-sheep/Build/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
       { source: '/my-favorite-sheep/Build/data-parts.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
       { source: '/my-favorite-sheep/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
+      // DeathRace3000's build files keep fixed names: browsers revalidate them (a cheap 304 when unchanged)
+      { source: '/deathrace3000/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }] },
     ];
+  },
+  experimental: {
+    // DeathRace3000's run verifier (a self-contained linux-x64 binary) ships with its API route
+    outputFileTracingIncludes: { '/api/deathrace/[...path]': ['./lib/deathrace/bin/**'] },
   },
   webpack: (config) => {
     // Optional deps pulled in by WalletConnect that aren't needed in the browser.

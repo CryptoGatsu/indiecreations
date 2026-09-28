@@ -1,0 +1,18 @@
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0b0b0d; color: #fff;
+  font-family: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif; touch-action: none; -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none; overscroll-behavior: none; }
+#game { position: fixed; inset: 0; }
+#unity-canvas { width: 100%; height: 100%; display: block; background: #0b0b0d; outline: none; }
+#loader { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  background: radial-gradient(ellipse at 50% 60%, #2a130a 0%, #0b0b0d 65%); transition: opacity .6s; z-index: 5; }
+#loader.done { opacity: 0; pointer-events: none; }
+#loader .brand { font-size: clamp(40px, 9vw, 110px); font-weight: 700; letter-spacing: .02em; }
+#loader .brand span { color: #ff7838; }
+#loader .tag { opacity: .6; font-size: clamp(14px, 2vw, 22px); letter-spacing: .05em; }
+#loader .bar { width: min(420px, 70vw); height: 3px; background: rgba(255,255,255,.12); margin-top: 18px; }
+#loader #fill { width: 0; height: 100%; background: #ff7838; transition: width .2s; }
+#loader #status { opacity: .5; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+#rotate { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  background: #0b0b0d; z-index: 10; font-size: 22px; letter-spacing: .05em; }
+#rotate .phone { width: 46px; height: 80px; border: 3px solid #ff7838; border-radius: 8px; animation: turn 2s ease-in-out infinite; }
+@keyframes turn { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
