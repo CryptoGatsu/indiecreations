@@ -1,0 +1,15 @@
+{
+  "46630": {
+    "network": "testnet",
+    "chainId": 46630,
+    "token": "0x9ebbb243456c2b8c057da041b1e013053bfd36a3",
+    "mockToken": true,
+    "heats": "0x996f3d4b61254b38135adf716ad0695eedec2026",
+    "shop": "0xccc93d49517ff6f73d9627b223e28d8e07a58df6",
+    "treasury": "0x901fC42f24adc138F73BaC931557Ab17AfCA7093",
+    "operator": "0x2510085dB93e6d5e497ea864F73F58646f01ff48",
+    "deployer": "0x2d8216f592b8ddE735a378087c9AE025292A1c4c",
+    "startBlock": 125027750,
+    "deployedAt": "2026-09-27T07:10:29.145Z"
+  }
+}

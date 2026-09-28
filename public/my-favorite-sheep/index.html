@@ -132,12 +132,12 @@
         // absolute URLs: Unity resolves some of these against the page address, not the base address (clean URL /my-favorite-sheep)
         var baseUrl = document.baseURI;
         var buildUrl = new URL('Build', baseUrl).href;
-        var loaderUrl = buildUrl + '/39dac46de918b6c4c26fee0dacd1e337.loader.js';
+        var loaderUrl = buildUrl + '/20b866e16b63bce5c1b81cbbf9836090.loader.js';
         var config = {
           arguments: [],
-          dataUrl: buildUrl + '/49d38101b5fe83294f824cfb41a56753.data.unityweb',
-          frameworkUrl: buildUrl + '/1424db881165f97abe1772ff3af00e6e.framework.js.unityweb',
-          codeUrl: buildUrl + '/10614b2bc68318458b3bd20cbe55942e.wasm.unityweb',
+          dataUrl: buildUrl + '/2701e4338a95d485f32467050eeadb71.data.unityweb',
+          frameworkUrl: buildUrl + '/2218f0e7038ceb370e41e1b639d4fa80.framework.js.unityweb',
+          codeUrl: buildUrl + '/67ef1417f00027537a5867e85c427888.wasm.unityweb',
           streamingAssetsUrl: new URL('StreamingAssets', baseUrl).href,
           companyName: "DefaultCompany",
           productName: "My Favorite Sheep",
@@ -147,6 +147,9 @@
           // ratio), so the GPU cost doesn't grow with the display's density.
           devicePixelRatio: (window.__mfsPixelRatio = Math.min(3, Math.max(1, window.devicePixelRatio || 1))),
           matchWebGLToCanvasSize: true,
+          // Laptops with two graphics chips: ask for the fast one. Browsers otherwise pick the power-saving chip, and the
+          // farm is several times slower on it (an RTX laptop rendered on its Intel UHD). 2 = "high-performance".
+          webglContextAttributes: { powerPreference: 2 },
           showBanner: function (msg, type) {
             if (type === 'error') showError(msg);
             else console.warn('[MFS]', msg);
@@ -228,7 +231,7 @@
         canvas.addEventListener('pointerdown', function () { if (document.activeElement !== canvas) canvas.focus(); });
       })();
     </script>
-      <!-- counts "playing now" on indiecreations.fun; keep this line when republishing the build -->
+    <!-- counts "playing now" on indiecreations.fun -->
     <script src="/presence.js" data-game="my-favorite-sheep" defer></script>
   </body>
 </html>
