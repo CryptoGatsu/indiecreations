@@ -12,8 +12,8 @@ export function timeAgo(iso) {
   return 'just now';
 }
 
-// Under each game: a favourite button with the count, and the comments. Signed-in players (the free wallet sign-in)
-// can comment and favourite; everyone can read.
+// Under each game: a favorite button with the count, and the comments. Signed-in players (the free wallet sign-in)
+// can comment and favorite; everyone can read.
 export default function GameComments({ game }) {
   const me = useProfile();
   const [comments, setComments] = useState(null);
@@ -88,11 +88,11 @@ export default function GameComments({ game }) {
         <h2>Players talking</h2>
         {me.address ? (
           <button type="button" className={`fav-button ${isFavorite ? 'fav-on' : ''}`} aria-pressed={isFavorite} onClick={toggleFavorite}>
-            {isFavorite ? '♥' : '♡'} Favourite · {favorites}
+            {isFavorite ? '♥' : '♡'} Favorite · {favorites}
           </button>
         ) : (
           <Link href={signInHref} className="fav-button">
-            ♡ Favourite · {favorites}
+            ♡ Favorite · {favorites}
           </Link>
         )}
       </div>
@@ -121,7 +121,7 @@ export default function GameComments({ game }) {
         </form>
       ) : (
         <div className="notice comment-signin">
-          <p>Sign in with your wallet to comment and favourite games. It is a free message, not a transaction.</p>
+          <p>Sign in with your wallet to comment and favorite games. It is a free message, not a transaction.</p>
           <Link href={signInHref} className="btn btn-primary btn-sm">
             Sign in
           </Link>

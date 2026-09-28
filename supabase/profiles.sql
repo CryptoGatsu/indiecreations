@@ -1,5 +1,5 @@
 -- Player profiles: a wallet that signed in (the free sign-in message) can set a display name, a bio, a picture and
--- favourite games, and comment under games. Run once in the Supabase SQL editor (or as a migration).
+-- favorite games, and comment under games. Run once in the Supabase SQL editor (or as a migration).
 --
 -- Written only by the site's server with the service-role key; RLS is on with no policies. The site shows what is
 -- public through its own API routes.
@@ -40,7 +40,7 @@ alter table public.profiles enable row level security;
 alter table public.profile_avatars enable row level security;
 alter table public.game_comments enable row level security;
 
--- How many signed-in players marked each game as a favourite.
+-- How many signed-in players marked each game as a favorite.
 create or replace function public.game_favorite_counts()
 returns table (game text, favorites bigint)
 language sql stable as $$

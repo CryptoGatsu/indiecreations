@@ -10,7 +10,7 @@ import { MIN_TOKENS, TOKEN_TICKER, shortAddress } from '../lib/config';
 import { GAMES } from '../lib/games';
 import { AVATAR_MAX_BYTES, AVATAR_PX, BIO_MAX, NAME_RE, shownName } from '../lib/profileRules';
 
-// Your own profile: sign in with your wallet, then set a name, bio, picture and favourite games, and see what you hold.
+// Your own profile: sign in with your wallet, then set a name, bio, picture and favorite games, and see what you hold.
 
 // Crops the chosen image to a centred square, shrinks it to AVATAR_PX and encodes it small (WebP, else JPEG).
 async function toAvatarDataUrl(file) {
@@ -149,7 +149,7 @@ function Editor({ me }) {
       </label>
 
       <fieldset className="field">
-        <span>Favourite games</span>
+        <span>Favorite games</span>
         <div className="shop-chips profile-favorites">
           {GAMES.map((g) => (
             <button
@@ -209,7 +209,7 @@ export default function Profile() {
       <div className="gate">
         <h1>Your profile</h1>
         <p className="muted">
-          Sign in with your wallet to set a name, a picture and a bio, mark your favourite games, comment under games and
+          Sign in with your wallet to set a name, a picture and a bio, mark your favorite games, comment under games and
           see your {TOKEN_TICKER}. Signing in is a free message, not a transaction.
         </p>
         {isConnected ? (

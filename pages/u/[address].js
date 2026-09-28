@@ -9,7 +9,7 @@ import { GAMES } from '../../lib/games';
 import { shownName } from '../../lib/profileRules';
 import { timeAgo } from '../../components/GameComments';
 
-// Anyone's public profile: picture, name, bio, favourite games, holder badge and recent comments.
+// Anyone's public profile: picture, name, bio, favorite games, holder badge and recent comments.
 export default function PublicProfile() {
   const router = useRouter();
   const address = typeof router.query.address === 'string' ? router.query.address : '';
@@ -59,7 +59,7 @@ export default function PublicProfile() {
 
       {favorites.length > 0 && (
         <section className="profile-section">
-          <h2>Favourite games</h2>
+          <h2>Favorite games</h2>
           <div className="profile-fav-list">
             {favorites.map((g) => (
               <Link key={g.slug} href={`/games/${g.slug}`} className="profile-fav">

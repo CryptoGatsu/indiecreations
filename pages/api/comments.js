@@ -3,7 +3,7 @@ import { isAdmin } from '../../lib/admin';
 import { ProfileError, addComment, deleteComment, favoriteCounts, listComments, persistent } from '../../lib/profiles';
 import { GAME_SLUGS } from '../../lib/profileRules';
 
-// GET ?game=<slug>&before=<iso> -> { comments, favorites, more }: newest 20, and how many players favourited the game.
+// GET ?game=<slug>&before=<iso> -> { comments, favorites, more }: newest 20, and how many players favorited the game.
 // POST { game, body } -> posts a comment as the signed-in wallet.
 // DELETE ?id=<uuid> -> deletes a comment: its author, or a studio admin.
 export default async function handler(req, res) {

@@ -1,7 +1,7 @@
 import { readPlayerWallet } from '../../../lib/session';
 import { ProfileError, persistent, setFavorite } from '../../../lib/profiles';
 
-// POST { game, favorite } -> marks or unmarks a game as one of the signed-in wallet's favourites.
+// POST { game, favorite } -> marks or unmarks a game as one of the signed-in wallet's favorites.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   res.setHeader('Cache-Control', 'no-store');

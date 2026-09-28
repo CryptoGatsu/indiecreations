@@ -89,9 +89,9 @@ New games join automatically: any sale through the site's checkout counts, which
 
 🙂 Player profiles (`/profile`, `/u/<wallet>`)
 
-Anyone can sign in with their wallet (a free signed message, the same sign-in the browser games use, 30 days) and get a profile: a display name (unique, 3 to 24 characters), a bio (280), a picture (resized in the browser to a 256 px square, stored small), favourite games, and their $CREATIONS balance with holder status. Without a picture, a tile pattern made from the wallet address shows instead. Public profiles at `/u/<wallet>` show the name, picture, bio, favourites, a holder badge and recent comments (the exact balance only shows to its owner).
+Anyone can sign in with their wallet (a free signed message, the same sign-in the browser games use, 30 days) and get a profile: a display name (unique, 3 to 24 characters), a bio (280), a picture (resized in the browser to a 256 px square, stored small), favorite games, and their $CREATIONS balance with holder status. Without a picture, a tile pattern made from the wallet address shows instead. Public profiles at `/u/<wallet>` show the name, picture, bio, favorites, a holder badge and recent comments (the exact balance only shows to its owner).
 
-Every game page has a comments section and a favourite button with its count. Comments are plain text (markup shows as text), at most 1,000 characters, one every 20 seconds and 30 a day per wallet. Authors delete their own; a studio admin signed in on `/admin` gets a delete button on every comment. Tables: `supabase/profiles.sql`.
+Every game page has a comments section and a favorite button with its count. Comments are plain text (markup shows as text), at most 1,000 characters, one every 20 seconds and 30 a day per wallet. Authors delete their own; a studio admin signed in on `/admin` gets a delete button on every comment. Tables: `supabase/profiles.sql`.
 
 👥 Players per game
 
