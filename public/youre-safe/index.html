@@ -14,13 +14,30 @@
   <style>
     html, body { margin: 0; height: 100%; background: #dcdad6; overflow: hidden; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     #unity-canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: #dcdad6; outline: none; touch-action: none; }
-    #loader { position: fixed; inset: 0; background: #dcdad6 url("TemplateData/bg.jpg") center / cover no-repeat; display: flex; align-items: center; transition: opacity .45s ease; z-index: 5; }
-    #loader .col { margin-left: 7vw; width: min(520px, 80vw); }
-    #loader img { width: 100%; height: auto; }
-    #loader .tag { color: #5e6573; font-size: 18px; margin: 8px 0 28px 4px; }
-    #bar { height: 14px; border-radius: 7px; background: rgba(90,98,114,.18); overflow: hidden; }
-    #fill { height: 100%; width: 0%; border-radius: 7px; background: #1fa7a3; transition: width .2s ease; }
-    #status { margin-top: 10px; color: #5e6573; font-size: 14px; }
+    /* the loading screen: the title art, the logo, and a cookie rolling along the progress bar */
+    #loader { position: fixed; inset: 0; background: #dcdad6; display: flex; align-items: center; transition: opacity .5s ease; z-index: 5; overflow: hidden; }
+    #loader.done { opacity: 0; pointer-events: none; }
+    #loader-art { position: absolute; inset: 0; background: url("TemplateData/bg.jpg") center / cover no-repeat; animation: settle 6s ease-out both; }
+    @keyframes settle { from { transform: scale(1.06); } to { transform: scale(1); } }
+    #loader .col { position: relative; margin-left: 7vw; width: min(520px, 84vw); animation: rise .7s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    #loader .logo { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 14px rgba(46,52,64,.12)); }
+    #loader .tag { color: #5e6573; font-size: 18px; margin: 8px 0 30px 4px; }
+    #track { position: relative; height: 16px; border-radius: 8px; background: rgba(90,98,114,.16); box-shadow: inset 0 1px 2px rgba(0,0,0,.08); }
+    #fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; border-radius: 8px; background: linear-gradient(90deg, #1fa7a3, #33c1b9); transition: width .25s ease; }
+    #cookie { position: absolute; top: 50%; left: 0%; width: 38px; height: 38px; margin: -21px 0 0 -19px; transition: left .25s ease; filter: drop-shadow(0 3px 3px rgba(0,0,0,.18)); }
+    #cookie img { width: 100%; height: 100%; display: block; }
+    #meta { display: flex; justify-content: space-between; margin-top: 14px; color: #5e6573; font-size: 14px; }
+    #pct { font-variant-numeric: tabular-nums; font-weight: 700; color: #2e3440; }
+    #status { transition: opacity .25s ease; }
+    #tip { margin-top: 22px; color: #7a8190; font-size: 13px; font-style: italic; min-height: 1.3em; }
+    /* phones held upright: the menu-side of the art is empty wall, so show the buddy under the logo instead */
+    /* phones held upright: the portrait art (open wall on top, the buddy under the anvil below) */
+    @media (orientation: portrait) {
+      #loader { align-items: flex-start; background: #d5d2ce; }
+      #loader-art { background-image: url("TemplateData/bg_portrait.jpg"); background-position: center bottom; }
+      #loader .col { margin: 8vh auto 0; }
+    }
     #warning { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); z-index: 10; }
     #warning div { background: #2e3440; color: #fff; padding: 10px 16px; border-radius: 12px; margin-bottom: 6px; font-size: 14px; }
     .ys-toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); opacity: 0; transition: all .25s ease; background: #2e3440; color: #fff; padding: 12px 18px; border-radius: 14px; font-size: 15px; z-index: 20; pointer-events: none; }
@@ -38,21 +55,39 @@
 <body>
   <canvas id="unity-canvas" tabindex="-1" aria-label="Don't Worry, You're Safe!"></canvas>
   <div id="loader">
+    <div id="loader-art"></div>
     <div class="col">
-      <img src="TemplateData/logo.png" alt="Don't Worry, You're Safe!">
+      <img class="logo" src="TemplateData/logo.png" alt="Don't Worry, You're Safe!">
       <div class="tag">An interactive buddy that remembers everything.</div>
-      <div id="bar"><div id="fill"></div></div>
-      <div id="status">Waking up your buddy…</div>
+      <div id="track"><div id="fill"></div><div id="cookie"><img src="TemplateData/cookie.png" alt=""></div></div>
+      <div id="meta"><span id="status">Waking up your buddy…</span><span id="pct">0%</span></div>
+      <div id="tip"></div>
     </div>
   </div>
   <div id="warning"></div>
   <script>
     (function () {
-      var st = document.getElementById("status"), fill = document.getElementById("fill");
-      function setProgress(p) { fill.style.width = Math.round(Math.max(0, Math.min(1, p)) * 100) + "%"; }
-      function showError(msg) { clearInterval(ticker); st.textContent = "Couldn't start: " + msg; }
-      var lines = ["Waking up your buddy…", "Hiding the anvils…", "Polishing the crate…", "Checking under the couch…", "Don't worry. It's safe."];
-      var li = 0, ticker = setInterval(function () { li = (li + 1) % lines.length; st.textContent = lines[li]; }, 1600);
+      var st = document.getElementById("status"), fill = document.getElementById("fill"), pct = document.getElementById("pct");
+      var cookie = document.getElementById("cookie"), tip = document.getElementById("tip"), shown = 0;
+      function setProgress(p) {
+        p = Math.max(shown, Math.max(0, Math.min(1, p)));   // never rolls backwards
+        shown = p;
+        var v = Math.round(p * 100);
+        fill.style.width = v + "%";
+        cookie.style.left = v + "%";
+        cookie.style.transform = "rotate(" + Math.round(p * 900) + "deg)";
+        pct.textContent = v + "%";
+      }
+      function showError(msg) { clearInterval(ticker); st.textContent = "Couldn't start: " + msg; pct.textContent = ""; }
+      var lines = ["Waking up your buddy…", "Hiding the anvils…", "Polishing the crate…", "Checking under the couch…", "Counting the cookies…", "Sharpening nothing. Honest.", "Don't worry. It's safe."];
+      var tips = ["Tip: it remembers what hurt it. And who.", "Tip: pet it with the Hand to calm it down.", "Tip: feed it and it forgives. Mostly.",
+                  "Tip: traps it has learned about, it walks around.", "Tip: turn its mind off in Settings and it just… drools."];
+      tip.textContent = tips[Math.floor(Math.random() * tips.length)];
+      var li = 0, ticker = setInterval(function () {
+        li = (li + 1) % lines.length;
+        st.style.opacity = 0;
+        setTimeout(function () { st.textContent = lines[li]; st.style.opacity = 1; }, 250);
+      }, 1800);
 
       try { if (!document.createElement("canvas").getContext("webgl2")) { showError("this browser has no WebGL 2. Try an up-to-date Chrome, Edge, Firefox or Safari."); return; } } catch (e) {}
 
@@ -61,13 +96,13 @@
       var buildUrl = new URL("Build", baseUrl).href;
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/ea9a0a335d334cfd0ff2c0ee04e15aae.data.unityweb",
-        frameworkUrl: buildUrl + "/09d22a901ee53a5e7a5c53fcae459004.framework.js.unityweb",
-        codeUrl: buildUrl + "/36127266d4eab9bb4e3a95370f06bc0a.wasm.unityweb",
+        dataUrl: buildUrl + "/12fcc1ddde80d30e1d30d9bc13ed427c.data.unityweb",
+        frameworkUrl: buildUrl + "/a18aef76406d542e8604165258b0f9c7.framework.js.unityweb",
+        codeUrl: buildUrl + "/beb5d0eef9f5816f2a39d7eb24ac4c0c.wasm.unityweb",
         streamingAssetsUrl: new URL("StreamingAssets", baseUrl).href,
         companyName: "Indie Creations",
         productName: "Don't Worry, You're Safe!",
-        productVersion: "0.9.0",
+        productVersion: "0.9.1",
         devicePixelRatio: Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
         webglContextAttributes: { powerPreference: 2 },
         showBanner: function (msg, type) {
@@ -116,14 +151,16 @@
 
       function startUnity() {
         var script = document.createElement("script");
-        script.src = buildUrl + "/ff44e1b8c94b53a18b793617bd128989.loader.js";
+        script.src = buildUrl + "/e2925983ef767a8491b0cb2ad6a305cd.loader.js";
         script.onerror = function () { showError("the game files could not be downloaded. Check your connection and try again."); };
         script.onload = function () {
           createUnityInstance(document.querySelector("#unity-canvas"), config, function (p) { unityProgress(p); }).then(function (instance) {
             window.unityInstance = instance;
             clearInterval(ticker);
+            setProgress(1);
+            st.textContent = "Here it is.";
             var l = document.getElementById("loader");
-            l.style.opacity = "0"; setTimeout(function () { l.remove(); }, 500);
+            setTimeout(function () { l.classList.add("done"); setTimeout(function () { l.remove(); }, 550); }, 350);
             document.querySelector("#unity-canvas").focus();
           }).catch(function (message) { showError(String(message)); });
         };
