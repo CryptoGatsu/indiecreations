@@ -96,15 +96,21 @@
       var buildUrl = new URL("Build", baseUrl).href;
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/e857d29bd6a30607ac27e5c3174720c4.data.unityweb",
+        dataUrl: buildUrl + "/47e5a19fdf3b119e7cbd976eb2032726.data.unityweb",
         frameworkUrl: buildUrl + "/6a535cf03786d5b5597753df718da3ab.framework.js.unityweb",
-        codeUrl: buildUrl + "/e9d6ea5b7df081327d78bfe2a172bc26.wasm.unityweb",
+        codeUrl: buildUrl + "/80900c399234e7b3516ff97af374c34b.wasm.unityweb",
         streamingAssetsUrl: new URL("StreamingAssets", baseUrl).href,
         companyName: "Indie Creations",
         productName: "Don't Worry, You're Safe!",
-        productVersion: "0.9.4",
+        productVersion: "0.9.5",
         devicePixelRatio: Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
         webglContextAttributes: { powerPreference: 2 },
+        // runtime errors are logged instead of popping a blocking alert (the game usually carries on); a fatal one
+        // still shows on the loading screen
+        errorHandler: function (message, filename, lineno) {
+          console.error("[youre-safe]", message, filename || "", lineno || "");
+          return true;
+        },
         showBanner: function (msg, type) {
           var w = document.getElementById("warning");
           var d = document.createElement("div"); d.textContent = msg; w.appendChild(d);
@@ -151,7 +157,7 @@
 
       function startUnity() {
         var script = document.createElement("script");
-        script.src = buildUrl + "/3c52378be506a15a4de3cc4689094ad4.loader.js";
+        script.src = buildUrl + "/4580797a7f361f518c8dde528a391921.loader.js";
         script.onerror = function () { showError("the game files could not be downloaded. Check your connection and try again."); };
         script.onload = function () {
           createUnityInstance(document.querySelector("#unity-canvas"), config, function (p) { unityProgress(p); }).then(function (instance) {
