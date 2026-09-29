@@ -96,13 +96,13 @@
       var buildUrl = new URL("Build", baseUrl).href;
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/6545d028f4205509d46e1c79fe7b8f67.data.unityweb",
+        dataUrl: buildUrl + "/e857d29bd6a30607ac27e5c3174720c4.data.unityweb",
         frameworkUrl: buildUrl + "/6a535cf03786d5b5597753df718da3ab.framework.js.unityweb",
-        codeUrl: buildUrl + "/31abb1db32c62a91968021ff1cd66273.wasm.unityweb",
+        codeUrl: buildUrl + "/e9d6ea5b7df081327d78bfe2a172bc26.wasm.unityweb",
         streamingAssetsUrl: new URL("StreamingAssets", baseUrl).href,
         companyName: "Indie Creations",
         productName: "Don't Worry, You're Safe!",
-        productVersion: "0.9.3",
+        productVersion: "0.9.4",
         devicePixelRatio: Math.min(2, Math.max(1, window.devicePixelRatio || 1)),
         webglContextAttributes: { powerPreference: 2 },
         showBanner: function (msg, type) {
@@ -151,7 +151,7 @@
 
       function startUnity() {
         var script = document.createElement("script");
-        script.src = buildUrl + "/f15af743774be885ecdb1e7f8b2ef5e7.loader.js";
+        script.src = buildUrl + "/3c52378be506a15a4de3cc4689094ad4.loader.js";
         script.onerror = function () { showError("the game files could not be downloaded. Check your connection and try again."); };
         script.onload = function () {
           createUnityInstance(document.querySelector("#unity-canvas"), config, function (p) { unityProgress(p); }).then(function (instance) {
