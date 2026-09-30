@@ -29,7 +29,7 @@ X: https://x.com/IndieCreations_
 The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
 
 - `NEXT_PUBLIC_TOKEN_ADDRESS` (optional) — overrides the $CREATIONS CA, which is already the default in `lib/config.js`.
-- `NEXT_PUBLIC_MIN_TOKENS` — tokens required to unlock playtests (default 5,000,000).
+- `NEXT_PUBLIC_MIN_TOKENS` — tokens required to unlock playtests (default 1: every holder).
 - `SESSION_SECRET` — long random string, required in production.
 - `RPC_URL` (optional) — private RPC for balance checks.
 - `NEXT_PUBLIC_WC_PROJECT_ID` (optional) — enables WalletConnect for mobile wallets.
