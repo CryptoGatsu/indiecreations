@@ -17,12 +17,14 @@
   <body>
     <canvas id="unity-canvas" tabindex="-1"></canvas>
     <div id="sm-loader">
+      <div class="sm-loader-art"></div>
+      <div class="sm-loader-shade"></div>
+      <img class="sm-loader-mark" src="wordmark.png" alt="Snowmoon Forever">
       <div class="sm-loader-panel">
-        <div class="sm-loader-title">Snowmoon Forever</div>
-        <div class="sm-loader-sub">A citizen's life in Veridia, 3724</div>
+        <div class="sm-loader-row"><span id="sm-loader-status">Downloading the city…</span><span id="sm-loader-pct">0%</span></div>
         <div class="sm-loader-bar"><div id="sm-loader-fill"></div></div>
-        <div id="sm-loader-status">Loading Meldan…</div>
-        <div class="sm-loader-credit">Snowmoon Forever is based on Snowmoon by Vitalik Buterin (GPL-3.0). Unofficial fan adaptation by Indie Creations.</div>
+        <div id="sm-loader-tip">Press E to talk to people in the street.</div>
+        <div class="sm-loader-credit">Private alpha · Snowmoon Forever is based on Snowmoon by Vitalik Buterin (GPL-3.0). Unofficial fan adaptation by Indie Creations.</div>
       </div>
     </div>
     <script src="Build/WebGLBuild.loader.js"></script>
@@ -30,23 +32,52 @@
       var canvas = document.querySelector("#unity-canvas");
       var fill = document.querySelector("#sm-loader-fill");
       var status = document.querySelector("#sm-loader-status");
+      var pct = document.querySelector("#sm-loader-pct");
+      var tip = document.querySelector("#sm-loader-tip");
+      var tips = [
+        "Press E to talk to people in the street.",
+        "Scan a building (T) to see its land taxes. Beautiful homes pay less.",
+        "When sortition picks you to vote on a building, answer it.",
+        "Hood up (R) and you're Anonymous: just your Rep on your tag.",
+        "Claim a plot on Badra Lane and build a home of your own.",
+        "Press M for the map of the area, Enter to chat.",
+        "Every Hydrafill ad is a collectible. Find them all.",
+        "Green circles verify you. Proof verified, welcome.",
+      ];
+      var tipAt = Math.floor(Math.random() * tips.length);
+      tip.textContent = tips[tipAt];
+      var tipTimer = setInterval(function () {
+        tip.classList.add("sm-fade");
+        setTimeout(function () { tipAt = (tipAt + 1) % tips.length; tip.textContent = tips[tipAt]; tip.classList.remove("sm-fade"); }, 400);
+      }, 5200);
+      // Browser performance: render at most 1.25x the page's CSS pixels on desktops (1.5x on phones). A 2x or 3x
+      // "retina" canvas is 4-9x the pixels for a barely visible difference, and it's what makes WebGL crawl.
+      var mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      var dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.25);
       createUnityInstance(canvas, {
         arguments: [],
         dataUrl: "Build/WebGLBuild.data.unityweb",
         frameworkUrl: "Build/WebGLBuild.framework.js.unityweb",
         codeUrl: "Build/WebGLBuild.wasm.unityweb",
-        streamingAssetsUrl: "StreamingAssets",
+        // against the page's base address (the playtest page serves this file at /play with a base of /game/);
+        // a bare relative path would resolve against /play and miss the folder
+        streamingAssetsUrl: new URL("StreamingAssets", document.baseURI).href,
         companyName: "Indie Creations",
         productName: "Snowmoon Forever",
         productVersion: "0.1.0",
         autoSyncPersistentDataPath: true,
+        devicePixelRatio: dpr,
       }, function (progress) {
-        fill.style.width = Math.round(progress * 100) + "%";
-        status.textContent = progress < 0.9 ? "Loading Meldan… " + Math.round(progress * 100) + "%" : "Building Kalimar…";
+        var p = Math.round(progress * 100);
+        fill.style.width = p + "%";
+        pct.textContent = p + "%";
+        status.textContent = progress < 0.35 ? "Downloading the city…" : progress < 0.7 ? "Unpacking Meldan…" : progress < 0.9 ? "Planting the trees…" : "Waking up Kalimar…";
       }).then(function (instance) {
         window.unityInstance = instance;   // the wallet bridge answers Unity through this
+        clearInterval(tipTimer);
         document.querySelector("#sm-loader").classList.add("sm-hidden");
       }).catch(function (message) {
+        clearInterval(tipTimer);
         status.textContent = "Snowmoon Forever couldn't start: " + message;
       });
     </script>

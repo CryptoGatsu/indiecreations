@@ -3,22 +3,40 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 #unity-canvas { width: 100%; height: 100%; display: block; background: #16201a; outline: none; }
 
 #sm-loader {
-  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(ellipse at 50% 40%, #2c3d30 0%, #16201a 70%);
+  position: fixed; inset: 0; overflow: hidden; background: #16201a;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #f4eee0;
-  transition: opacity 0.6s ease;
+  transition: opacity 0.7s ease;
 }
 #sm-loader.sm-hidden { opacity: 0; pointer-events: none; }
-.sm-loader-panel {
-  width: min(420px, 86vw); padding: 28px 26px; border-radius: 22px; text-align: center;
-  background: rgba(30, 40, 33, 0.78); border: 1px solid rgba(236, 211, 150, 0.6);
+/* key art (pipeline/higgsfield: loading_keyart_v1), drifting slowly */
+.sm-loader-art {
+  position: absolute; inset: -3%; background: url("loading.jpg") center 40% / cover no-repeat;
+  animation: sm-drift 38s ease-in-out infinite alternate;
 }
-.sm-loader-title { font-family: Georgia, "Times New Roman", serif; font-size: 34px; color: #f3e2b4; letter-spacing: 0.5px; }
-.sm-loader-sub { margin-top: 4px; font-size: 14px; color: #d6e2be; }
-.sm-loader-bar { margin: 22px 0 10px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
-#sm-loader-fill { width: 0; height: 100%; background: linear-gradient(90deg, #8dbf5a, #ecce80); transition: width 0.2s; }
-#sm-loader-status { font-size: 13px; color: rgba(244, 238, 224, 0.8); min-height: 18px; }
-.sm-loader-credit { margin-top: 18px; font-size: 11px; color: rgba(244, 238, 224, 0.55); line-height: 1.4; }
+@keyframes sm-drift { from { transform: scale(1.0) translate(0, 0); } to { transform: scale(1.07) translate(-1.5%, -1%); } }
+.sm-loader-shade {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(10, 16, 12, 0.35) 0%, rgba(10, 16, 12, 0) 28%, rgba(10, 16, 12, 0) 52%, rgba(10, 16, 12, 0.82) 100%);
+}
+.sm-loader-mark {
+  position: absolute; top: 5vh; left: 50%; transform: translateX(-50%);
+  width: min(360px, 62vw); filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.45));
+}
+.sm-loader-panel {
+  position: absolute; left: 50%; bottom: 6vh; transform: translateX(-50%); width: min(560px, 88vw);
+  padding: 18px 22px; border-radius: 18px; box-sizing: border-box;
+  background: rgba(22, 30, 25, 0.72); border: 1px solid rgba(236, 211, 150, 0.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.sm-loader-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
+#sm-loader-status { color: #f3e2b4; letter-spacing: 0.2px; }
+#sm-loader-pct { color: rgba(244, 238, 224, 0.7); font-variant-numeric: tabular-nums; }
+.sm-loader-bar { margin: 10px 0 12px; height: 7px; border-radius: 4px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
+#sm-loader-fill { width: 0; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #5e8c4a, #8dbf5a 55%, #ecce80); transition: width 0.25s; }
+#sm-loader-tip { min-height: 20px; font-size: 14px; color: rgba(244, 238, 224, 0.92); transition: opacity 0.4s; }
+#sm-loader-tip.sm-fade { opacity: 0; }
+.sm-loader-credit { margin-top: 10px; font-size: 11px; color: rgba(244, 238, 224, 0.55); line-height: 1.4; }
+@media (max-height: 520px) { .sm-loader-mark { width: min(240px, 40vw); top: 3vh; } .sm-loader-panel { bottom: 3vh; padding: 12px 16px; } }
 
 /* HTML text inputs laid over UI Toolkit text fields (Runtime/UI/WebTextInput.cs); same look as the in-game field. */
 .sm-text-input {
