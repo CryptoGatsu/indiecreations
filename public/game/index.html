@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!-- Snowmoon Forever — GPL-3.0-or-later. WebGL page template (CLAUDE.md §2, §2.1). Source of truth: /client-web;
+     Snowmoon > Build WebGL copies it to Assets/WebGLTemplates/Snowmoon. -->
+<html lang="en-us">
+  <head>
+    <base href="/game/">
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+    <title>Snowmoon Forever</title>
+    <meta name="description" content="Snowmoon Forever is based on Snowmoon by Vitalik Buterin (GPL-3.0). Unofficial fan adaptation by Indie Creations.">
+    <link rel="stylesheet" href="style.css">
+    <script src="config.js"></script>
+    <script src="wallet.js"></script>
+    <script src="/presence.js" data-game="snowmoon" defer></script>
+  </head>
+  <body>
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <div id="sm-loader">
+      <div class="sm-loader-panel">
+        <div class="sm-loader-title">Snowmoon Forever</div>
+        <div class="sm-loader-sub">A citizen's life in Veridia, 3724</div>
+        <div class="sm-loader-bar"><div id="sm-loader-fill"></div></div>
+        <div id="sm-loader-status">Loading Meldan…</div>
+        <div class="sm-loader-credit">Snowmoon Forever is based on Snowmoon by Vitalik Buterin (GPL-3.0). Unofficial fan adaptation by Indie Creations.</div>
+      </div>
+    </div>
+    <script src="Build/WebGLBuild.loader.js"></script>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var fill = document.querySelector("#sm-loader-fill");
+      var status = document.querySelector("#sm-loader-status");
+      createUnityInstance(canvas, {
+        arguments: [],
+        dataUrl: "Build/WebGLBuild.data.unityweb",
+        frameworkUrl: "Build/WebGLBuild.framework.js.unityweb",
+        codeUrl: "Build/WebGLBuild.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Indie Creations",
+        productName: "Snowmoon Forever",
+        productVersion: "0.1.0",
+        autoSyncPersistentDataPath: true,
+      }, function (progress) {
+        fill.style.width = Math.round(progress * 100) + "%";
+        status.textContent = progress < 0.9 ? "Loading Meldan… " + Math.round(progress * 100) + "%" : "Building Kalimar…";
+      }).then(function (instance) {
+        window.unityInstance = instance;   // the wallet bridge answers Unity through this
+        document.querySelector("#sm-loader").classList.add("sm-hidden");
+      }).catch(function (message) {
+        status.textContent = "Snowmoon Forever couldn't start: " + message;
+      });
+    </script>
+  </body>
+</html>
