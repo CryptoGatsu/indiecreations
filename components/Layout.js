@@ -76,6 +76,9 @@ export default function Layout({ children }) {
             <a href={LINKS.pons} target="_blank" rel="noreferrer">
               PONS Launchpad
             </a>
+            <a href={LINKS.coingecko} target="_blank" rel="noreferrer">
+              CoinGecko
+            </a>
             <a href={LINKS.tokenExplorer || LINKS.explorer} target="_blank" rel="noreferrer">
               Explorer
             </a>

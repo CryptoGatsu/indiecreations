@@ -56,6 +56,9 @@ export default function TokenSection() {
             <a href={LINKS.pons} target="_blank" rel="noreferrer" className="btn btn-primary">
               Buy on PONS
             </a>
+            <a href={LINKS.coingecko} target="_blank" rel="noreferrer" className="btn btn-ghost">
+              CoinGecko
+            </a>
             {LINKS.tokenExplorer && (
               <a href={LINKS.tokenExplorer} target="_blank" rel="noreferrer" className="btn btn-ghost">
                 View on explorer
