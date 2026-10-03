@@ -3,7 +3,7 @@
      Snowmoon > Build WebGL copies it to Assets/WebGLTemplates/Snowmoon. -->
 <html lang="en-us">
   <head>
-    <base href="/game/">
+    <base href="/snowmoon-forever/">
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="config.js"></script>
     <script src="wallet.js"></script>
-    <script src="/presence.js" data-game="snowmoon" defer></script>
+    <script src="/presence.js" data-game="snowmoon-forever" defer></script>
   </head>
   <body>
     <canvas id="unity-canvas" tabindex="-1"></canvas>
@@ -24,7 +24,7 @@
         <div class="sm-loader-row"><span id="sm-loader-status">Downloading the city…</span><span id="sm-loader-pct">0%</span></div>
         <div class="sm-loader-bar"><div id="sm-loader-fill"></div></div>
         <div id="sm-loader-tip">Press E to talk to people in the street.</div>
-        <div class="sm-loader-credit">Private alpha · Snowmoon Forever is based on Snowmoon by Vitalik Buterin (GPL-3.0). Unofficial fan adaptation by Indie Creations.</div>
+        <div class="sm-loader-credit">Alpha · Snowmoon Forever is based on Snowmoon by Vitalik Buterin (GPL-3.0). Unofficial fan adaptation by Indie Creations.</div>
       </div>
     </div>
     <script src="Build/WebGLBuild.loader.js"></script>
@@ -59,8 +59,8 @@
         dataUrl: "Build/WebGLBuild.data.unityweb",
         frameworkUrl: "Build/WebGLBuild.framework.js.unityweb",
         codeUrl: "Build/WebGLBuild.wasm.unityweb",
-        // against the page's base address (the playtest page serves this file at /play with a base of /game/);
-        // a bare relative path would resolve against /play and miss the folder
+        // against the page's base address (the site serves this file at /snowmoon-forever with a base of /snowmoon-forever/);
+        // a bare relative path would resolve against /snowmoon-forever and miss the folder
         streamingAssetsUrl: new URL("StreamingAssets", document.baseURI).href,
         companyName: "Indie Creations",
         productName: "Snowmoon Forever",

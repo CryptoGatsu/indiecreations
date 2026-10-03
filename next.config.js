@@ -16,6 +16,7 @@ const nextConfig = {
       { source: '/games/agent-arena', destination: '/games/agentacus', permanent: true },
       { source: '/agent-arena', destination: '/games/agentacus', permanent: true },
       { source: '/sheep', destination: '/my-favorite-sheep', permanent: false },
+      { source: '/snowmoon', destination: '/snowmoon-forever', permanent: false },
     ];
   },
   async rewrites() {
@@ -30,6 +31,8 @@ const nextConfig = {
       { source: '/deathrace3000', destination: '/deathrace3000/index.html' },
       // Don't Worry, You're Safe! (<base href="/youre-safe/">); its API is /api/buddy/* plus the shared game shop routes
       { source: '/youre-safe', destination: '/youre-safe/index.html' },
+      // Snowmoon Forever (<base href="/snowmoon-forever/">); its game server is snowmoon-api.indiecreations.fun
+      { source: '/snowmoon-forever', destination: '/snowmoon-forever/index.html' },
     ];
     if (ARENA_API_ORIGIN) rules.push({ source: '/v1/:path*', destination: `${ARENA_API_ORIGIN}/v1/:path*` });
     return rules;
@@ -47,6 +50,8 @@ const nextConfig = {
       { source: '/youre-safe/Build/data-parts.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
       { source: '/youre-safe/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
       { source: '/youre-safe/TemplateData/buddy.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
+      // Snowmoon Forever's build files keep fixed names: browsers revalidate them (a cheap 304 when unchanged)
+      { source: '/snowmoon-forever/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }] },
       // DeathRace3000's build files keep fixed names: browsers revalidate them (a cheap 304 when unchanged)
       { source: '/deathrace3000/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }] },
     ];
