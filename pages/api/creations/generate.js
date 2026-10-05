@@ -12,15 +12,18 @@ import { creatorStatus, gameView, holderWallet, SITE_PER_DAY, siteUsedToday } fr
 //   { type: 'continue', jobId }    this function run is out of time; what was written is saved, POST { jobId } to go on
 //   { type: 'done', game }         saved; game.version is the new version
 //   { type: 'error', error }       nothing saved; the message is meant for the creator
-// A big game can take longer than one function may run, so it is written over up to MAX_LEGS runs: each one stops a
-// little before the platform's limit, saves the text so far, and the next continues from exactly there.
+// A big game can take longer than one function may run, so it is written over as many runs as it needs: each one
+// stops a little before the platform's limit, saves the text so far, and the next continues from exactly there, at low
+// effort (the plan is already in the text, so it writes instead of thinking it all through again). A game is only
+// given up on when two runs in a row add almost nothing, it passes HTML_MAX, or MAX_LEGS runs (a safety net).
 // Checks before any tokens are spent: a verified holder session, enough $CREATIONS for the games they'd have
 // (lib/creations.js tiers), their daily allowance, and the site's. A continuation counts as the same generation.
 export const config = { maxDuration: 300 };
 
 // keep in step with maxDuration: stop, save and say so before the platform cuts off (shorter in development, to try it)
 const LEG_MS = (process.env.NODE_ENV !== 'production' && Number(process.env.CREATIONS_LEG_MS)) || (300 - 20) * 1000;
-const MAX_LEGS = 3;
+const MAX_LEGS = 12;
+const STALL_CHARS = Math.round(LEG_MS / 560); // a run that adds less than this (500 characters in 280 s) made no real progress
 const JOB_TTL_MS = 30 * 60 * 1000; // an unfinished run can be continued for this long
 
 class Refusal extends Error {
@@ -113,6 +116,7 @@ export default async function handler(req, res) {
     send({ type: 'progress', chars });
   };
 
+  const started = Date.now();
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), LEG_MS);
   // keeps the connection busy while Claude is still thinking and no code has arrived yet
@@ -132,6 +136,7 @@ export default async function handler(req, res) {
       originalPrompt: game?.prompt,
       items,
       partial: job?.partial || '',
+      ...(job ? { effort: 'low' } : {}),
       onProgress,
       signal: abort.signal,
     });
@@ -140,13 +145,18 @@ export default async function handler(req, res) {
       ? await addVersion(game, { request: prompt, ...result, title: game.title })
       : await createGame({ owner: wallet, prompt, ...result });
     if (job) await deleteJob(job.id).catch(() => {});
+    console.log(JSON.stringify({ evt: 'creation-done', job: job?.id || null, leg: (job?.legs || 0) + 1, chars: result.html.length, ms: Date.now() - started }));
     send({ type: 'done', game: gameView(saved, { full: true }) });
   } catch (err) {
     if (err instanceof GenerationCutOff) {
       const legs = (job?.legs || 0) + 1;
-      if (legs >= MAX_LEGS || err.text.length > HTML_MAX) {
+      const before = job?.partial.length || 0;
+      const stalls = err.text.length - before < STALL_CHARS ? (job?.stalls || 0) + 1 : 0;
+      console.log(JSON.stringify({ evt: 'creation-leg', job: job?.id || null, leg: legs, before, after: err.text.length, ms: Date.now() - started, stalls }));
+      if (stalls >= 2 || legs >= MAX_LEGS || err.text.length > HTML_MAX) {
         if (job) await deleteJob(job.id).catch(() => {});
-        send({ type: 'error', error: 'The game got too big to finish. Try a simpler idea or a smaller change.' });
+        const why = err.text.length > HTML_MAX || legs >= MAX_LEGS ? 'The game got too big to finish.' : 'Claude got stuck writing this one.';
+        send({ type: 'error', error: `${why} Try describing it a little differently, or start smaller and add to it with changes.` });
       } else {
         try {
           const saved = await saveJob({
@@ -157,6 +167,7 @@ export default async function handler(req, res) {
             request: prompt,
             partial: err.text,
             legs,
+            stalls,
             created_at: job?.created_at || new Date().toISOString(),
           });
           send({ type: 'continue', jobId: saved.id, chars: err.text.length, legs });

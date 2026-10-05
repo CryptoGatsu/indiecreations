@@ -37,7 +37,7 @@ const ago = (date) => {
 // message for the creator.
 async function runGeneration(body, onProgress) {
   let request = body;
-  for (let part = 1; part <= 4; part++) {
+  for (let part = 1; part <= 13; part++) {
     const res = await fetch('/api/creations/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -117,7 +117,7 @@ function Progress({ gen, verb }) {
         <strong>{gen.chars ? `${verb}… ${n(gen.chars)} characters of code` : 'Claude is planning the game…'}</strong>
         <p className="muted small">
           {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, '0')} ·{' '}
-          {gen.part > 1 ? `a big one: still going (part ${gen.part}).` : 'usually 2 to 6 minutes.'} Keep this tab open.
+          {gen.part > 1 ? `a big one: still going (part ${gen.part}).` : 'usually 2 to 6 minutes, longer for big games.'} Keep this tab open.
         </p>
       </div>
     </div>

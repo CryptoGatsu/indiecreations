@@ -148,8 +148,10 @@ create table if not exists public.creations_jobs (
   request      text        not null check (char_length(request) <= 2000),
   partial      text        not null default '' check (char_length(partial) <= 400000),
   legs         integer     not null default 1,
+  stalls       integer     not null default 0,                           -- runs in a row that added almost nothing
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
+alter table public.creations_jobs add column if not exists stalls integer not null default 0;
 create index if not exists creations_jobs_wallet_idx on public.creations_jobs (wallet, created_at desc);
 alter table public.creations_jobs enable row level security;
