@@ -38,7 +38,10 @@ export default function GameSandbox({ src, title, onError, onLoaded, store, onOp
         sendStore();
       }
       if (d.type === 'open-store' && onOpenStore) onOpenStore(typeof d.itemId === 'string' ? d.itemId : null);
-      if (d.type === 'error' && onError) onError(String(d.message || 'Error').slice(0, 300));
+      // wallet extensions' own errors inside the sandbox are not the game's (the runtime filters them too)
+      if (d.type === 'error' && onError && !/metamask|phantom|coinbase wallet|-extension:\/\//i.test(String(d.message))) {
+        onError(String(d.message || 'Error').slice(0, 300));
+      }
       if (d.type === 'loaded' && onLoaded) onLoaded();
     };
     window.addEventListener('message', onMessage);
