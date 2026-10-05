@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { shortAddress, TOKEN_TICKER } from '../../lib/config';
 import { MIN_CREATOR_TOKENS, tileColors } from '../../lib/creations';
+import { LiveCount } from '../../components/CreationStats';
 
 // Community games: made by holders with a prompt (/create), free for anyone to play.
 export default function Community() {
@@ -11,7 +12,7 @@ export default function Community() {
 
   useEffect(() => {
     setGames(null);
-    fetch(`/api/creations?sort=${sort}`)
+    fetch(`/api/creations?sort=${sort}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => setGames(d.games || []))
       .catch(() => setGames([]));
@@ -67,8 +68,10 @@ export default function Community() {
                 </span>
                 <h3>{g.title}</h3>
                 <p className="muted small">{g.description}</p>
+                <LiveCount stats={g.stats} />
                 <p className="muted small">
-                  by {shortAddress(g.owner)} · {g.plays.toLocaleString('en-US')} plays
+                  by {shortAddress(g.owner)} · {g.plays.toLocaleString('en-US')} plays · {g.versions}{' '}
+                  {g.versions === 1 ? 'prompt' : 'prompts'}
                 </p>
               </Link>
             );

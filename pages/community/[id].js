@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import CreationStats, { useGamePresence } from '../../components/CreationStats';
 import GameSandbox from '../../components/GameSandbox';
 import { LINKS, shortAddress } from '../../lib/config';
 import { rawUrl } from '../../lib/creations';
@@ -14,6 +15,10 @@ export default function CommunityGame() {
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState('');
   const [reportNote, setReportNote] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const onLoaded = useCallback(() => setLoaded(true), []);
+  // only published games count players: a creator opening their draft here doesn't
+  useGamePresence(data?.game?.published && !data.game.hidden ? data.game.id : null, loaded);
 
   useEffect(() => {
     if (!isReady) return;
@@ -74,7 +79,7 @@ export default function CommunityGame() {
           <p className="muted small">
             Made by{' '}
             <a href={`${LINKS.explorer}/address/${game.owner}`} target="_blank" rel="noreferrer" className="mono">{shortAddress(game.owner)}</a>{' '}
-            with Claude · {game.plays.toLocaleString('en-US')} plays
+            with Claude
             {game.hidden ? ' · Taken down' : !game.published && ' · Draft: only you can see it'}
           </p>
         </div>
@@ -84,7 +89,9 @@ export default function CommunityGame() {
         </div>
       </div>
 
-      <GameSandbox src={rawUrl(game.id, game.version)} title={game.title} />
+      <GameSandbox src={rawUrl(game.id, game.version)} title={game.title} onLoaded={onLoaded} />
+
+      <CreationStats id={game.id} />
 
       {data.admin && data.reports?.length > 0 && (
         <div className="card creations-errors">

@@ -4,7 +4,7 @@ import { canManage, gameView, isPublic } from '../../../../lib/creators';
 
 // GET    -> { game } (+ versions and reports for its owner / the studio). Drafts and taken-down games are only
 //           visible to them.
-// PATCH  { title?, published?, version? } (owner) / { hidden? } (studio) -> { game }
+// PATCH  { title?, published?, version?, showPrompts? } (owner) / { hidden? } (studio) -> { game }
 // DELETE -> removes the game and every version of it (owner or studio)
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -34,6 +34,7 @@ export default async function handler(req, res) {
           patch.title = title;
         }
         if (typeof body.published === 'boolean') patch.published = body.published;
+        if (typeof body.showPrompts === 'boolean') patch.show_prompts = body.showPrompts;
         if (body.version !== undefined) {
           const v = Number(body.version);
           const kept = await listVersions(id);

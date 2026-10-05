@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ConnectButton from '../components/ConnectButton';
+import CreationStats, { LiveCount } from '../components/CreationStats';
 import GameSandbox from '../components/GameSandbox';
 import useHolderSession from '../components/useHolderSession';
 import { Mark } from '../components/Logo';
@@ -243,6 +244,7 @@ function GameList({ games }) {
             </span>
             <h3>{g.title}</h3>
             <p className="muted small">{g.description || g.prompt}</p>
+            <LiveCount stats={g.stats} />
             <p className="muted small">
               v{g.version} · {n(g.plays)} plays · updated {ago(g.updatedAt)}
             </p>
@@ -428,6 +430,15 @@ function Editor({ id, me, reload }) {
             </>
           )}
 
+          <label className="creations-check small">
+            <input
+              type="checkbox"
+              checked={game.showPrompts}
+              onChange={(e) => patch({ showPrompts: e.target.checked }, e.target.checked ? 'Your prompts show on the game page.' : 'Your prompts are private.')}
+            />
+            Show my prompts in the game&apos;s stats
+          </label>
+
           <h3>Name</h3>
           <form
             className="creations-rename"
@@ -468,6 +479,8 @@ function Editor({ id, me, reload }) {
           <button type="button" className="link-button small creations-delete" onClick={remove}>Delete this game</button>
         </aside>
       </div>
+
+      <CreationStats id={game.id} owner refreshKey={`${game.version}:${game.versions}:${game.showPrompts}`} />
     </div>
   );
 }

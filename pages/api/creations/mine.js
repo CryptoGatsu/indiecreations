@@ -1,5 +1,6 @@
 import { creatorStatus, gameView, holderWallet } from '../../../lib/creators';
 import { aiConfigured } from '../../../lib/creationAI';
+import { presenceStats, statsFor } from '../../../lib/creationStore';
 
 // GET -> the signed-in holder's games, how many their holdings allow, and today's allowance.
 export default async function handler(req, res) {
@@ -8,7 +9,7 @@ export default async function handler(req, res) {
   const wallet = await holderWallet(req);
   if (!wallet) return res.status(401).json({ error: 'Verify your wallet first.' });
   try {
-    const s = await creatorStatus(wallet);
+    const [s, stats] = await Promise.all([creatorStatus(wallet), presenceStats().catch(() => ({}))]);
     return res.status(200).json({
       address: wallet,
       balance: Number.isFinite(s.balance) ? s.balance : null, // null: a studio wallet
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
       usedToday: s.usedToday,
       perDay: s.perDay,
       available: aiConfigured(),
-      games: s.games.map((g) => gameView(g, { full: true })),
+      games: s.games.map((g) => gameView(g, { full: true, stats: statsFor(stats, g.id) })),
     });
   } catch (err) {
     console.error('creations mine failed:', err);

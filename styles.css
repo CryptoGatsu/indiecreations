@@ -2139,3 +2139,57 @@ main > .section:first-child {
 @media (max-width: 860px) {
   .creations-editor { grid-template-columns: 1fr; }
 }
+
+/* Community games: stats under each game */
+.creations-stats { margin-top: 20px; }
+.creations-stats h2 { font-size: 24px; margin-bottom: 16px; }
+.creations-stats h3 { font-size: 18px; margin: 24px 0 10px; }
+.creations-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.creations-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+}
+.creations-stat strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+.creations-stat span:last-child { color: var(--muted); font-size: 13px; }
+.creations-prompts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 2px solid var(--line);
+}
+.creations-prompts li { position: relative; padding: 0 0 16px 18px; }
+.creations-prompts li::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.creations-prompts li.muted::before { background: var(--line); }
+.creations-prompt-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.creations-prompts p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.creations-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.creations-item .player-count, .creations-card .player-count { margin: 0; }
+
+@media (max-width: 720px) {
+  .creations-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .creations-stat strong { font-size: 20px; }
+}
