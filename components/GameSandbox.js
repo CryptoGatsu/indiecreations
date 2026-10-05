@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { SANDBOX } from '../lib/creations';
+import { createNetRelay, netPlayer } from '../lib/gameNet';
 
 // A community game in its sandbox. The iframe gets scripts and pointer lock only; the game's own response headers
 // (pages/api/creations/[id]/raw.js) isolate it as well. onError(message) hears about errors the game hits, reported by
@@ -13,8 +14,40 @@ import { SANDBOX } from '../lib/creations';
 //
 // ref.takeSnapshot() -> Promise<string | null>: a 640x360 JPEG data URL of what the game is showing, or null when the
 // frame is blank or the game doesn't answer (the runtime inside the game does the capture).
-const GameSandbox = forwardRef(function GameSandbox({ src, title, onError, onLoaded, store, onOpenStore }, ref) {
+//
+// net: { gameId, version, wallet, room, inviteUrl } turns on online multiplayer: the game's IC.net calls are relayed
+// to the other players (lib/gameNet.js), and a bar under the game shows the room. inviteUrl(code) makes the share
+// link (only for published games: a friend can't open a draft).
+const GameSandbox = forwardRef(function GameSandbox({ src, title, onError, onLoaded, store, onOpenStore, net }, ref) {
   const frame = useRef(null);
+  const relay = useRef(null);
+  const netRef = useRef(net);
+  netRef.current = net;
+  const [netState, setNetState] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  // one relay per game frame; it closes with the frame (a reload, another version, leaving the page)
+  const closeRelay = () => {
+    relay.current?.dispose();
+    relay.current = null;
+    setNetState(null);
+  };
+  useEffect(() => closeRelay, []);
+  const relayFor = () => {
+    const n = netRef.current;
+    if (!n) return null;
+    if (!relay.current) {
+      relay.current = createNetRelay({
+        gameId: n.gameId,
+        version: n.version,
+        player: netPlayer(n.wallet),
+        roomHint: n.room,
+        toGame: (msg) => frame.current?.contentWindow?.postMessage(msg, '*'),
+        onState: setNetState,
+      });
+    }
+    return relay.current;
+  };
   const shot = useRef(null); // the pending takeSnapshot: { resolve, timer }
 
   useImperativeHandle(ref, () => ({
@@ -59,7 +92,9 @@ const GameSandbox = forwardRef(function GameSandbox({ src, title, onError, onLoa
       if (d.type === 'ready') {
         readySinceLoad.current = true;
         sendStore();
+        closeRelay(); // a reload of the game starts with no room
       }
+      if (d.type === 'net') relayFor()?.handle(d);
       if (d.type === 'snapshot' && shot.current) {
         // only a request we made counts, and only a JPEG data URL
         const ok = typeof d.image === 'string' && /^data:image\/jpeg;base64,/.test(d.image) && d.image.length < 400_000;
@@ -117,6 +152,35 @@ const GameSandbox = forwardRef(function GameSandbox({ src, title, onError, onLoa
           referrerPolicy="no-referrer"
           onLoad={onLoad}
         />
+      )}
+      {netState && (
+        <div className="sandbox-room">
+          <span className="live-dot" aria-hidden="true" />
+          <span>
+            Online · room <strong className="mono">{netState.room}</strong> · {netState.players.length} player
+            {netState.players.length === 1 ? '' : 's'}
+            {netState.players.length > 0 && <span className="muted">: {netState.players.map((p) => (p.id === netState.me ? `${p.name} (you)` : p.name)).join(', ')}</span>}
+          </span>
+          {net?.inviteUrl ? (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={async () => {
+                const url = net.inviteUrl(netState.room);
+                try {
+                  if (navigator.share) await navigator.share({ title, url });
+                  else await navigator.clipboard.writeText(url);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                } catch {}
+              }}
+            >
+              {copied ? 'Link copied' : 'Invite friends'}
+            </button>
+          ) : (
+            <span className="muted small">Open the game in another tab to test with a second player.</span>
+          )}
+        </div>
       )}
       <div className="sandbox-bar">
         <span className="muted small">Click the game to play. It runs sandboxed: never type a password or seed phrase into it.</span>
