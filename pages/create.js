@@ -32,41 +32,51 @@ const ago = (date) => {
   return `${Math.floor(s / 86400)} d ago`;
 };
 
-// Starts a generation and follows its progress. Resolves the saved game; throws with a message for the creator.
+// Starts a generation and follows its progress. A big game is written over several server runs: when one runs out of
+// time it says 'continue', and the next picks up from the text saved so far. Resolves the saved game; throws with a
+// message for the creator.
 async function runGeneration(body, onProgress) {
-  const res = await fetch('/api/creations/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || 'Could not start. Try again.');
-  }
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let i;
-    while ((i = buffer.indexOf('\n')) >= 0) {
-      const line = buffer.slice(0, i).trim();
-      buffer = buffer.slice(i + 1);
-      if (!line) continue;
-      const msg = JSON.parse(line);
-      if (msg.type === 'progress' && msg.chars >= 0) onProgress(msg.chars);
-      if (msg.type === 'done') return msg.game;
-      if (msg.type === 'error') throw new Error(msg.error);
+  let request = body;
+  for (let part = 1; part <= 4; part++) {
+    const res = await fetch('/api/creations/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Could not start. Try again.');
     }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let next = null;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let i;
+      while ((i = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, i).trim();
+        buffer = buffer.slice(i + 1);
+        if (!line) continue;
+        const msg = JSON.parse(line);
+        if (msg.type === 'progress' && msg.chars >= 0) onProgress(msg.chars, part);
+        if (msg.type === 'continue') next = { jobId: msg.jobId };
+        if (msg.type === 'done') return msg.game;
+        if (msg.type === 'error') throw new Error(msg.error);
+      }
+    }
+    if (!next) throw new Error('The connection dropped. Your game may still be saving: refresh in a minute to check.');
+    request = next;
   }
-  throw new Error('The connection dropped. Your game may still be saving: refresh in a minute to check.');
+  throw new Error('The game got too big to finish. Try a simpler idea or a smaller change.');
 }
 
 function useGeneration() {
   const [busy, setBusy] = useState(false);
   const [chars, setChars] = useState(0);
+  const [part, setPart] = useState(1);
   const [started, setStarted] = useState(0);
   const [error, setError] = useState(null);
 
@@ -74,9 +84,13 @@ function useGeneration() {
     setBusy(true);
     setError(null);
     setChars(0);
+    setPart(1);
     setStarted(Date.now());
     try {
-      return await runGeneration(body, setChars);
+      return await runGeneration(body, (c, p) => {
+        setChars(c);
+        setPart(p);
+      });
     } catch (err) {
       setError(err.message);
       return null;
@@ -84,7 +98,7 @@ function useGeneration() {
       setBusy(false);
     }
   };
-  return { busy, chars, started, error, run, clearError: () => setError(null) };
+  return { busy, chars, part, started, error, run, clearError: () => setError(null) };
 }
 
 function Progress({ gen, verb }) {
@@ -102,7 +116,8 @@ function Progress({ gen, verb }) {
       <div>
         <strong>{gen.chars ? `${verb}… ${n(gen.chars)} characters of code` : 'Claude is planning the game…'}</strong>
         <p className="muted small">
-          {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, '0')} · usually 1 to 4 minutes. Keep this tab open.
+          {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, '0')} ·{' '}
+          {gen.part > 1 ? `a big one: still going (part ${gen.part}).` : 'usually 2 to 6 minutes.'} Keep this tab open.
         </p>
       </div>
     </div>

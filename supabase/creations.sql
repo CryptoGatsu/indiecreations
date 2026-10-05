@@ -137,3 +137,19 @@ grant execute on function public.creations_play(text) to service_role;
 grant execute on function public.creations_ping(text, text, text) to service_role;
 grant execute on function public.creations_stats(text) to service_role;
 grant execute on function public.creations_report(text, text, text) to service_role;
+
+-- A generation that needs more than one function run (lib/creationAI.js): what Claude has written so far, so the next
+-- run continues from there instead of starting over. Short-lived; finished and abandoned rows are cleared after a day.
+create table if not exists public.creations_jobs (
+  id           uuid        primary key,
+  wallet       text        not null check (wallet ~ '^0x[0-9a-f]{40}$'),
+  game_id      text        references public.creations_games (id) on delete cascade,
+  base_version integer,                                                    -- the version an edit started from
+  request      text        not null check (char_length(request) <= 2000),
+  partial      text        not null default '' check (char_length(partial) <= 400000),
+  legs         integer     not null default 1,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create index if not exists creations_jobs_wallet_idx on public.creations_jobs (wallet, created_at desc);
+alter table public.creations_jobs enable row level security;
