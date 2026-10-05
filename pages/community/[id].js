@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import CreationStats, { useGamePresence } from '../../components/CreationStats';
+import CreatorStore, { useCreatorStore } from '../../components/CreatorStore';
 import GameSandbox from '../../components/GameSandbox';
 import { LINKS, shortAddress } from '../../lib/config';
 import { rawUrl } from '../../lib/creations';
@@ -19,6 +20,13 @@ export default function CommunityGame() {
   const onLoaded = useCallback(() => setLoaded(true), []);
   // only published games count players: a creator opening their draft here doesn't
   useGamePresence(data?.game?.published && !data.game.hidden ? data.game.id : null, loaded);
+
+  // the creator's store: what this player owns goes into the game, and the game can ask to open the store
+  const { data: store, reload: reloadStore } = useCreatorStore(data?.game?.id);
+  const gameStore = useMemo(() => (store ? { items: store.items.filter((i) => i.available), owned: store.owned } : null), [store]);
+  const [focus, setFocus] = useState(undefined);
+  const onOpenStore = useCallback((itemId) => setFocus(itemId), []);
+  const onFocusDone = useCallback(() => setFocus(undefined), []);
 
   useEffect(() => {
     if (!isReady) return;
@@ -89,7 +97,15 @@ export default function CommunityGame() {
         </div>
       </div>
 
-      <GameSandbox src={rawUrl(game.id, game.version)} title={game.title} onLoaded={onLoaded} />
+      <GameSandbox
+        src={rawUrl(game.id, game.version)}
+        title={game.title}
+        onLoaded={onLoaded}
+        store={gameStore}
+        onOpenStore={onOpenStore}
+      />
+
+      <CreatorStore gameId={game.id} store={store} reload={reloadStore} focus={focus} onFocusDone={onFocusDone} />
 
       <CreationStats id={game.id} />
 

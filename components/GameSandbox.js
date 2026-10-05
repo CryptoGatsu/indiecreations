@@ -7,9 +7,24 @@ import { SANDBOX } from '../lib/creations';
 //
 // A sandboxed frame can still navigate itself. Every load of a real game announces itself ('ready', from the runtime);
 // a load that doesn't is some other page the game navigated to, so it is replaced with a notice.
-export default function GameSandbox({ src, title, onError, onLoaded }) {
+//
+// store: { items: [{ id, name, description }], owned: [ids] } - handed to the game (window.IC inside it) on every load
+// and whenever it changes. onOpenStore(itemId) runs when the game asks to show the store.
+export default function GameSandbox({ src, title, onError, onLoaded, store, onOpenStore }) {
   const frame = useRef(null);
   const readySinceLoad = useRef(false);
+  const storeRef = useRef(store);
+  storeRef.current = store;
+
+  const sendStore = () => {
+    const s = storeRef.current;
+    if (!s || !frame.current?.contentWindow) return;
+    const items = (s.items || []).map(({ id, name, description }) => ({ id, name, description }));
+    // '*': the game has an opaque origin, so there is no origin to name; only this frame receives it
+    frame.current.contentWindow.postMessage({ source: 'ic-page', type: 'store', items, owned: s.owned || [] }, '*');
+  };
+
+  useEffect(sendStore, [store]);
   const [left, setLeft] = useState(false);
   const [run, setRun] = useState(0);
 
@@ -18,13 +33,17 @@ export default function GameSandbox({ src, title, onError, onLoaded }) {
       if (!frame.current || e.source !== frame.current.contentWindow) return;
       const d = e.data;
       if (!d || d.source !== 'ic-creation') return;
-      if (d.type === 'ready') readySinceLoad.current = true;
+      if (d.type === 'ready') {
+        readySinceLoad.current = true;
+        sendStore();
+      }
+      if (d.type === 'open-store' && onOpenStore) onOpenStore(typeof d.itemId === 'string' ? d.itemId : null);
       if (d.type === 'error' && onError) onError(String(d.message || 'Error').slice(0, 300));
       if (d.type === 'loaded' && onLoaded) onLoaded();
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [onError, onLoaded]);
+  }, [onError, onLoaded, onOpenStore]);
 
   const onLoad = () => {
     // messages posted while the page parsed can land just after the load event: give them a moment

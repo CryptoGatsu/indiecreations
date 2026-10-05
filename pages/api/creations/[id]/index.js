@@ -1,11 +1,12 @@
 import { isGameId, TITLE_MAX } from '../../../../lib/creations';
 import { deleteGame, getGame, listReports, listVersions, updateGame } from '../../../../lib/creationStore';
 import { canManage, gameView, isPublic } from '../../../../lib/creators';
+import { deleteItemsOf, salesOf } from '../../../../lib/creatorStore';
 
 // GET    -> { game } (+ versions and reports for its owner / the studio). Drafts and taken-down games are only
 //           visible to them.
 // PATCH  { title?, published?, version?, showPrompts? } (owner) / { hidden? } (studio) -> { game }
-// DELETE -> removes the game and every version of it (owner or studio)
+// DELETE -> removes the game and every version of it (owner or studio), unless players have bought its items
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const { id } = req.query;
@@ -53,6 +54,11 @@ export default async function handler(req, res) {
 
     if (req.method === 'DELETE') {
       if (!manager) return res.status(403).json({ error: 'Only the creator can delete this game.' });
+      // players who bought its items keep them, so a game with sales stays (it can be unpublished)
+      if ((await salesOf(id)).total.sold > 0) {
+        return res.status(409).json({ error: 'Players have bought items from this game, so it can\'t be deleted. Unpublish it instead.' });
+      }
+      await deleteItemsOf(id);
       await deleteGame(id);
       return res.status(200).json({ ok: true });
     }

@@ -2193,3 +2193,50 @@ main > .section:first-child {
   .creations-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .creations-stat strong { font-size: 20px; }
 }
+
+/* Community games: creator stores */
+.creations-store, .creations-store-manager { margin-top: 20px; }
+.creations-store-head h2 { font-size: 24px; margin-bottom: 4px; }
+.creations-store-head p { margin: 0 0 16px; }
+.creations-store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.creations-store-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.creations-store-item h3 { font-size: 17px; margin: 4px 0 0; }
+.creations-store-item p { margin: 0; }
+.creations-store-art {
+  display: flex;
+  align-items: flex-end;
+  aspect-ratio: 4 / 3;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.15;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.creations-store-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 6px; }
+.creations-store .banner { margin-bottom: 14px; }
+.creations-store-stats { margin-bottom: 16px; }
+.creations-store-list { list-style: none; margin: 0 0 16px; padding: 0; border-top: 1px solid var(--line); }
+.creations-store-list > li { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.creations-store-row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.creations-store-row p { margin: 3px 0 0; }
+.creations-store-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.creations-pill-off { margin-left: 8px; }
+.creations-item-form { display: grid; gap: 12px; max-width: 520px; }
+.creations-item-form .actions { margin-top: 0; }
+.creations-price .admin-input { max-width: 160px; }
+.creations-store-note { margin: 12px 0 0; }
+.creations-unlock { margin-top: 10px; }

@@ -1,6 +1,7 @@
 import { isGameId, PROMPT_MAX, MIN_CREATOR_TOKENS } from '../../../lib/creations';
 import { addVersion, createGame, getGame, getHtml, logGeneration, persistent } from '../../../lib/creationStore';
 import { aiConfigured, generateGame, GenerationError } from '../../../lib/creationAI';
+import { listItems } from '../../../lib/creatorStore';
 import { creatorStatus, gameView, holderWallet, SITE_PER_DAY, siteUsedToday } from '../../../lib/creators';
 
 // POST { prompt, id? } -> makes a new game from a prompt, or (with id) a new version of one of the holder's games.
@@ -90,10 +91,13 @@ export default async function handler(req, res) {
       current = await getHtml(game.id, game.version);
       if (!current) throw new GenerationError('The current version could not be loaded. Try again.');
     }
+    // the store's items on sale, so every change keeps them working (and a new one can be built in)
+    const items = game ? (await listItems(game.id)).filter((i) => i.available).map(({ id, name, description }) => ({ id, name, description })) : [];
     const result = await generateGame({
       request: prompt,
       current,
       originalPrompt: game?.prompt,
+      items,
       onProgress,
       signal: abort.signal,
     });

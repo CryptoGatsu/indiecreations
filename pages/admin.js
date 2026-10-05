@@ -130,7 +130,8 @@ function Payouts({ s }) {
         <div><dt>Minimum before a payout</dt><dd>${s.config.minUsd}</dd></div>
         <div><dt>First paying month</dt><dd>{s.config.startMonth || 'not set'}</dd></div>
         {next && <div><dt>Revenue waiting for the next payout</dt><dd>{dollars(next.pendingUsdCents)} of {dollars(next.minUsdCents)}</dd></div>}
-        {next && <div><dt>Next payout would take from the treasury</dt><dd>{tokens(next.poolRaw, d)} {TOKEN_TICKER}</dd></div>}
+        {next && <div><dt>Next payout would take from the treasury</dt><dd>{tokens(BigInt(next.poolRaw) + BigInt(next.creatorsRaw || 0), d)} {TOKEN_TICKER}</dd></div>}
+        {next && BigInt(next.creatorsRaw || 0) > 0n && <div><dt>of which creators&apos; store cut</dt><dd>{tokens(next.creatorsRaw, d)} {TOKEN_TICKER}</dd></div>}
         <div><dt>Last payout published</dt><dd>{when(c.lastPublishedAt)}</dd></div>
         <div><dt>Contract allows the next payout</dt><dd>{c.nextPublishAllowedAt ? when(c.nextPublishAllowedAt) : 'any time'}</dd></div>
         <div><dt>Claimed by holders so far</dt><dd>{tokens(c.totalClaimedRaw, d)} {TOKEN_TICKER}</dd></div>

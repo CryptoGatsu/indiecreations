@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ConnectButton from '../components/ConnectButton';
 import CreationStats, { LiveCount } from '../components/CreationStats';
+import { useCreatorStore } from '../components/CreatorStore';
 import GameSandbox from '../components/GameSandbox';
+import StoreManager from '../components/StoreManager';
 import useHolderSession from '../components/useHolderSession';
 import { Mark } from '../components/Logo';
 import { LINKS, TOKEN_TICKER, shortAddress } from '../lib/config';
@@ -267,6 +269,20 @@ function Editor({ id, me, reload }) {
   const [note, setNote] = useState(null);
   const changeBox = useRef(null);
 
+  // the store: the preview gets every item unlocked (or none), so the creator can try both sides
+  const { data: store, reload: reloadStore } = useCreatorStore(id);
+  const [unlockAll, setUnlockAll] = useState(true);
+  const previewStore = useMemo(
+    () => (store ? { items: store.items.filter((i) => i.available), owned: unlockAll ? store.items.map((i) => i.id) : [] } : null),
+    [store, unlockAll]
+  );
+  const onOpenStore = useCallback(() => document.getElementById('store-manager')?.scrollIntoView({ behavior: 'smooth' }), []);
+  const buildIn = useCallback((prompt) => {
+    setChange(prompt);
+    changeBox.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    changeBox.current?.focus({ preventScroll: true });
+  }, []);
+
   const load = useCallback(async () => {
     const res = await fetch(`/api/creations/${id}`);
     const d = await res.json().catch(() => ({}));
@@ -362,7 +378,20 @@ function Editor({ id, me, reload }) {
         </span>
       </div>
 
-      <GameSandbox key={preview} src={rawUrl(game.id, preview)} title={game.title} onError={onError} />
+      <GameSandbox
+        key={preview}
+        src={rawUrl(game.id, preview)}
+        title={game.title}
+        onError={onError}
+        store={previewStore}
+        onOpenStore={onOpenStore}
+      />
+      {store?.items.length > 0 && (
+        <label className="creations-check small creations-unlock">
+          <input type="checkbox" checked={unlockAll} onChange={(e) => setUnlockAll(e.target.checked)} />
+          Preview with every store item unlocked
+        </label>
+      )}
 
       {errors.length > 0 && (
         <div className="card creations-errors">
@@ -478,6 +507,10 @@ function Editor({ id, me, reload }) {
 
           <button type="button" className="link-button small creations-delete" onClick={remove}>Delete this game</button>
         </aside>
+      </div>
+
+      <div id="store-manager">
+        <StoreManager game={game} store={store} reload={reloadStore} onBuild={buildIn} building={gen.busy} />
       </div>
 
       <CreationStats id={game.id} owner refreshKey={`${game.version}:${game.versions}:${game.showPrompts}`} />
