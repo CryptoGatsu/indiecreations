@@ -2252,3 +2252,18 @@ main > .section:first-child {
   border-radius: var(--radius-sm);
   background: #000;
 }
+
+/* Community games: online rooms and random ideas */
+.sandbox-room {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  font-size: 14px;
+}
+.sandbox-room .btn { margin-left: auto; }
+.creations-idea { margin: 12px 0 0; }

@@ -168,3 +168,18 @@ create table if not exists public.creations_thumbs (
   updated_at timestamptz not null default now()
 );
 alter table public.creations_thumbs enable row level security;
+
+-- Random game ideas ("Make a random single-player / multiplayer game"): every idea handed out, so none is given twice.
+-- title_key is the title reduced to lowercase letters and digits; a unique index keeps repeats out.
+create table if not exists public.creations_ideas (
+  id         bigint      generated always as identity primary key,
+  wallet     text        not null check (wallet ~ '^0x[0-9a-f]{40}$'),
+  mode       text        not null check (mode in ('single', 'multi')),
+  title      text        not null check (char_length(title) between 1 and 60),
+  title_key  text        not null,
+  prompt     text        not null check (char_length(prompt) <= 2000),
+  created_at timestamptz not null default now()
+);
+create unique index if not exists creations_ideas_title_key_idx on public.creations_ideas (title_key);
+create index if not exists creations_ideas_wallet_idx on public.creations_ideas (wallet, created_at desc);
+alter table public.creations_ideas enable row level security;

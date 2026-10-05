@@ -198,6 +198,34 @@ function NewGame({ me, onCreated }) {
     if (game) onCreated(game);
   };
 
+  // "Make a random game": Claude invents an idea nobody has made yet (/api/creations/idea), then it is made like any
+  // other prompt, which stays in the box so the creator can see what they got.
+  const [ideaBusy, setIdeaBusy] = useState(null); // 'single' | 'multi'
+  const [ideaError, setIdeaError] = useState(null);
+  const [idea, setIdea] = useState(null);
+  const random = async (mode) => {
+    setIdeaBusy(mode);
+    setIdeaError(null);
+    setIdea(null);
+    try {
+      const res = await fetch('/api/creations/idea', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || 'Could not come up with an idea. Try again.');
+      setPrompt(d.prompt);
+      setIdea(d);
+      setIdeaBusy(null);
+      const game = await gen.run({ prompt: d.prompt });
+      if (game) onCreated(game);
+    } catch (err) {
+      setIdeaError(err.message);
+      setIdeaBusy(null);
+    }
+  };
+
   if (me.slots === 0) {
     return (
       <div className="card notice">
@@ -237,11 +265,24 @@ function NewGame({ me, onCreated }) {
         ))}
       </div>
       <div className="actions">
-        <button className="btn btn-primary" disabled={gen.busy || outOfToday || prompt.trim().length < 3}>
+        <button className="btn btn-primary" disabled={gen.busy || ideaBusy || outOfToday || prompt.trim().length < 3}>
           {gen.busy ? 'Making your game…' : 'Make my game'}
+        </button>
+        <span className="muted small">or</span>
+        <button type="button" className="btn btn-ghost" disabled={gen.busy || ideaBusy || outOfToday} onClick={() => random('single')}>
+          {ideaBusy === 'single' ? 'Thinking of one…' : '🎲 Make a random single-player'}
+        </button>
+        <button type="button" className="btn btn-ghost" disabled={gen.busy || ideaBusy || outOfToday} onClick={() => random('multi')}>
+          {ideaBusy === 'multi' ? 'Thinking of one…' : '🎲 Make a random multiplayer'}
         </button>
         {outOfToday && <span className="muted small">That's today's generations used. Come back tomorrow.</span>}
       </div>
+      {idea && (
+        <p className="small creations-idea">
+          Random {idea.mode === 'multi' ? 'online multiplayer' : 'single-player'} idea: <strong>{idea.title}</strong>
+        </p>
+      )}
+      {ideaError && <p className="error small">{ideaError}</p>}
       <Progress gen={gen} verb="Writing your game" />
       {gen.error && <p className="error small">{gen.error}</p>}
     </form>
@@ -447,6 +488,7 @@ function Editor({ id, me, reload }) {
         onError={onError}
         store={previewStore}
         onOpenStore={onOpenStore}
+        net={{ gameId: game.id, version: preview, wallet: game.owner }}
       />
       {store?.items.length > 0 && (
         <label className="creations-check small creations-unlock">

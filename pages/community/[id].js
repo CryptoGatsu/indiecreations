@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import CreationStats, { useGamePresence } from '../../components/CreationStats';
 import CreatorStore, { useCreatorStore } from '../../components/CreatorStore';
+import useProfile from '../../components/useProfile';
 import GameSandbox from '../../components/GameSandbox';
 import { LINKS, shortAddress } from '../../lib/config';
 import { rawUrl } from '../../lib/creations';
@@ -17,6 +18,7 @@ export default function CommunityGame() {
   const [reason, setReason] = useState('');
   const [reportNote, setReportNote] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  const profile = useProfile(); // names the player in online rooms
   const onLoaded = useCallback(() => setLoaded(true), []);
   // only published games count players: a creator opening their draft here doesn't
   useGamePresence(data?.game?.published && !data.game.hidden ? data.game.id : null, loaded);
@@ -103,6 +105,13 @@ export default function CommunityGame() {
         onLoaded={onLoaded}
         store={gameStore}
         onOpenStore={onOpenStore}
+        net={{
+          gameId: game.id,
+          version: game.version,
+          wallet: profile.address,
+          room: typeof query.room === 'string' ? query.room.toUpperCase() : null,
+          inviteUrl: game.published && !game.hidden ? (code) => `${window.location.origin}/community/${game.id}?room=${code}` : null,
+        }}
       />
 
       <CreatorStore gameId={game.id} store={store} reload={reloadStore} focus={focus} onFocusDone={onFocusDone} />
