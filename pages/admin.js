@@ -130,7 +130,8 @@ function Payouts({ s }) {
         <div><dt>Minimum before a payout</dt><dd>${s.config.minUsd}</dd></div>
         <div><dt>First paying month</dt><dd>{s.config.startMonth || 'not set'}</dd></div>
         {next && <div><dt>Revenue waiting for the next payout</dt><dd>{dollars(next.pendingUsdCents)} of {dollars(next.minUsdCents)}</dd></div>}
-        {next && <div><dt>Next payout would take from the treasury</dt><dd>{tokens(next.poolRaw, d)} {TOKEN_TICKER}</dd></div>}
+        {next && <div><dt>Next payout would take from the treasury</dt><dd>{tokens(BigInt(next.poolRaw) + BigInt(next.creatorsRaw || 0), d)} {TOKEN_TICKER}</dd></div>}
+        {next && BigInt(next.creatorsRaw || 0) > 0n && <div><dt>of which creators&apos; store cut</dt><dd>{tokens(next.creatorsRaw, d)} {TOKEN_TICKER}</dd></div>}
         <div><dt>Last payout published</dt><dd>{when(c.lastPublishedAt)}</dd></div>
         <div><dt>Contract allows the next payout</dt><dd>{c.nextPublishAllowedAt ? when(c.nextPublishAllowedAt) : 'any time'}</dd></div>
         <div><dt>Claimed by holders so far</dt><dd>{tokens(c.totalClaimedRaw, d)} {TOKEN_TICKER}</dd></div>
@@ -386,6 +387,62 @@ function Downloads({ s }) {
   );
 }
 
+// Community games (/community): reported ones first. Taking a game down hides it everywhere at once (its creator can't
+// publish or edit it again); putting it back restores it.
+function CommunityGames() {
+  const [games, setGames] = useState(null);
+  const [error, setError] = useState(null);
+
+  const load = useCallback(async () => {
+    const res = await fetch('/api/admin/creations');
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) return setError(d.error || 'Could not load.');
+    setGames(d.games);
+  }, []);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const setHidden = async (id, hidden) => {
+    const res = await fetch(`/api/creations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hidden }),
+    });
+    if (!res.ok) setError((await res.json().catch(() => ({}))).error || 'Could not update.');
+    load();
+  };
+
+  return (
+    <section className="card admin-card admin-wide">
+      <h2>Community games</h2>
+      <p className="muted small">Made by holders at /create. Reported games come first; open one to read its reports.</p>
+      {error && <p className="error small">{error}</p>}
+      {!games ? (
+        <p className="muted small">Loading…</p>
+      ) : !games.length ? (
+        <p className="muted small">No community games yet.</p>
+      ) : (
+        <div className="admin-table">
+          <div className="admin-tr admin-th"><span>Game</span><span>Creator</span><span>Status</span><span>Plays</span><span>Reports</span><span></span></div>
+          {games.map((g) => (
+            <div className="admin-tr" key={g.id}>
+              <span><a href={`/community/${g.id}`} target="_blank" rel="noreferrer">{g.title}</a></span>
+              <span>{addr(g.owner)}</span>
+              <span>{g.hidden ? 'taken down' : g.published ? 'published' : 'draft'}</span>
+              <span>{g.plays}</span>
+              <span>{g.reports}</span>
+              <span>
+                <button className="link-button" onClick={() => setHidden(g.id, !g.hidden)}>{g.hidden ? 'Put back' : 'Take down'}</button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Admin() {
   const [mounted, setMounted] = useState(false);
   const [status, setStatus] = useState(undefined); // undefined: loading, null: signed out
@@ -444,6 +501,7 @@ export default function Admin() {
             <Months s={status} />
             <Orders s={status} />
             <Downloads s={status} />
+            <CommunityGames />
           </div>
           <p className="muted small admin-foot">
             Admin wallets: {status.config.admins.map((a) => shortAddress(a)).join(', ')}. Add more with ADMIN_WALLETS in Vercel.

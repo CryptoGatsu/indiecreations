@@ -2004,3 +2004,239 @@ main > .section:first-child {
     max-width: 150px;
   }
 }
+
+/* Community games: /create, /community */
+.sandbox .game-frame:not(.game-frame-empty) { background: #000; }
+.sandbox-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.creations-tiers {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.creations-tiers .eyebrow { margin-bottom: 4px; }
+.creations-big { font-size: 34px; font-weight: 700; margin: 0 0 6px; }
+.creations-tier-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+  font-size: 14px;
+}
+.creations-tier-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+}
+.creations-tier-list li.tier-on { border-color: var(--ink); color: var(--ink); font-weight: 600; }
+
+.creations-new { margin-bottom: 20px; }
+.creations-new h2, .creations-editor h2 { font-size: 24px; margin-bottom: 6px; }
+.creations-ideas { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; }
+.creations-note { margin: 0 0 20px; }
+
+.creations-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+}
+.creations-progress p { margin: 2px 0 0; }
+
+.creations-mine { margin-top: 32px; }
+.creations-mine h2 { font-size: 24px; margin-bottom: 14px; }
+.creations-sort { margin-bottom: 24px; }
+.creations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.creations-item, .creations-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+.creations-item:hover, .creations-card:hover { border-color: var(--ink); }
+.creations-item h3, .creations-card h3 { font-size: 20px; margin: 0; }
+.creations-item p, .creations-card p { margin: 0; }
+.creations-tile {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.creations-errors { margin-top: 16px; border-color: var(--error); }
+.creations-errors ul { margin: 8px 0 0; padding-left: 18px; color: var(--error); }
+.creations-errors .actions { margin-top: 14px; }
+
+.creations-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+  align-items: start;
+}
+.creations-side { display: flex; flex-direction: column; gap: 10px; }
+.creations-side h3 { font-size: 16px; margin: 12px 0 0; }
+.creations-side h3:first-child { margin-top: 0; }
+.creations-side .actions { margin-top: 4px; }
+.creations-rename { display: flex; gap: 8px; align-items: center; }
+.creations-rename .admin-input { margin-top: 0; font-family: inherit; }
+.creations-versions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+}
+.creations-versions li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.creations-versions li p { margin: 2px 0 0; overflow-wrap: anywhere; }
+.creations-versions li.version-on strong { text-decoration: underline; }
+.creations-version-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.creations-delete { align-self: flex-start; margin-top: 12px; color: var(--error); }
+.creations-report { margin-top: 18px; }
+.creations-report .card { max-width: 560px; }
+.creations-head-actions { margin-top: 0; }
+
+@media (max-width: 860px) {
+  .creations-editor { grid-template-columns: 1fr; }
+}
+
+/* Community games: stats under each game */
+.creations-stats { margin-top: 20px; }
+.creations-stats h2 { font-size: 24px; margin-bottom: 16px; }
+.creations-stats h3 { font-size: 18px; margin: 24px 0 10px; }
+.creations-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.creations-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+}
+.creations-stat strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+.creations-stat span:last-child { color: var(--muted); font-size: 13px; }
+.creations-prompts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 2px solid var(--line);
+}
+.creations-prompts li { position: relative; padding: 0 0 16px 18px; }
+.creations-prompts li::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.creations-prompts li.muted::before { background: var(--line); }
+.creations-prompt-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.creations-prompts p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.creations-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.creations-item .player-count, .creations-card .player-count { margin: 0; }
+
+@media (max-width: 720px) {
+  .creations-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .creations-stat strong { font-size: 20px; }
+}
+
+/* Community games: creator stores */
+.creations-store, .creations-store-manager { margin-top: 20px; }
+.creations-store-head h2 { font-size: 24px; margin-bottom: 4px; }
+.creations-store-head p { margin: 0 0 16px; }
+.creations-store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.creations-store-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.creations-store-item h3 { font-size: 17px; margin: 4px 0 0; }
+.creations-store-item p { margin: 0; }
+.creations-store-art {
+  display: flex;
+  align-items: flex-end;
+  aspect-ratio: 4 / 3;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.15;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.creations-store-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 6px; }
+.creations-store .banner { margin-bottom: 14px; }
+.creations-store-stats { margin-bottom: 16px; }
+.creations-store-list { list-style: none; margin: 0 0 16px; padding: 0; border-top: 1px solid var(--line); }
+.creations-store-list > li { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.creations-store-row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.creations-store-row p { margin: 3px 0 0; }
+.creations-store-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.creations-pill-off { margin-left: 8px; }
+.creations-item-form { display: grid; gap: 12px; max-width: 520px; }
+.creations-item-form .actions { margin-top: 0; }
+.creations-price .admin-input { max-width: 160px; }
+.creations-store-note { margin: 12px 0 0; }
+.creations-unlock { margin-top: 10px; }
