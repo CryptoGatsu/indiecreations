@@ -153,6 +153,11 @@ create table if not exists public.creations_jobs (
   updated_at   timestamptz not null default now()
 );
 alter table public.creations_jobs add column if not exists stalls integer not null default 0;
+-- A run is resumable from any page load: running_until is the lease of the server run working on it now (no second run
+-- starts until it ends or lapses), result is how it finished ({"gameId","version"} or {"error"}), kept for a while so a
+-- page that lost its connection still hears the outcome.
+alter table public.creations_jobs add column if not exists running_until timestamptz;
+alter table public.creations_jobs add column if not exists result        jsonb;
 create index if not exists creations_jobs_wallet_idx on public.creations_jobs (wallet, created_at desc);
 alter table public.creations_jobs enable row level security;
 

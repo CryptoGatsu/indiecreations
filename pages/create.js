@@ -32,25 +32,49 @@ const ago = (date) => {
   return `${Math.floor(s / 86400)} d ago`;
 };
 
-// Starts a generation and follows its progress. A big game is written over several server runs: when one runs out of
-// time it says 'continue', and the next picks up from the text saved so far. Resolves the saved game; throws with a
-// message for the creator.
-async function runGeneration(body, onProgress) {
-  let request = body;
-  for (let part = 1; part <= 13; part++) {
-    const res = await fetch('/api/creations/generate', {
+// Starts a generation (or picks one up again: { jobId }) and follows its progress. A big game is written over several
+// server runs: when one runs out of time it says 'continue', and the next picks up from the text saved so far. The
+// server keeps writing when the connection drops (a phone locks, Safari's "Load failed"), so this reconnects with the
+// run's id until it can carry on or hear how it ended. Resolves the saved game; throws with a message for the creator.
+class StudioError extends Error {}
+
+// Resolves after `ms`, or sooner when the tab comes back into view or the network returns.
+const pause = (ms) =>
+  new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', done);
+      resolve();
+    };
+    const onVisible = () => document.visibilityState === 'visible' && done();
+    const timer = setTimeout(done, ms);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', done);
+  });
+
+// One request, following its stream: { game } | { next: jobId } | { busy } (another run holds it) | { lost }
+async function attempt(request, on) {
+  let res;
+  try {
+    res = await fetch('/api/creations/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || 'Could not start. Try again.');
-    }
+  } catch {
+    return { lost: true };
+  }
+  if (res.status === 409) return { busy: true };
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new StudioError(data.error || 'Could not start. Try again.');
+  }
+  let next = null;
+  try {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-    let next = null;
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -61,16 +85,51 @@ async function runGeneration(body, onProgress) {
         buffer = buffer.slice(i + 1);
         if (!line) continue;
         const msg = JSON.parse(line);
-        if (msg.type === 'progress' && msg.chars >= 0) onProgress(msg.chars, part);
-        if (msg.type === 'continue') next = { jobId: msg.jobId };
-        if (msg.type === 'done') return msg.game;
-        if (msg.type === 'error') throw new Error(msg.error);
+        if (msg.type === 'job') on.job(msg.jobId);
+        if (msg.type === 'progress') on.progress(msg.chars);
+        if (msg.type === 'continue') next = msg.jobId;
+        if (msg.type === 'done') return { game: msg.game };
+        if (msg.type === 'error') throw new StudioError(msg.error);
       }
     }
-    if (!next) throw new Error('The connection dropped. Your game may still be saving: refresh in a minute to check.');
-    request = next;
+  } catch (err) {
+    if (err instanceof StudioError) throw err;
+    return { lost: true };
   }
-  throw new Error('The game got too big to finish. Try a simpler idea or a smaller change.');
+  return next ? { next } : { lost: true };
+}
+
+const GIVE_UP_MS = 40 * 60 * 1000; // reconnecting this long without hearing from the server: stop and say so
+
+async function runGeneration(body, { onProgress, onState }) {
+  let request = body;
+  let jobId = body.jobId || null;
+  let part = 1;
+  let quietSince = null;
+  for (;;) {
+    const r = await attempt(request, {
+      job: (id) => (jobId = id),
+      progress: (chars) => {
+        quietSince = null;
+        onState(null);
+        if (chars >= 0) onProgress(chars, part);
+      },
+    });
+    if (r.game) return r.game;
+    if (r.next) {
+      part += 1;
+      request = { jobId: r.next };
+      continue;
+    }
+    if (!jobId) throw new Error('The connection dropped before your game started. Try again.');
+    quietSince ||= Date.now();
+    if (Date.now() - quietSince > GIVE_UP_MS) {
+      throw new Error('Lost touch with the studio. Refresh the page in a minute: your game may still be finishing.');
+    }
+    onState(r.busy ? 'running' : 'reconnecting');
+    request = { jobId };
+    await pause(r.busy ? 10_000 : 4_000);
+  }
 }
 
 function useGeneration() {
@@ -78,27 +137,44 @@ function useGeneration() {
   const [chars, setChars] = useState(0);
   const [part, setPart] = useState(1);
   const [started, setStarted] = useState(0);
+  const [state, setState] = useState(null); // 'reconnecting' | 'running' (elsewhere, out of sight) | null
   const [error, setError] = useState(null);
 
-  const run = async (body) => {
+  const run = async (body, since = Date.now()) => {
     setBusy(true);
     setError(null);
     setChars(0);
     setPart(1);
-    setStarted(Date.now());
+    setState(null);
+    setStarted(since);
     try {
-      return await runGeneration(body, (c, p) => {
-        setChars(c);
-        setPart(p);
+      return await runGeneration(body, {
+        onProgress: (c, p) => {
+          setChars(c);
+          setPart(p);
+        },
+        onState: setState,
       });
     } catch (err) {
       setError(err.message);
       return null;
     } finally {
       setBusy(false);
+      setState(null);
     }
   };
-  return { busy, chars, part, started, error, run, clearError: () => setError(null) };
+  return { busy, chars, part, started, state, error, run, clearError: () => setError(null) };
+}
+
+// Picks up the holder's unfinished run (me.pending) once, when it belongs here: `gameId` null for a new game.
+function useResume(me, gameId, gen, onDone) {
+  const resumed = useRef(null);
+  const pending = me?.pending;
+  useEffect(() => {
+    if (!pending || (pending.gameId || null) !== gameId || gen.busy || resumed.current === pending.jobId) return;
+    resumed.current = pending.jobId;
+    gen.run({ jobId: pending.jobId }, Date.parse(pending.startedAt) || Date.now()).then((game) => game && onDone(game, pending));
+  }, [pending, gameId, gen, onDone]);
 }
 
 function Progress({ gen, verb }) {
@@ -114,10 +190,19 @@ function Progress({ gen, verb }) {
     <div className="creations-progress" role="status">
       <span className="live-dot" />
       <div>
-        <strong>{gen.chars ? `${verb}… ${n(gen.chars)} characters of code` : 'Claude is planning the game…'}</strong>
+        <strong>
+          {gen.state === 'reconnecting'
+            ? 'Reconnecting… your game is still being written.'
+            : gen.state === 'running'
+              ? 'Still writing your game…'
+              : gen.chars
+                ? `${verb}… ${n(gen.chars)} characters of code`
+                : 'Claude is planning the game…'}
+        </strong>
         <p className="muted small">
           {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, '0')} ·{' '}
-          {gen.part > 1 ? `a big one: still going (part ${gen.part}).` : 'usually 2 to 6 minutes, longer for big games.'} Keep this tab open.
+          {gen.part > 1 ? `a big one: still going (part ${gen.part}).` : 'usually 2 to 6 minutes, longer for big games.'} If you
+          leave or lock your phone, it picks up here when you come back.
         </p>
       </div>
     </div>
@@ -191,6 +276,13 @@ function NewGame({ me, onCreated }) {
   const [prompt, setPrompt] = useState('');
   const full = me.games.length >= me.slots;
   const outOfToday = me.usedToday >= me.perDay;
+
+  // a new game still being written when the page was left (or the connection dropped): carry on with it here
+  const pendingHere = me.pending && !me.pending.gameId ? me.pending : null;
+  useEffect(() => {
+    if (pendingHere) setPrompt((p) => p || pendingHere.request);
+  }, [pendingHere]);
+  useResume(me, null, gen, (game) => onCreated(game));
 
   const submit = async (e) => {
     e.preventDefault();
@@ -352,6 +444,13 @@ function Editor({ id, me, reload }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // a change still being written when the page was left (or the connection dropped): carry on with it here
+  useResume(me, id, gen, async (updated) => {
+    setPreview(updated.version);
+    await load();
+    reload();
+  });
 
   const onError = useCallback((msg) => setErrors((list) => (list.includes(msg) ? list : [...list, msg].slice(-5))), []);
 

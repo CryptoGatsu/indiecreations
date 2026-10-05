@@ -1,13 +1,14 @@
 import { isGameId, PROMPT_MAX, MIN_CREATOR_TOKENS } from '../../../lib/creations';
 import crypto from 'crypto';
-import { addVersion, createGame, deleteJob, getGame, getHtml, getJob, logGeneration, persistent, saveJob } from '../../../lib/creationStore';
+import { addVersion, claimJob, createGame, getGame, getHtml, getJob, JOB_TTL_MS, logGeneration, persistent, saveJob } from '../../../lib/creationStore';
 import { aiConfigured, generateGame, GenerationCutOff, GenerationError, HTML_MAX } from '../../../lib/creationAI';
 import { listItems } from '../../../lib/creatorStore';
 import { creatorStatus, gameView, holderWallet, SITE_PER_DAY, siteUsedToday } from '../../../lib/creators';
 
 // POST { prompt, id? } -> makes a new game from a prompt, or (with id) a new version of one of the holder's games.
-// POST { jobId }       -> carries on a run that was cut off (see 'continue' below).
+// POST { jobId }       -> picks a run up again: carries on one that was cut off, or replays how it finished.
 // Writing a game takes a few minutes, so the answer streams as newline-delimited JSON:
+//   { type: 'job', jobId }         first: the run's id, so a page that loses the connection can pick it up again
 //   { type: 'progress', chars }    the code written so far (a few times a second)
 //   { type: 'continue', jobId }    this function run is out of time; what was written is saved, POST { jobId } to go on
 //   { type: 'done', game }         saved; game.version is the new version
@@ -16,6 +17,9 @@ import { creatorStatus, gameView, holderWallet, SITE_PER_DAY, siteUsedToday } fr
 // stops a little before the platform's limit, saves the text so far, and the next continues from exactly there, at low
 // effort (the plan is already in the text, so it writes instead of thinking it all through again). A game is only
 // given up on when two runs in a row add almost nothing, it passes HTML_MAX, or MAX_LEGS runs (a safety net).
+// Every run is a row in creations_jobs from the start. A server run carries on when the browser goes away (a phone
+// locks, a tab is closed), so the row holds a lease while one works on it (409 to anyone else) and keeps the outcome,
+// and the studio picks unfinished runs up again when it next loads (pages/api/creations/mine.js lists them).
 // Checks before any tokens are spent: a verified holder session, enough $CREATIONS for the games they'd have
 // (lib/creations.js tiers), their daily allowance, and the site's. A continuation counts as the same generation.
 export const config = { maxDuration: 300 };
@@ -24,7 +28,7 @@ export const config = { maxDuration: 300 };
 const LEG_MS = (process.env.NODE_ENV !== 'production' && Number(process.env.CREATIONS_LEG_MS)) || (300 - 20) * 1000;
 const MAX_LEGS = 12;
 const STALL_CHARS = Math.round(LEG_MS / 560); // a run that adds less than this (500 characters in 280 s) made no real progress
-const JOB_TTL_MS = 30 * 60 * 1000; // an unfinished run can be continued for this long
+const LEASE_MS = LEG_MS + 30_000; // a run's hold on its job; lapses on its own if the function dies
 
 class Refusal extends Error {
   constructor(status, message) {
@@ -56,6 +60,14 @@ async function checkAllowed(wallet, game, { fresh }) {
   }
 }
 
+// A run that already finished: tell the page how, in the same stream format.
+async function replay(res, result) {
+  const game = result.gameId ? await getGame(result.gameId) : null;
+  res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8' });
+  if (game) res.end(`${JSON.stringify({ type: 'done', game: gameView(game, { full: true }) })}\n`);
+  else res.end(`${JSON.stringify({ type: 'error', error: result.error || 'That game is gone.' })}\n`);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   res.setHeader('Cache-Control', 'no-store');
@@ -68,14 +80,16 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
-  let job = null;
+  let job = null; // the run being picked up again
   let game = null;
   let prompt;
   let baseVersion = null;
   try {
     if (body.jobId !== undefined) {
       job = await getJob(body.jobId);
-      if (!job || job.wallet !== wallet || Date.now() - Date.parse(job.updated_at) > JOB_TTL_MS) {
+      if (!job || job.wallet !== wallet) return res.status(404).json({ error: 'That run has expired. Start it again.' });
+      if (job.result) return replay(res, job.result);
+      if (Date.now() - Date.parse(job.updated_at) > JOB_TTL_MS) {
         return res.status(404).json({ error: 'That run has expired. Start it again.' });
       }
       prompt = job.request;
@@ -97,16 +111,47 @@ export default async function handler(req, res) {
     if (game?.hidden) return res.status(403).json({ error: 'The studio took this game down, so it cannot be edited.' });
 
     await checkAllowed(wallet, game, { fresh: !job });
-    if (!job) await logGeneration(wallet, game?.id || null, game ? 'edit' : 'create');
   } catch (err) {
     if (err instanceof Refusal) return res.status(err.status).json({ error: err.message });
     console.error('creation checks failed:', err);
     return res.status(500).json({ error: 'Could not check your holdings. Try again shortly.' });
   }
 
+  const until = () => new Date(Date.now() + LEASE_MS).toISOString();
+  let row;
+  try {
+    if (job) {
+      if (!(await claimJob(job.id, until()))) {
+        return res.status(409).json({ error: 'This game is still being written.', running: true });
+      }
+      row = job;
+    } else {
+      await logGeneration(wallet, game?.id || null, game ? 'edit' : 'create');
+      row = await saveJob({
+        id: crypto.randomUUID(),
+        wallet,
+        game_id: game?.id || null,
+        base_version: game ? baseVersion : null,
+        request: prompt,
+        partial: '',
+        legs: 0,
+        stalls: 0,
+        running_until: until(),
+        result: null,
+        created_at: new Date().toISOString(),
+      });
+    }
+  } catch (err) {
+    console.error('creation job start failed:', err);
+    return res.status(500).json({ error: 'Could not start. Try again shortly.' });
+  }
+  // how the run ended, kept for a page that lost the connection; the text is no longer needed
+  const finish = (result) => saveJob({ ...row, partial: '', running_until: null, result }).catch((e) => console.error('creation job finish failed:', e));
+
   res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'X-Accel-Buffering': 'no' });
   const send = (obj) => res.write(`${JSON.stringify(obj)}\n`);
-  send({ type: 'progress', chars: job ? job.partial.length : 0 });
+  send({ type: 'job', jobId: row.id });
+  send({ type: 'progress', chars: row.partial.length });
 
   let last = 0;
   const onProgress = (chars) => {
@@ -135,7 +180,7 @@ export default async function handler(req, res) {
       current,
       originalPrompt: game?.prompt,
       items,
-      partial: job?.partial || '',
+      partial: row.partial,
       ...(job ? { effort: 'low' } : {}),
       onProgress,
       signal: abort.signal,
@@ -144,42 +189,34 @@ export default async function handler(req, res) {
     const saved = game
       ? await addVersion(game, { request: prompt, ...result, title: game.title })
       : await createGame({ owner: wallet, prompt, ...result });
-    if (job) await deleteJob(job.id).catch(() => {});
-    console.log(JSON.stringify({ evt: 'creation-done', job: job?.id || null, leg: (job?.legs || 0) + 1, chars: result.html.length, ms: Date.now() - started }));
+    await finish({ gameId: saved.id, version: saved.version });
+    console.log(JSON.stringify({ evt: 'creation-done', job: row.id, leg: row.legs + 1, chars: result.html.length, ms: Date.now() - started }));
     send({ type: 'done', game: gameView(saved, { full: true }) });
   } catch (err) {
     if (err instanceof GenerationCutOff) {
-      const legs = (job?.legs || 0) + 1;
-      const before = job?.partial.length || 0;
-      const stalls = err.text.length - before < STALL_CHARS ? (job?.stalls || 0) + 1 : 0;
-      console.log(JSON.stringify({ evt: 'creation-leg', job: job?.id || null, leg: legs, before, after: err.text.length, ms: Date.now() - started, stalls }));
+      const legs = row.legs + 1;
+      const before = row.partial.length;
+      const stalls = err.text.length - before < STALL_CHARS ? row.stalls + 1 : 0;
+      console.log(JSON.stringify({ evt: 'creation-leg', job: row.id, leg: legs, before, after: err.text.length, ms: Date.now() - started, stalls }));
       if (stalls >= 2 || legs >= MAX_LEGS || err.text.length > HTML_MAX) {
-        if (job) await deleteJob(job.id).catch(() => {});
         const why = err.text.length > HTML_MAX || legs >= MAX_LEGS ? 'The game got too big to finish.' : 'Claude got stuck writing this one.';
-        send({ type: 'error', error: `${why} Try describing it a little differently, or start smaller and add to it with changes.` });
+        const error = `${why} Try describing it a little differently, or start smaller and add to it with changes.`;
+        await finish({ error });
+        send({ type: 'error', error });
       } else {
         try {
-          const saved = await saveJob({
-            id: job?.id || crypto.randomUUID(),
-            wallet,
-            game_id: game?.id || null,
-            base_version: game ? baseVersion : null,
-            request: prompt,
-            partial: err.text,
-            legs,
-            stalls,
-            created_at: job?.created_at || new Date().toISOString(),
-          });
-          send({ type: 'continue', jobId: saved.id, chars: err.text.length, legs });
+          await saveJob({ ...row, partial: err.text, legs, stalls, running_until: null });
+          send({ type: 'continue', jobId: row.id, chars: err.text.length, legs });
         } catch (saveErr) {
           console.error('creation job save failed:', saveErr);
           send({ type: 'error', error: 'Something went wrong writing the game. Try again.' });
         }
       }
-    } else if (err instanceof GenerationError) send({ type: 'error', error: err.message });
-    else {
-      console.error('creation generate failed:', err);
-      send({ type: 'error', error: 'Something went wrong writing the game. Try again.' });
+    } else {
+      const error = err instanceof GenerationError ? err.message : 'Something went wrong writing the game. Try again.';
+      if (!(err instanceof GenerationError)) console.error('creation generate failed:', err);
+      await finish({ error });
+      send({ type: 'error', error });
     }
   } finally {
     clearTimeout(timer);
