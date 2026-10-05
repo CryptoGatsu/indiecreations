@@ -1,0 +1,120 @@
+import { useEffect, useState } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import GameSandbox from '../../components/GameSandbox';
+import { LINKS, shortAddress } from '../../lib/config';
+import { rawUrl } from '../../lib/creations';
+
+// One community game: the game in its sandbox, who made it, and a way to report it.
+export default function CommunityGame() {
+  const { query, isReady } = useRouter();
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [reporting, setReporting] = useState(false);
+  const [reason, setReason] = useState('');
+  const [reportNote, setReportNote] = useState(null);
+
+  useEffect(() => {
+    if (!isReady) return;
+    fetch(`/api/creations/${query.id}`)
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || 'Game not found.');
+        setData(d);
+        // one play per visit
+        const key = `ic-played-${query.id}`;
+        try {
+          if (sessionStorage.getItem(key)) return;
+          sessionStorage.setItem(key, '1');
+        } catch {}
+        fetch(`/api/creations/${query.id}/play`, { method: 'POST' }).catch(() => {});
+      })
+      .catch((err) => setError(err.message));
+  }, [isReady, query.id]);
+
+  const report = async (e) => {
+    e.preventDefault();
+    const res = await fetch(`/api/creations/${query.id}/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) return setReportNote({ error: d.error || 'Could not send the report.' });
+    setReporting(false);
+    setReportNote({ text: 'Thanks. The studio will take a look.' });
+  };
+
+  if (error) {
+    return (
+      <div className="container page">
+        <div className="gate">
+          <h1>Game not found</h1>
+          <p className="muted">It may have been unpublished or removed.</p>
+          <Link href="/community" className="btn btn-primary">More community games</Link>
+        </div>
+      </div>
+    );
+  }
+  if (!data) return <div className="container page"><p className="muted">Loading…</p></div>;
+
+  const { game } = data;
+  return (
+    <div className="container page">
+      <Head>
+        <title>{`${game.title} · Community games · Indie Creations`}</title>
+        <meta name="description" content={game.description} />
+      </Head>
+      <div className="page-head">
+        <div>
+          <p className="eyebrow"><Link href="/community">Community games</Link></p>
+          <h1>{game.title}</h1>
+          <p className="muted">{game.description}</p>
+          <p className="muted small">
+            Made by{' '}
+            <a href={`${LINKS.explorer}/address/${game.owner}`} target="_blank" rel="noreferrer" className="mono">{shortAddress(game.owner)}</a>{' '}
+            with Claude · {game.plays.toLocaleString('en-US')} plays
+            {game.hidden ? ' · Taken down' : !game.published && ' · Draft: only you can see it'}
+          </p>
+        </div>
+        <div className="actions creations-head-actions">
+          {data.owner && <Link href={`/create?game=${game.id}`} className="btn btn-ghost btn-sm">Edit</Link>}
+          <Link href="/create" className="btn btn-primary btn-sm">Make your own</Link>
+        </div>
+      </div>
+
+      <GameSandbox src={rawUrl(game.id, game.version)} title={game.title} />
+
+      {data.admin && data.reports?.length > 0 && (
+        <div className="card creations-errors">
+          <h3>Reports (studio only)</h3>
+          <ul>
+            {data.reports.map((r) => (
+              <li key={r.reporter} className="small">{new Date(r.at).toLocaleString()}: {r.reason || 'no reason given'}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="creations-report">
+        {reportNote?.text ? (
+          <p className="muted small">{reportNote.text}</p>
+        ) : reporting ? (
+          <form onSubmit={report} className="card">
+            <h3>Report this game</h3>
+            <p className="muted small">Offensive, broken, or asking for something it shouldn&apos;t (like a seed phrase)? Tell the studio.</p>
+            <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} placeholder="What's wrong with it?" />
+            <div className="actions">
+              <button className="btn btn-primary btn-sm">Send report</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setReporting(false)}>Cancel</button>
+            </div>
+            {reportNote?.error && <p className="error small">{reportNote.error}</p>}
+          </form>
+        ) : (
+          <button type="button" className="link-button small" onClick={() => setReporting(true)}>Report this game</button>
+        )}
+      </div>
+    </div>
+  );
+}

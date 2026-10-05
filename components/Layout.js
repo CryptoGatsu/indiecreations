@@ -31,6 +31,7 @@ export default function Layout({ children }) {
 
           <nav className="nav">
             <Link href="/games">Games</Link>
+            <Link href="/community">Community</Link>
             <Link href="/token">Token</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/shop">Shop</Link>
@@ -60,6 +61,8 @@ export default function Layout({ children }) {
           </div>
           <div className="footer-links">
             <Link href="/games">Games</Link>
+            <Link href="/community">Community games</Link>
+            <Link href="/create">Make a game</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/shop">Shop</Link>
             <Link href="/rewards">Rewards</Link>

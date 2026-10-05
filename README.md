@@ -38,6 +38,18 @@ The site is a Next.js app. Copy `.env.example` to `.env.local` and fill in:
 
 How the gate works: the holder connects a wallet and signs a free message, the server verifies the signature and the on-chain balance, then sets a signed session cookie. `middleware.js` blocks everything under `/game/` without that cookie, so the build cannot be loaded by URL alone. The game also checks for itself: it asks `/api/game/ticket` for a short-lived ticket signed with `GAME_TICKET_KEY` (the balance is re-checked each time) and refuses to run without one, so a copy of the build hosted elsewhere does not work and a wallet that sells below the threshold is out within minutes. Which build is live is set in `lib/build.js`; while it is `null`, holders see a "no build live" message and the game files stay closed.
 
+🎮 Community games (`/create`, `/community`)
+
+Holders make their own browser games with a prompt. Claude writes each game as one Three.js HTML file; the creator plays it in the studio at `/create`, asks for changes (every change is a new version, and older ones can be previewed or restored), then publishes it. Published games are free for anyone to play at `/community/<id>`.
+
+- **Game slots by holdings** (`lib/creations.js`, checked live on every new game and edit): 100,000 $CREATIONS for 1 game, 500,000 for 2, 1,000,000 for 3, 5,000,000 for 4, 10,000,000 for 5. A wallet that drops below its game count keeps its published games, but must delete some (or top up) before it can edit again.
+- **Daily allowances:** `CREATIONS_PER_DAY` generations per wallet (default 15) and `CREATIONS_SITE_PER_DAY` for the whole site (default 400). A new game or a change each count once.
+- **Model:** `ANTHROPIC_API_KEY` (already used by the Inner Voice). `CREATIONS_MODEL` (default `claude-opus-5-5`) and `CREATIONS_EFFORT` (default `medium`) tune quality against cost.
+- **Storage:** the `creations_*` tables from `supabase/creations.sql`. Without Supabase, creation is switched off in production.
+- **Sandbox:** games are served only from `/api/creations/<id>/raw`, whose `Content-Security-Policy: sandbox` header gives them an opaque origin, even when opened directly. They can't read the site's cookies or call its API, can't load anything but the pinned Three.js, and can't reach any server. The iframe adds `sandbox="allow-scripts allow-pointer-lock"`. A small runtime injected at serve time hides browser wallets, stands in for storage, and reports errors to the studio ("Ask Claude to fix it").
+- **Moderation:** anyone can report a game; the admin page lists reported games first, and "Take down" hides a game everywhere at once (its creator can't publish or edit it again).
+- **Generation time:** a game takes about 1 to 4 minutes to write. The route allows 300 seconds (`maxDuration`); on Vercel Pro it can be raised for bigger games.
+
 🛍️ Cosmetics shop (`/shop`)
 
 Every Indie Creations game sells its cosmetics here. Items are priced in USD, paid in $CREATIONS, and tied to the buyer's Steam account.
