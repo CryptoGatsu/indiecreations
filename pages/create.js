@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ConnectButton from '../components/ConnectButton';
-import CreationStats, { LiveCount } from '../components/CreationStats';
+import CreationStats, { Cover, LiveCount } from '../components/CreationStats';
 import { useCreatorStore } from '../components/CreatorStore';
 import GameSandbox from '../components/GameSandbox';
 import StoreManager from '../components/StoreManager';
@@ -256,6 +256,7 @@ function GameList({ games }) {
       <div className="creations-grid">
         {games.map((g) => (
           <Link href={`/create?game=${g.id}`} key={g.id} className="card creations-item">
+            <Cover game={g} />
             <span className={g.hidden ? 'pill' : g.published ? 'pill pill-solid' : 'pill'}>
               {g.hidden ? 'Taken down' : g.published ? 'Published' : 'Draft'}
             </span>
@@ -312,6 +313,50 @@ function Editor({ id, me, reload }) {
   }, [load]);
 
   const onError = useCallback((msg) => setErrors((list) => (list.includes(msg) ? list : [...list, msg].slice(-5))), []);
+
+  // Cover screenshot. With no cover yet (or an automatic one of an older version), one is taken a few seconds after the
+  // live version loads, and again while the creator plays if the game was still showing a blank screen.
+  const sandbox = useRef(null);
+  const [loadedAt, setLoadedAt] = useState(0);
+  const [coverBusy, setCoverBusy] = useState(false);
+  const onLoaded = useCallback(() => setLoadedAt(Date.now()), []);
+  const saveCover = useCallback(
+    async (manual) => {
+      const image = await sandbox.current?.takeSnapshot();
+      if (!image) return false;
+      const res = await fetch(`/api/creations/${id}/thumbnail`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: preview, image, manual }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) return false;
+      if (d.thumb) {
+        setData((old) => ({ ...old, game: { ...old.game, thumb: d.thumb, thumbVersion: d.thumbVersion, thumbManual: d.thumbManual } }));
+        reload();
+      }
+      return true;
+    },
+    [id, preview, reload]
+  );
+  const needsCover = Boolean(
+    data && preview === data.game.version && !data.game.hidden &&
+      (!data.game.thumb || (!data.game.thumbManual && data.game.thumbVersion < data.game.version))
+  );
+  useEffect(() => {
+    if (!loadedAt || !needsCover) return undefined;
+    let stop = false;
+    const timers = [4000, 12000, 25000, 45000, 75000].map((ms) =>
+      setTimeout(async () => {
+        if (stop) return;
+        if (await saveCover(false)) stop = true;
+      }, ms)
+    );
+    return () => {
+      stop = true;
+      timers.forEach(clearTimeout);
+    };
+  }, [loadedAt, needsCover, saveCover]);
 
   if (loadError) {
     return (
@@ -394,6 +439,8 @@ function Editor({ id, me, reload }) {
       </div>
 
       <GameSandbox
+        ref={sandbox}
+        onLoaded={onLoaded}
         key={preview}
         src={rawUrl(game.id, preview)}
         title={game.title}
@@ -482,6 +529,26 @@ function Editor({ id, me, reload }) {
             />
             Show my prompts in the game&apos;s stats
           </label>
+
+          <h3>Cover</h3>
+          {game.thumb ? (
+            <img className="creations-cover-preview" src={game.thumb} alt={`${game.title} cover`} width={640} height={360} />
+          ) : (
+            <p className="muted small">No cover yet. It's taken from the game automatically once it shows something.</p>
+          )}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={coverBusy || game.hidden}
+            onClick={async () => {
+              setCoverBusy(true);
+              const ok = await saveCover(true);
+              setCoverBusy(false);
+              setNote(ok ? { text: 'Cover updated.' } : { error: 'The game was showing a blank screen. Play it to a good moment and try again.' });
+            }}
+          >
+            {coverBusy ? 'Taking it…' : 'Use what\'s on screen now'}
+          </button>
 
           <h3>Name</h3>
           <form

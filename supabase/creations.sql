@@ -155,3 +155,16 @@ create table if not exists public.creations_jobs (
 alter table public.creations_jobs add column if not exists stalls integer not null default 0;
 create index if not exists creations_jobs_wallet_idx on public.creations_jobs (wallet, created_at desc);
 alter table public.creations_jobs enable row level security;
+
+-- Cover images: a screenshot of each game, taken in its creator's browser from the game's own canvas (the studio
+-- captures one automatically, or the creator picks the moment). A 640x360 JPEG, base64. One per game.
+alter table public.creations_games add column if not exists thumb_version integer;        -- the version it shows
+alter table public.creations_games add column if not exists thumb_at      timestamptz;    -- when it was taken
+alter table public.creations_games add column if not exists thumb_manual  boolean not null default false; -- picked by hand
+create table if not exists public.creations_thumbs (
+  game_id    text        primary key references public.creations_games (id) on delete cascade,
+  version    integer     not null,
+  image      text        not null check (char_length(image) <= 400000),
+  updated_at timestamptz not null default now()
+);
+alter table public.creations_thumbs enable row level security;

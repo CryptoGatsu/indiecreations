@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { SANDBOX } from '../lib/creations';
 
 // A community game in its sandbox. The iframe gets scripts and pointer lock only; the game's own response headers
@@ -10,8 +10,31 @@ import { SANDBOX } from '../lib/creations';
 //
 // store: { items: [{ id, name, description }], owned: [ids] } - handed to the game (window.IC inside it) on every load
 // and whenever it changes. onOpenStore(itemId) runs when the game asks to show the store.
-export default function GameSandbox({ src, title, onError, onLoaded, store, onOpenStore }) {
+//
+// ref.takeSnapshot() -> Promise<string | null>: a 640x360 JPEG data URL of what the game is showing, or null when the
+// frame is blank or the game doesn't answer (the runtime inside the game does the capture).
+const GameSandbox = forwardRef(function GameSandbox({ src, title, onError, onLoaded, store, onOpenStore }, ref) {
   const frame = useRef(null);
+  const shot = useRef(null); // the pending takeSnapshot: { resolve, timer }
+
+  useImperativeHandle(ref, () => ({
+    takeSnapshot() {
+      if (shot.current) return shot.current.promise;
+      const win = frame.current?.contentWindow;
+      if (!win) return Promise.resolve(null);
+      let resolve;
+      const promise = new Promise((r) => (resolve = r));
+      const timer = setTimeout(() => finish(null), 5000);
+      const finish = (image) => {
+        clearTimeout(timer);
+        shot.current = null;
+        resolve(image);
+      };
+      shot.current = { promise, finish };
+      win.postMessage({ source: 'ic-page', type: 'snapshot' }, '*');
+      return promise;
+    },
+  }));
   const readySinceLoad = useRef(false);
   const storeRef = useRef(store);
   storeRef.current = store;
@@ -36,6 +59,11 @@ export default function GameSandbox({ src, title, onError, onLoaded, store, onOp
       if (d.type === 'ready') {
         readySinceLoad.current = true;
         sendStore();
+      }
+      if (d.type === 'snapshot' && shot.current) {
+        // only a request we made counts, and only a JPEG data URL
+        const ok = typeof d.image === 'string' && /^data:image\/jpeg;base64,/.test(d.image) && d.image.length < 400_000;
+        shot.current.finish(ok ? d.image : null);
       }
       if (d.type === 'open-store' && onOpenStore) onOpenStore(typeof d.itemId === 'string' ? d.itemId : null);
       // wallet extensions' own errors inside the sandbox are not the game's (the runtime filters them too)
@@ -96,4 +124,6 @@ export default function GameSandbox({ src, title, onError, onLoaded, store, onOp
       </div>
     </div>
   );
-}
+});
+
+export default GameSandbox;

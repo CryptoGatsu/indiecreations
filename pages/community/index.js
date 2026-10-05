@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { shortAddress, TOKEN_TICKER } from '../../lib/config';
-import { MIN_CREATOR_TOKENS, tileColors } from '../../lib/creations';
-import { LiveCount } from '../../components/CreationStats';
+import { MIN_CREATOR_TOKENS } from '../../lib/creations';
+import { Cover, LiveCount } from '../../components/CreationStats';
 
 // Community games: made by holders with a prompt (/create), free for anyone to play.
 export default function Community() {
@@ -59,23 +59,18 @@ export default function Community() {
         </div>
       ) : (
         <div className="creations-grid">
-          {games.map((g) => {
-            const c = tileColors(g.id);
-            return (
-              <Link href={`/community/${g.id}`} key={g.id} className="card creations-card">
-                <span className="creations-tile" style={{ background: `linear-gradient(135deg, ${c.from}, ${c.to})` }}>
-                  {g.title}
-                </span>
-                <h3>{g.title}</h3>
-                <p className="muted small">{g.description}</p>
-                <LiveCount stats={g.stats} />
-                <p className="muted small">
-                  by {shortAddress(g.owner)} · {g.plays.toLocaleString('en-US')} plays · {g.versions}{' '}
-                  {g.versions === 1 ? 'prompt' : 'prompts'}
-                </p>
-              </Link>
-            );
-          })}
+          {games.map((g) => (
+            <Link href={`/community/${g.id}`} key={g.id} className="card creations-card">
+              <Cover game={g} />
+              <h3>{g.title}</h3>
+              <p className="muted small">{g.description}</p>
+              <LiveCount stats={g.stats} />
+              <p className="muted small">
+                by {shortAddress(g.owner)} · {g.plays.toLocaleString('en-US')} plays · {g.versions}{' '}
+                {g.versions === 1 ? 'prompt' : 'prompts'}
+              </p>
+            </Link>
+          ))}
         </div>
       )}
     </div>

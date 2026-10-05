@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PING_MS } from '../lib/creations';
+import { PING_MS, tileColors } from '../lib/creations';
 
 // The numbers under a community game: who is playing it, how much, and the prompts it was made from (unless its
 // creator keeps them private). `owner` asks as the creator (never cached, always with the prompts). Refreshes every
@@ -30,6 +30,19 @@ export function LiveCount({ stats }) {
         `${n(stats.day)} player${stats.day === 1 ? '' : 's'} today`
       )}
     </p>
+  );
+}
+
+// A game's cover: its screenshot, or a colour tile with its name until it has one.
+export function Cover({ game }) {
+  if (game.thumb) {
+    return <img className="creations-tile creations-tile-img" src={game.thumb} alt="" loading="lazy" width={640} height={360} />;
+  }
+  const c = tileColors(game.id);
+  return (
+    <span className="creations-tile" style={{ background: `linear-gradient(135deg, ${c.from}, ${c.to})` }}>
+      {game.title}
+    </span>
   );
 }
 
