@@ -2240,3 +2240,15 @@ main > .section:first-child {
 .creations-price .admin-input { max-width: 160px; }
 .creations-store-note { margin: 12px 0 0; }
 .creations-unlock { margin-top: 10px; }
+
+/* Community games: cover screenshots */
+.creations-tile-img { display: block; height: auto; object-fit: cover; padding: 0; background: #000; }
+.creations-cover-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: #000;
+}
