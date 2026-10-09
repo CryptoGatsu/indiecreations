@@ -249,19 +249,25 @@ function Tiers({ me }) {
       <div>
         <p className="eyebrow">Your game slots</p>
         <p className="creations-big">
-          {me.games.length} / {me.slots}
+          {me.unlimited ? `${me.games.length} / ∞` : `${me.games.length} / ${me.slots}`}
         </p>
-        <p className="muted small">
-          {studio ? 'Studio wallet.' : `You hold ${n(me.balance)} ${TOKEN_TICKER}.`}{' '}
-          {me.next && `Hold ${n(me.next.min)} for ${me.next.games} game${me.next.games === 1 ? '' : 's'}.`}
-        </p>
-        <p className="muted small">
-          Generations today: {Math.min(me.usedToday, me.perDay)} / {me.perDay} (a new game or a change each count once).
-        </p>
+        {me.unlimited ? (
+          <p className="muted small">Dev wallet: unlimited games and generations.</p>
+        ) : (
+          <>
+            <p className="muted small">
+              {studio ? 'Studio wallet.' : `You hold ${n(me.balance)} ${TOKEN_TICKER}.`}{' '}
+              {me.next && `Hold ${n(me.next.min)} for ${me.next.games} game${me.next.games === 1 ? '' : 's'}.`}
+            </p>
+            <p className="muted small">
+              Generations today: {Math.min(me.usedToday, me.perDay)} / {me.perDay} (a new game or a change each count once).
+            </p>
+          </>
+        )}
       </div>
       <ul className="creations-tier-list">
         {[...CREATOR_TIERS].reverse().map((t) => (
-          <li key={t.min} className={me.slots >= t.games ? 'tier-on' : ''}>
+          <li key={t.min} className={me.unlimited || me.slots >= t.games ? 'tier-on' : ''}>
             <span>{n(t.min)}+</span>
             <span>{t.games} game{t.games === 1 ? '' : 's'}</span>
           </li>
@@ -274,8 +280,8 @@ function Tiers({ me }) {
 function NewGame({ me, onCreated }) {
   const gen = useGeneration();
   const [prompt, setPrompt] = useState('');
-  const full = me.games.length >= me.slots;
-  const outOfToday = me.usedToday >= me.perDay;
+  const full = !me.unlimited && me.games.length >= me.slots;
+  const outOfToday = !me.unlimited && me.usedToday >= me.perDay;
 
   // a new game still being written when the page was left (or the connection dropped): carry on with it here
   const pendingHere = me.pending && !me.pending.gameId ? me.pending : null;
@@ -318,7 +324,7 @@ function NewGame({ me, onCreated }) {
     }
   };
 
-  if (me.slots === 0) {
+  if (!me.unlimited && me.slots === 0) {
     return (
       <div className="card notice">
         <p>Creating games takes at least {n(MIN_CREATOR_TOKENS)} {TOKEN_TICKER}.</p>
@@ -509,8 +515,8 @@ function Editor({ id, me, reload }) {
   if (!data) return <div className="container page"><p className="muted">Loading…</p></div>;
 
   const { game, versions } = data;
-  const overSlots = me && me.games.length > me.slots;
-  const outOfToday = me && me.usedToday >= me.perDay;
+  const overSlots = me && !me.unlimited && me.games.length > me.slots;
+  const outOfToday = me && !me.unlimited && me.usedToday >= me.perDay;
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/community/${game.id}` : `/community/${game.id}`;
 
   const patch = async (body, ok) => {

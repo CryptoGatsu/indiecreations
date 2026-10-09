@@ -18,10 +18,11 @@ export default async function handler(req, res) {
     return res.status(200).json({
       address: wallet,
       balance: Number.isFinite(s.balance) ? s.balance : null, // null: a studio wallet
-      slots: s.slots,
+      unlimited: s.unlimited, // the dev wallet: slots and perDay are null (no limit)
+      slots: s.unlimited ? null : s.slots,
       next: s.next,
       usedToday: s.usedToday,
-      perDay: s.perDay,
+      perDay: s.unlimited ? null : s.perDay,
       available: aiConfigured(),
       games: s.games.map((g) => gameView(g, { full: true, stats: statsFor(stats, g.id) })),
       pending: job && { jobId: job.id, gameId: job.game_id, request: job.request, startedAt: job.created_at },

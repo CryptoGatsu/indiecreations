@@ -55,7 +55,7 @@ async function checkAllowed(wallet, game, { fresh }) {
   if (status.usedToday >= status.perDay) {
     throw new Refusal(429, `That's your ${status.perDay} generations for today. Come back tomorrow.`);
   }
-  if ((await siteUsedToday()) >= SITE_PER_DAY) {
+  if (!status.unlimited && (await siteUsedToday()) >= SITE_PER_DAY) {
     throw new Refusal(429, 'The studio has made all the games it can for today. Try again tomorrow.');
   }
 }

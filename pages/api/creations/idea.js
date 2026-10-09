@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     if (status.usedToday >= status.perDay) {
       return res.status(429).json({ error: `That's your ${status.perDay} generations for today. Come back tomorrow.` });
     }
-    if ((await ideasToday(wallet, IDEAS_PER_DAY + 1)) >= IDEAS_PER_DAY) {
+    if (!status.unlimited && (await ideasToday(wallet, IDEAS_PER_DAY + 1)) >= IDEAS_PER_DAY) {
       return res.status(429).json({ error: 'That is a lot of random ideas for one day. Try writing your own!' });
     }
 
