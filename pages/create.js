@@ -17,11 +17,11 @@ import { CREATOR_TIERS, MIN_CREATOR_TOKENS, PROMPT_MAX, rawUrl } from '../lib/cr
 // /community. How many games a wallet may have depends on what it holds (lib/creations.js).
 
 const IDEAS = [
-  'A neon space shooter: dodge asteroids that speed up every 10 seconds, collect shield orbs, and fight a boss every minute.',
-  'A cosy low-poly fishing game on a lake at sunset. Cast, wait for the bobber to dip, reel in with timing. Rare fish glow.',
-  'An endless runner through a candy forest. Jump and slide past obstacles, collect sweets, speed builds up over time.',
-  'A top-down arena where waves of slimes split in two when hit. Survive as long as you can; power-ups drop every wave.',
-  'A marble rolling puzzle: tilt the floating maze to guide the marble to the goal before the timer runs out. 5 levels.',
+  'An open-world tropical archipelago at golden hour: sail between islands, explore jungle ruins and a volcano, help villagers with quests, and find the 5 lost relics to wake the sea guardian.',
+  'A snowy mountain kingdom at night under the stars: a knight climbs from a lantern-lit village through pine forests to an ice castle, fighting wolves and collecting runes.',
+  'An alien crater world with glowing crystals and giant mushrooms: explore as a little robot, scan strange creatures, and repair your ship from parts scattered across 4 biomes.',
+  'A cosy farming valley with a day-night cycle: plant and harvest crops, fish in the river, sell at the market, and upgrade your cottage.',
+  'A neon cyberpunk city rooftop runner at night: parkour across rooftops, dodge drones, and reach the tower before the timer runs out. 5 districts.',
 ];
 
 const n = (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -345,8 +345,8 @@ function NewGame({ me, onCreated }) {
     <form className="card creations-new" onSubmit={submit}>
       <h2>New game</h2>
       <p className="muted small">
-        Say what you play, how you win or lose, and the look. Everything is built from code: 3D shapes, colours,
-        particles and synth sounds, no uploaded art.
+        Describe a game or a whole world: the setting and mood, what you play, the goal. Claude builds it in 3D with
+        the studio&apos;s world kit: terrain, forests, water, skies, weather, characters, music and sound.
       </p>
       <textarea
         value={prompt}

@@ -2,7 +2,9 @@
   "name": "indiecreations",
   "private": true,
   "scripts": {
+    "predev": "node scripts/build-engine.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/build-engine.mjs",
     "build": "next build",
     "start": "next start"
   },

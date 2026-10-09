@@ -7,3 +7,4 @@ out
 *.log
 .DS_Store
 .env*
+engine/ic3d.js

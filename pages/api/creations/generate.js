@@ -14,8 +14,8 @@ import { creatorStatus, gameView, holderWallet, SITE_PER_DAY, siteUsedToday } fr
 //   { type: 'done', game }         saved; game.version is the new version
 //   { type: 'error', error }       nothing saved; the message is meant for the creator
 // A big game can take longer than one function may run, so it is written over as many runs as it needs: each one
-// stops a little before the platform's limit, saves the text so far, and the next continues from exactly there, at low
-// effort (the plan is already in the text, so it writes instead of thinking it all through again). A game is only
+// stops a little before the platform's limit, saves the text so far, and the next continues from exactly there, at the
+// same effort (the PLAN comment at the top of the game keeps the passes consistent). A game is only
 // given up on when two runs in a row add almost nothing, it passes HTML_MAX, or MAX_LEGS runs (a safety net).
 // Every run is a row in creations_jobs from the start. A server run carries on when the browser goes away (a phone
 // locks, a tab is closed), so the row holds a lease while one works on it (409 to anyone else) and keeps the outcome,
@@ -181,7 +181,6 @@ export default async function handler(req, res) {
       originalPrompt: game?.prompt,
       items,
       partial: row.partial,
-      ...(job ? { effort: 'low' } : {}),
       onProgress,
       signal: abort.signal,
     });
