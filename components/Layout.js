@@ -16,10 +16,10 @@ export default function Layout({ children }) {
         <title>Indie Creations</title>
         <meta name="description" content={DESCRIPTION} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta property="og:title" content="Indie Creations" />
-        <meta property="og:description" content={DESCRIPTION} />
-        <meta property="og:image" content="https://www.indiecreations.fun/logo.png" />
-        <meta name="twitter:card" content="summary" />
+        <meta property="og:title" content="Indie Creations" key="og:title" />
+        <meta property="og:description" content={DESCRIPTION} key="og:description" />
+        <meta property="og:image" content="https://www.indiecreations.fun/logo.png" key="og:image" />
+        <meta name="twitter:card" content="summary" key="twitter:card" />
         <meta name="twitter:site" content="@IndieCreations_" />
       </Head>
 

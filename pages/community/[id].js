@@ -6,11 +6,51 @@ import CreationStats, { useGamePresence } from '../../components/CreationStats';
 import CreatorStore, { useCreatorStore } from '../../components/CreatorStore';
 import useProfile from '../../components/useProfile';
 import GameSandbox from '../../components/GameSandbox';
+import ShareGame from '../../components/ShareGame';
 import { LINKS, shortAddress } from '../../lib/config';
 import { rawUrl } from '../../lib/creations';
 
+const SITE = 'https://www.indiecreations.fun';
+
+// Only what a link preview needs, rendered on the server so X, Discord and the like see it: the share card as the image.
+export async function getServerSideProps({ params, res }) {
+  const { isGameId } = await import('../../lib/creations');
+  const { getGame } = await import('../../lib/creationStore');
+  const { gameView, isPublic } = await import('../../lib/creators');
+  let meta = null;
+  try {
+    const game = isGameId(params.id) ? await getGame(params.id) : null;
+    if (isPublic(game)) {
+      const v = gameView(game);
+      meta = { title: v.title, description: v.description || 'A community game made with Claude.', image: `${SITE}${v.card}`, url: `${SITE}/community/${v.id}` };
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=600');
+    }
+  } catch (err) {
+    console.error('community game meta failed:', err);
+  }
+  return { props: { meta } };
+}
+
+function PreviewMeta({ meta }) {
+  if (!meta) return null;
+  return (
+    <Head>
+      <title>{`${meta.title} · Community games · Indie Creations`}</title>
+      <meta name="description" content={meta.description} />
+      <meta property="og:title" content={meta.title} key="og:title" />
+      <meta property="og:description" content={meta.description} key="og:description" />
+      <meta property="og:image" content={meta.image} key="og:image" />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:url" content={meta.url} />
+      <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
+      <meta name="twitter:image" content={meta.image} />
+    </Head>
+  );
+}
+
 // One community game: the game in its sandbox, who made it, and a way to report it.
-export default function CommunityGame() {
+export default function CommunityGame({ meta }) {
   const { query, isReady } = useRouter();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -72,11 +112,19 @@ export default function CommunityGame() {
       </div>
     );
   }
-  if (!data) return <div className="container page"><p className="muted">Loading…</p></div>;
+  if (!data) {
+    return (
+      <div className="container page">
+        <PreviewMeta meta={meta} />
+        <p className="muted">Loading…</p>
+      </div>
+    );
+  }
 
   const { game } = data;
   return (
     <div className="container page">
+      <PreviewMeta meta={meta} />
       <Head>
         <title>{`${game.title} · Community games · Indie Creations`}</title>
         <meta name="description" content={game.description} />
@@ -95,6 +143,7 @@ export default function CommunityGame() {
         </div>
         <div className="actions creations-head-actions">
           {data.owner && <Link href={`/create?game=${game.id}`} className="btn btn-ghost btn-sm">Edit</Link>}
+          <ShareGame game={game} />
           <Link href="/create" className="btn btn-primary btn-sm">Make your own</Link>
         </div>
       </div>

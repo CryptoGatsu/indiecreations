@@ -9,6 +9,7 @@ import GameSandbox from '../components/GameSandbox';
 import StoreManager from '../components/StoreManager';
 import useHolderSession from '../components/useHolderSession';
 import { Mark } from '../components/Logo';
+import ShareGame from '../components/ShareGame';
 import { LINKS, TOKEN_TICKER, shortAddress } from '../lib/config';
 import { CREATOR_TIERS, MIN_CREATOR_TOKENS, PROMPT_MAX, rawUrl } from '../lib/creations';
 
@@ -657,6 +658,7 @@ function Editor({ id, me, reload }) {
               <p className="muted small">Anyone can play it on the community page. New versions go live as soon as they're made.</p>
               <div className="actions">
                 <Link href={`/community/${game.id}`} className="btn btn-ghost btn-sm">Open</Link>
+                <ShareGame game={game} />
                 <button type="button" className="btn btn-ghost btn-sm" onClick={copy}>Copy link</button>
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => patch({ published: false }, 'Unpublished.')}>Unpublish</button>
               </div>
