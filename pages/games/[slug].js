@@ -60,7 +60,7 @@ export default function GamePage({ game }) {
           </div>
         </div>
 
-        <img className="game-hero" src={game.hero} alt="" />
+        <img className="game-hero" src={game.hero} alt="" style={game.heroRatio ? { aspectRatio: game.heroRatio } : undefined} />
 
         <div className="game-about">
           <div className="game-copy">
