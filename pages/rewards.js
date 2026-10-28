@@ -180,17 +180,21 @@ function ByGame({ stats }) {
         const b = burns.get(game.name) || 0n;
         // a game whose own contracts are not listed yet (Agentacus on testnet) has nothing on-chain to count
         const waiting = game.chain && !game.chain.revenue?.length && !game.chain.burners?.length && !r;
+        // not out yet, with nothing sold on this site (BioShooter before its Steam launch)
+        const upcoming = !game.play && !game.shop && !game.chain && !r;
         return (
           <div className="rewards-row" key={game.slug}>
             <span>{game.name}</span>
             <span className="muted">
-              {waiting
+              {upcoming
+                ? 'Not out yet: sales count from launch'
+                : waiting
                 ? /testnet/i.test(game.status)
                   ? 'On testnet: sales and burns count from mainnet launch'
                   : 'In-game sales count once its contracts are listed'
                 : `${r ? r.orders : 0} sale${r?.orders === 1 ? '' : 's'} · ${tokens(b, d)} ${TOKEN_TICKER} burned`}
             </span>
-            <strong>{waiting ? '—' : `${dollars(r?.usdCents)} revenue`}</strong>
+            <strong>{waiting || upcoming ? '—' : `${dollars(r?.usdCents)} revenue`}</strong>
           </div>
         );
       })}

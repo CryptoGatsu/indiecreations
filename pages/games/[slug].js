@@ -16,6 +16,8 @@ export async function getStaticProps({ params }) {
 export default function GamePage({ game }) {
   const counts = usePlayerCounts();
   const shopHref = `/shop?game=${game.slug}`;
+  // a Steam game with no shop on this site yet (lib/games.js): everything points to its Steam page
+  const steamOnly = !game.play && !game.shop && Boolean(game.steam);
   return (
     <>
       <Head>
@@ -39,12 +41,16 @@ export default function GamePage({ game }) {
               <a href={game.play} className="btn btn-primary">
                 Play in browser
               </a>
+            ) : steamOnly ? (
+              <a href={game.steam} target="_blank" rel="noreferrer" className="btn btn-primary">
+                Wishlist on Steam
+              </a>
             ) : (
               <Link href={shopHref} className="btn btn-primary">
                 Cosmetics
               </Link>
             )}
-            {game.play ? null : game.steam ? (
+            {game.play || steamOnly ? null : game.steam ? (
               <a className="btn btn-ghost" href={game.steam} target="_blank" rel="noreferrer">
                 Steam
               </a>
@@ -64,7 +70,16 @@ export default function GamePage({ game }) {
             <p className="muted small">{game.players}</p>
           </div>
 
-          {game.shop === 'in-game' ? (
+          {steamOnly ? (
+            <aside className="card game-shop-card">
+              <span className="card-index">Steam</span>
+              <h3>Wishlist it on Steam</h3>
+              <p className="muted">Steam lets you know the day it launches. The store page has the trailer and screenshots.</p>
+              <a href={game.steam} target="_blank" rel="noreferrer" className="btn btn-primary">
+                Open the Steam page
+              </a>
+            </aside>
+          ) : game.shop === 'in-game' ? (
             <aside className="card game-shop-card">
               <span className="card-index">Play</span>
               <h3>{game.playCard?.title || 'Runs in your browser'}</h3>
@@ -89,14 +104,16 @@ export default function GamePage({ game }) {
           )}
         </div>
 
-        <div className="shots">
-          {game.shots.map((s) => (
-            <figure key={s.src}>
-              <img src={s.src} alt={s.alt} loading="lazy" />
-              <figcaption className="muted small">{s.alt}</figcaption>
-            </figure>
-          ))}
-        </div>
+        {game.shots.length > 0 && (
+          <div className="shots">
+            {game.shots.map((s) => (
+              <figure key={s.src}>
+                <img src={s.src} alt={s.alt} loading="lazy" />
+                <figcaption className="muted small">{s.alt}</figcaption>
+              </figure>
+            ))}
+          </div>
+        )}
 
         <GameComments game={game} />
       </div>

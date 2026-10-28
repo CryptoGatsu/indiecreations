@@ -25,6 +25,10 @@ export default function GameCard({ game }) {
             <a href={game.play} className="btn btn-ghost btn-sm">
               Play in browser
             </a>
+          ) : !game.shop && game.steam ? (
+            <a href={game.steam} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
+              Wishlist on Steam
+            </a>
           ) : (
             <Link href={`/shop?game=${game.slug}`} className="btn btn-ghost btn-sm">
               Cosmetics
