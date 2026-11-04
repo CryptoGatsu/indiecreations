@@ -2736,3 +2736,13 @@ main > .section:first-child {
     height: 60vh;
   }
 }
+@media (max-width: 720px) {
+  .shop-chips.store-review-tabs {
+    flex-wrap: wrap;
+    max-width: none;
+    overflow: visible;
+  }
+  .store-review {
+    min-width: 0;
+  }
+}

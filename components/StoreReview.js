@@ -179,7 +179,7 @@ export default function StoreReview() {
     <section className="card admin-card admin-wide store-review">
       <h2>Store review</h2>
       {data?.network?.testnet && <p className="muted small">The store runs on {data.network.chainName}: burns are test burns.</p>}
-      <div className="shop-chips">
+      <div className="shop-chips store-review-tabs">
         {tabs.map(([key, label]) => (
           <button key={key} className={`shop-sort-btn ${tab === key ? 'shop-sort-btn-on' : ''}`} onClick={() => setTab(key)}>
             {label}

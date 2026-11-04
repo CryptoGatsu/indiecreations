@@ -478,7 +478,15 @@ export default function Admin() {
         <title>Studio admin · Indie Creations</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      {!mounted || status === undefined ? (
+      {mounted && status === undefined && error ? (
+        // the payout status failed to load: still show the store queues, which don't depend on it
+        <>
+          <p className="error small">Payout status: {error}</p>
+          <div className="admin-grid">
+            <StoreReview />
+          </div>
+        </>
+      ) : !mounted || status === undefined ? (
         <p className="muted">Loading…</p>
       ) : status === null ? (
         <SignIn onSignedIn={load} />

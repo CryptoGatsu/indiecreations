@@ -28,7 +28,14 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const { kind, id, approve, codes, note } = req.body || {};
       if (kind === 'application') return res.status(200).json({ application: await decideApplication(admin, id, { approve: Boolean(approve), codes, note }) });
-      if (kind === 'build') return res.status(200).json({ build: await decideBuild(admin, id, { approve: Boolean(approve), codes, note }) });
+      if (kind === 'build') {
+        const build = await decideBuild(admin, id, { approve: Boolean(approve), codes, note });
+        // an approved version reaches the store, home and game pages now, not at their next minute's refresh
+        if (approve && build.slug) {
+          await Promise.allSettled([res.revalidate('/games'), res.revalidate('/'), res.revalidate(`/games/${build.slug}`)]);
+        }
+        return res.status(200).json({ build });
+      }
       return res.status(400).json({ error: 'Unknown decision.' });
     }
     return res.status(405).end();
