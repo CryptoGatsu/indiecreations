@@ -43,6 +43,30 @@ function activeWalletForWagmi({ wallets }) {
   );
 }
 
+const READY_WAIT_MS = 15000;
+const TOKEN_WAIT_MS = 12000;
+const NOT_READY =
+  "The sign-in service didn't load. If this keeps happening, the site's address may be missing from the Privy app's allowed domains.";
+const NO_TOKEN =
+  'Privy signed you in but sent no identity token. Turn on identity tokens in the Privy dashboard, then try again.';
+
+// Resolves true once check() is true, or false after ms.
+function until(check, ms) {
+  return new Promise((resolve) => {
+    if (check()) return resolve(true);
+    const started = Date.now();
+    const timer = setInterval(() => {
+      if (check()) {
+        clearInterval(timer);
+        resolve(true);
+      } else if (Date.now() - started > ms) {
+        clearInterval(timer);
+        resolve(false);
+      }
+    }, 200);
+  });
+}
+
 async function post(identityToken) {
   const res = await fetch('/api/auth/privy', {
     method: 'POST',
@@ -60,7 +84,13 @@ function PrivySession({ children }) {
   const synced = useRef(null); // the identity token the server last accepted
   const waiting = useRef([]); // login() promises waiting for the server session
 
+  // the latest Privy state, for the waits below (closures would see stale values)
+  const live = useRef({ ready, authenticated, identityToken });
+  live.current = { ready, authenticated, identityToken };
+  const tokenTimer = useRef(null);
+
   const settle = useCallback((err) => {
+    clearTimeout(tokenTimer.current);
     const list = waiting.current;
     waiting.current = [];
     list.forEach(({ resolve, reject }) => (err ? reject(err) : resolve()));
@@ -94,7 +124,17 @@ function PrivySession({ children }) {
     if (!authenticated) synced.current = null;
   }, [ready, authenticated, identityToken, sync]);
 
+  // Privy signed the person in; the identity token should follow within moments. If it never does, the Privy app
+  // isn't set to issue identity tokens, and waiting longer would only leave the button stuck.
+  const expectToken = useCallback(() => {
+    clearTimeout(tokenTimer.current);
+    tokenTimer.current = setTimeout(() => {
+      if (waiting.current.length && !live.current.identityToken) settle(new Error(NO_TOKEN));
+    }, TOKEN_WAIT_MS);
+  }, [settle]);
+
   const { login } = useLogin({
+    onComplete: () => expectToken(),
     onError: (err) => settle(new Error(err === 'exited_auth_flow' ? 'Sign-in cancelled.' : 'Sign-in did not finish.')),
   });
   const { logout } = useLogout();
@@ -110,12 +150,17 @@ function PrivySession({ children }) {
   const actions = useMemo(
     () => ({
       // resolves once the site's own session is set (so callers can redirect afterwards)
-      login: () =>
-        new Promise((resolve, reject) => {
+      login: async () => {
+        // Privy loads in the background; until it's ready, its login() does nothing at all
+        if (!(await until(() => live.current.ready, READY_WAIT_MS))) throw new Error(NOT_READY);
+        return new Promise((resolve, reject) => {
           waiting.current.push({ resolve, reject });
-          if (authenticated && identityToken) sync(identityToken);
+          const now = live.current;
+          if (now.authenticated && now.identityToken) sync(now.identityToken);
+          else if (now.authenticated) expectToken(); // signed in to Privy already, token still to come
           else login();
-        }),
+        });
+      },
       logout: async () => {
         await logout().catch(() => {});
         synced.current = null;
@@ -126,7 +171,7 @@ function PrivySession({ children }) {
       linkEmail: () => linkEmail(),
       connectWallet: () => connectWallet({ walletChainType: 'ethereum-only' }),
     }),
-    [authenticated, identityToken, sync, login, logout, linkWallet, linkEmail, connectWallet]
+    [sync, expectToken, login, logout, linkWallet, linkEmail, connectWallet]
   );
 
   return <PrivyActionsContext.Provider value={actions}>{children}</PrivyActionsContext.Provider>;
