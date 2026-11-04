@@ -2,33 +2,53 @@ import Link from 'next/link';
 import TokenSection from '../components/TokenSection';
 import { TOKEN_TICKER, MIN_TOKENS } from '../lib/config';
 import { GAMES } from '../lib/games';
+import { privyEnabled } from '../lib/privyClient';
 import GameCard from '../components/GameCard';
+import StoreSplit from '../components/StoreSplit';
 import EconomyStats, { useEconomyStats } from '../components/EconomyStats';
+
+// How the store works, for each kind of visitor (PLATFORM_SPEC). Store features that aren't open yet say so.
+const AUDIENCES = [
+  {
+    title: 'For players',
+    body: `Play indie games right in your browser, nothing to install. Paid games are priced in dollars and paid in stablecoins (USDG on Robinhood Chain, USDC on Solana), and if you haven't played a minute you can get your money back within 72 hours.`,
+  },
+  {
+    title: 'For developers',
+    body: 'Publish your web game and keep 80% of every sale, paid out automatically after a 72-hour refund window. Run an in-game shop with no store fee, and launch your own game token if you want one.',
+    link: { href: '/developers', label: 'How publishing works' },
+  },
+  {
+    title: 'For holders and curators',
+    body: `${TOKEN_TICKER} holders share 2% of every sale. Players who hold ${TOKEN_TICKER} and write real, played-in reviews share another 1% as curators.`,
+    link: { href: '/rewards', label: 'Holder rewards' },
+  },
+];
 
 const PERKS = [
   {
-    title: 'One coin, every game',
-    body: `${TOKEN_TICKER} is the currency of the whole studio. Every Indie Creations game runs on the same coin, so what you hold works in the game you play today and every game we ship after it.`,
+    title: 'Burned to publish',
+    body: `Developers burn $50 of ${TOKEN_TICKER} to join the store and another $50 for every new game they submit. Every burn is permanent and counted on the site.`,
   },
   {
-    title: 'Cosmetics in every game',
-    body: `Every game has its own cosmetics, all bought with ${TOKEN_TICKER}: hats, outfits and tool skins in My Favorite Sheep, armour finishes, emotes and banners in Agentacus. Some are tied to your Steam account, others are bought and kept inside the game itself. Cosmetics are for looking good, never for winning.`,
+    title: 'A share of every sale',
+    body: `Once the store opens, 2% of every game sold goes to ${TOKEN_TICKER} holders each month, paid in USDG and weighted by how much each wallet held through the month.`,
   },
   {
-    title: 'In the game, every day',
-    body: `${TOKEN_TICKER} is spent inside the games, not just held. In Agentacus, lanistas stake it on their gladiators and spectators bet from the stands, and half of every losing bet is burned. The beta runs on testnet for now.`,
+    title: 'Curator rewards',
+    body: `Hold at least $25 of ${TOKEN_TICKER} and write five qualifying reviews a month, each after real playtime, to share the 1% curator pool.`,
+  },
+  {
+    title: 'Cosmetics in studio games',
+    body: `Indie Creations' own games sell their cosmetics for ${TOKEN_TICKER}: hats, outfits and tool skins in My Favorite Sheep, items in Don't Worry, You're Safe! and more. Cosmetics are for looking good, never for winning.`,
   },
   {
     title: 'Playtest access',
-    body: `Hold ${MIN_TOKENS.toLocaleString('en-US')} ${TOKEN_TICKER} to get into the playtest area and play builds while they are still being made.`,
+    body: `Hold ${MIN_TOKENS.toLocaleString('en-US')} ${TOKEN_TICKER} to get into the playtest area and play studio builds while they are still being made.`,
   },
   {
-    title: 'Reviews that matter',
-    body: 'Rate each build and leave feedback. Holder reviews decide what gets fixed and built next.',
-  },
-  {
-    title: 'Every game, free',
-    body: 'When a game ships, holders play it free. One bag, the whole catalogue.',
+    title: 'Make your own game',
+    body: `Holders can make browser games with a prompt in Create, publish them to Community, and sell items in them.`,
   },
 ];
 
@@ -46,21 +66,21 @@ export default function Home() {
           <div className="hero-copy">
             <span className="pill">
               <span className="dot" />
-              Live on Robinhood Chain
+              Store opening soon
             </span>
-            <h1>Indie games that share one coin.</h1>
+            <h1>An indie game store, built on crypto.</h1>
             <p className="lead">
-              Indie Creations is an independent studio making a family of games that all run on{' '}
-              {TOKEN_TICKER}. Spend it on cosmetics and in-game play across every title, and hold it
-              to get into playtests, review builds and play each release free. Half of the total
-              supply is locked.
+              Play indie web games right in your browser and pay with stablecoins. Developers keep 80% of every sale,{' '}
+              {TOKEN_TICKER} holders share 2% and curators who review games share 1%.
+              {privyEnabled ? ' Sign in with your email or a wallet.' : ''} The store opens to independent developers
+              soon; the studio&apos;s own games are playable now.
             </p>
             <div className="actions">
-              <Link href="/playtest" className="btn btn-primary">
-                Enter playtest
+              <Link href="/games" className="btn btn-primary">
+                Browse games
               </Link>
-              <Link href="/token" className="btn btn-ghost">
-                Get {TOKEN_TICKER}
+              <Link href="/developers" className="btn btn-ghost">
+                Publish your game
               </Link>
             </div>
           </div>
@@ -76,11 +96,38 @@ export default function Home() {
       {/* GAMES */}
       <section className="section">
         <div className="container">
-          <p className="eyebrow">In the studio now</p>
-          <h2>What we&apos;re making.</h2>
+          <p className="eyebrow">Play now</p>
+          <h2>On the store.</h2>
           <div className="games-grid">
             {GAMES.map((game) => (
               <GameCard game={game} key={game.slug} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HOW THE STORE WORKS */}
+      <section className="section">
+        <div className="container">
+          <p className="eyebrow">How the store works</p>
+          <h2>Every sale, split four ways.</h2>
+          <p className="lead">
+            Games are priced in dollars and paid in stablecoins. Each sale waits 72 hours in escrow, so a player who
+            hasn&apos;t played can get a refund, then splits automatically.
+          </p>
+          <StoreSplit />
+          <div className="grid-3">
+            {AUDIENCES.map((a, i) => (
+              <div className="card" key={a.title}>
+                <span className="card-index">0{i + 1}</span>
+                <h3>{a.title}</h3>
+                <p className="muted">{a.body}</p>
+                {a.link && (
+                  <Link href={a.link.href} className="small">
+                    {a.link.label}
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -90,11 +137,10 @@ export default function Home() {
       <section className="section">
         <div className="container">
           <p className="eyebrow">What {TOKEN_TICKER} is for</p>
-          <h2>The coin behind every game we make.</h2>
+          <h2>The coin behind the store.</h2>
           <p className="lead">
-            {TOKEN_TICKER} is first of all the everyday coin of the Indie Creations ecosystem: what
-            players spend on cosmetics and in-game across all of our games. Holding it also gets you
-            into the studio itself, from early playtests to free releases.
+            {TOKEN_TICKER} is burned every time a developer joins the store or submits a game, and its holders share in
+            every sale. It is also the coin of the studio&apos;s own games, from cosmetics to playtests.
           </p>
           <div className="grid-3">
             {PERKS.map((perk, i) => (
@@ -134,8 +180,8 @@ export default function Home() {
             <p className="eyebrow">The economy so far</p>
             <h2>Every game, one set of books.</h2>
             <p className="lead">
-              Revenue from every Indie Creations game and every {TOKEN_TICKER} burned, counted live from the shop and
-              the chain. A share of that revenue goes back to holders.
+              Revenue from every game and every {TOKEN_TICKER} burned, counted live from the shop and the chain. A
+              share of that revenue goes back to holders.
             </p>
             <EconomyStats stats={economy} />
             <div className="actions">

@@ -1,11 +1,21 @@
 import { useState } from 'react';
 import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, MIN_TOKENS, robinhoodChain } from '../lib/config';
+import { privyEnabled } from '../lib/privyClient';
 
-const STEPS = [
-  { title: 'Get a wallet', body: 'Any EVM wallet works. Add Robinhood Chain and bridge a little ETH for gas.' },
-  { title: `Pick up ${TOKEN_TICKER}`, body: 'Buy on PONS Launchpad using the contract address on this page.' },
-  { title: 'Connect and verify', body: 'Sign a free message on the playtest page. No transaction, no approvals.' },
-];
+const STEPS = privyEnabled
+  ? [
+      {
+        title: 'Sign in',
+        body: 'Sign in with your email and the store makes you a wallet only you control, or bring your own EVM wallet. Bridge a little ETH to Robinhood Chain for gas.',
+      },
+      { title: `Pick up ${TOKEN_TICKER}`, body: 'Buy on PONS Launchpad using the contract address on this page.' },
+      { title: 'It counts everywhere', body: `${TOKEN_TICKER} in any wallet linked to your account counts for holder perks. No staking, no approvals.` },
+    ]
+  : [
+      { title: 'Get a wallet', body: 'Any EVM wallet works. Add Robinhood Chain and bridge a little ETH for gas.' },
+      { title: `Pick up ${TOKEN_TICKER}`, body: 'Buy on PONS Launchpad using the contract address on this page.' },
+      { title: 'Connect and verify', body: 'Sign a free message on the playtest page. No transaction, no approvals.' },
+    ];
 
 function ContractAddress() {
   const [copied, setCopied] = useState(false);
@@ -43,10 +53,11 @@ export default function TokenSection() {
           <p className="eyebrow">The token</p>
           <h2>{TOKEN_TICKER}</h2>
           <p className="muted">
-            {TOKEN_TICKER} is the ecosystem coin for everything Indie Creations makes: cosmetics
-            and in-game play in every title, plus holder access to the studio. It is a fixed-supply
-            token live on Robinhood Chain, launched through PONS Launchpad, with 50% of the total
-            supply locked. Hold at least {MIN_TOKENS.toLocaleString()} to unlock the playtest area.
+            {TOKEN_TICKER} is the coin of the Indie Creations store. Developers burn it to join and to
+            publish each game, holders share in every sale, and curators need it to earn from their
+            reviews. It also buys cosmetics in the studio&apos;s own games. It is a fixed-supply token
+            live on Robinhood Chain, launched through PONS Launchpad, with 50% of the total supply
+            locked. Hold at least {MIN_TOKENS.toLocaleString()} to unlock the playtest area.
           </p>
 
           <p className="label">Contract address</p>

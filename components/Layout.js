@@ -7,7 +7,7 @@ import SocialIcons from './Socials';
 import { LINKS, TOKEN_TICKER } from '../lib/config';
 
 const DESCRIPTION =
-  'Indie Creations is an independent game studio. $CREATIONS on Robinhood Chain buys cosmetics in every game, opens playtests, and shares game revenue with holders.';
+  'Indie Creations is an indie game store: play web games in your browser and pay with stablecoins. Developers keep 80% of every sale, and $CREATIONS holders and curators share in every sale.';
 
 export default function Layout({ children }) {
   return (
@@ -30,14 +30,13 @@ export default function Layout({ children }) {
           </Link>
 
           <nav className="nav">
-            <Link href="/games">Games</Link>
+            <Link href="/games">Store</Link>
             <Link href="/community">Community</Link>
             <Link href="/create">Create</Link>
-            <Link href="/token">Token</Link>
-            <Link href="/playtest">Playtest</Link>
-            <Link href="/shop">Shop</Link>
+            <Link href="/developers">Developers</Link>
             <Link href="/rewards">Rewards</Link>
-            <Link href="/reviews">Reviews</Link>
+            <Link href="/token">Token</Link>
+            <Link href="/shop">Shop</Link>
           </nav>
 
           <div className="header-actions">
@@ -55,15 +54,18 @@ export default function Layout({ children }) {
           <div>
             <Logo />
             <p className="muted small footer-note">
-              {TOKEN_TICKER} is the ecosystem coin of Indie Creations games. Holder rewards come from game
-              revenue: they vary from month to month and can be zero. Crypto assets are risky and can lose value.
-              Nothing on this site is financial advice.
+              {TOKEN_TICKER} is the coin of the Indie Creations store and its games. Holder and curator rewards
+              come from sales: they vary from month to month and can be zero. Crypto assets are risky and can lose
+              value. Nothing on this site is financial advice.
             </p>
           </div>
           <div className="footer-links">
-            <Link href="/games">Games</Link>
+            <Link href="/games">Store</Link>
             <Link href="/community">Community games</Link>
             <Link href="/create">Make a game</Link>
+            <Link href="/developers">Developers</Link>
+            <Link href="/dev/guidelines">Guidelines</Link>
+            <Link href="/token">Token</Link>
             <Link href="/playtest">Playtest</Link>
             <Link href="/shop">Shop</Link>
             <Link href="/rewards">Rewards</Link>

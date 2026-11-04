@@ -7,16 +7,16 @@ export default function Games() {
   return (
     <>
       <Head>
-        <title>Games - Indie Creations</title>
+        <title>Store - Indie Creations</title>
       </Head>
       <div className="container page">
         <div className="page-head">
           <div>
-            <p className="eyebrow">Games</p>
-            <h1>Everything we&apos;re making.</h1>
+            <p className="eyebrow">Store</p>
+            <h1>Games on Indie Creations.</h1>
             <p className="muted">
-              Each game has its own page and its own cosmetics shop. Holders of {TOKEN_TICKER} play every release
-              free.
+              Play right in your browser. The store opens to independent developers soon; until then, these are the
+              studio&apos;s own games, with cosmetics paid in {TOKEN_TICKER}.
             </p>
           </div>
         </div>

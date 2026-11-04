@@ -229,6 +229,16 @@ export default function Rewards() {
         </div>
       </div>
 
+      <div className="notice rewards-change">
+        <p>
+          <strong>Changing when the store opens.</strong> Today {REVSHARE_PERCENT}% of the studio&apos;s own game
+          revenue goes to holders. When the store opens to other developers, that share pays out through the end of
+          that month, and from then on holders share <strong>2% of every game sold on the store</strong>, paid monthly
+          in USDG and weighted by how much each wallet held through the month. Curators, holders who write
+          played-in reviews, share another 1%. Rewards already owed stay claimable here.
+        </p>
+      </div>
+
       {REVSHARE_ADDRESS ? (
         <Claim decimals={decimals} />
       ) : (
