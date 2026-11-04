@@ -2746,3 +2746,58 @@ main > .section:first-child {
     min-width: 0;
   }
 }
+
+/* Studio admin: header button and the "waiting for review" notice (components/AdminNotice.js) */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e5533d;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+.admin-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.admin-toast p {
+  margin: 2px 0 0;
+}
+.admin-toast-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+@media (max-width: 520px) {
+  .admin-toast {
+    left: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+/* with the Admin button the header row runs out of room on laptop widths: the channels stay in the footer */
+@media (max-width: 1400px) {
+  .header-actions:has(.admin-btn) .socials { display: none; }
+}

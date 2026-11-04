@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Logo from './Logo';
 import AccountButton from './AccountButton';
+import { AdminButton, AdminToast } from './AdminNotice';
 import ThemeToggle from './ThemeToggle';
 import SocialIcons from './Socials';
 import { LINKS, TOKEN_TICKER } from '../lib/config';
@@ -43,12 +44,14 @@ export default function Layout({ children }) {
           <div className="header-actions">
             <SocialIcons />
             <ThemeToggle />
+            <AdminButton />
             <AccountButton />
           </div>
         </div>
       </header>
 
       <main>{children}</main>
+      <AdminToast />
 
       <footer className="site-footer">
         <div className="container footer-inner">

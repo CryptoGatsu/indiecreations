@@ -154,7 +154,7 @@ Independent developers publish web games on the store, and the studio reviews ev
 
 🔑 Studio admin (`/admin`)
 
-A private page for the studio (not linked from the site, and hidden from search engines). Sign in with the treasury wallet, the dev wallet, or any wallet listed in `ADMIN_WALLETS`, by signing a free message; the admin session lasts 2 hours. It shows anything that would stop the next payout, and lets you:
+A private page for the studio (hidden from search engines, and linked only for admins: an **Admin** button appears in the header, with a count, when the signed-in account has an admin wallet linked or an admin wallet signed in; after signing in, a notice lists the developer applications and game builds waiting for review, and comes back only when something new arrives; `/api/admin/notice`). Sign in with the treasury wallet, the dev wallet, or any wallet listed in `ADMIN_WALLETS`, by signing a free message; the admin session lasts 2 hours. It shows anything that would stop the next payout, and lets you:
 
 - **Approve payouts:** with the treasury wallet connected, set how much $CREATIONS the payout contract may take from the treasury (or revoke it). Setting it replaces the previous amount.
 - **Watch the payouts:** revenue waiting for the next payout, what it would take from the treasury, when the contract allows the next one, what holders have claimed, and every closed month with its transaction and public tree.
