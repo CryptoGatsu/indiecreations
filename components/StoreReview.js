@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { APPLICATION_REASONS, RULES } from '../lib/platform/guidelines';
 import { AGE_RATINGS } from '../lib/platform/listing';
 import { shortAddress } from '../lib/config';
+import { FRAME_SANDBOX } from '../lib/platform/files';
 
 // The studio's store queues on /admin: developer applications, game builds, and the adult lane (PLATFORM_SPEC 15).
 // Approve in one click, or turn down with the codes that apply and an optional note; every decision is logged.
@@ -143,7 +144,7 @@ function Build({ b, reload }) {
           className="review-frame"
           src={b.entryUrl}
           title={l.title}
-          sandbox="allow-scripts allow-same-origin allow-pointer-lock"
+          sandbox={FRAME_SANDBOX}
           allow="fullscreen; gamepad; autoplay"
         />
       )}

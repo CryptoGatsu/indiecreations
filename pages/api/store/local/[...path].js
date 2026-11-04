@@ -12,5 +12,7 @@ export default function handler(req, res) {
   if (!file) return res.status(404).end();
   res.setHeader('Content-Type', BUILD_TYPES[extOf(pathname)] || 'application/octet-stream');
   res.setHeader('Cache-Control', 'no-store');
+  // game frames run in an opaque origin (lib/platform/frame.js), so their requests here are cross-origin, like Blob's
+  res.setHeader('Access-Control-Allow-Origin', '*');
   return res.status(200).send(file);
 }

@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
+import { FRAME_SANDBOX } from '../../lib/platform/files';
 
 // Plays a store game. The build is served from the games storage domain (never indiecreations.fun) inside a sandboxed
 // frame that can't navigate the store or reach its cookies (PLATFORM_SPEC section 6). The store frame itself counts
@@ -95,7 +96,7 @@ export default function Play() {
             className="game-frame play-frame"
             src={state.game.entryUrl}
             title={state.game.name}
-            sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-forms"
+            sandbox={FRAME_SANDBOX}
             allow="fullscreen; gamepad; autoplay; clipboard-write"
             referrerPolicy="no-referrer"
           />
