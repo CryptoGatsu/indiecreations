@@ -128,6 +128,19 @@ Each browser game page includes `<script src="/presence.js" data-game="<slug>" d
 
 **When republishing a Unity build, keep that script line in its `index.html`** (it sits just before `</body>`), or put it in the game repo's WebGL template so it is always there. A new browser game only needs the same line with its own slug.
 
+🪪 Store accounts (Privy, milestone 1 of `PLATFORM_SPEC`)
+
+The store is moving to accounts: people sign in with their email or a wallet through [Privy](https://privy.io), and every account gets its own non-custodial wallets (an EVM one on Robinhood Chain if they brought none, and a Solana one). They can link MetaMask, Phantom and others to the same account. The site never sees or stores a private key.
+
+- **Off until `NEXT_PUBLIC_PRIVY_APP_ID` is set.** Without it the site keeps the wallet-message sign-in below, and Privy isn't even in the bundle. A value that isn't a 25-character Privy app ID leaves accounts off too, and if Privy fails to start in a browser the page falls back to the wallet sign-in instead of going blank.
+- **How a sign-in works:** after a Privy login the browser sends its Privy identity token to `/api/auth/privy`. The server checks it (signed by Privy for this app; `PRIVY_VERIFICATION_KEY`, or Privy's JWKS), saves the account and its wallets (`users`, `wallets` in `supabase/accounts.sql`), and sets the site's own cookies: `ic_account` (the account, 30 days), `ic_player` for the account's profile wallet (so profiles, comments, cosmetics and the browser games work exactly as before) and, when any linked EVM wallet holds enough $CREATIONS, `ic_session` (the holder gate) for that wallet. Each new identity token (a wallet linked or created) updates the account; when Privy's own session ends, the site's ends too.
+- **Profile wallet:** the site still acts as one EVM wallet per account: a wallet the person linked themselves if there is one, else the one Privy made. `/profile` lists every wallet and lets them switch (`PUT /api/auth/account`), link more, or add an email.
+- **Roles:** `player` for everyone, `curator` and `developer` stored per account (later milestones grant them). `admin` is never stored: an account is an admin while any of its wallets is in `ADMIN_WALLETS` (or is the treasury or dev wallet). The `/admin` page still signs in with an admin wallet's own signature.
+- **Routes:** `POST /api/auth/privy` (sign in), `GET /api/auth/account` (the account, its wallets, roles and holder status), `PUT` (profile wallet), `DELETE` (sign out of everything).
+- **Platform constants:** `lib/platform/config.js` holds the spec's fixed numbers (splits, escrow and refund windows, curator rules, vesting).
+
+Privy dashboard setup: create an app, turn on **Email** and **Wallet** login, turn on embedded wallets for **Ethereum** and **Solana**, turn on **identity tokens** (the site reads the linked accounts from them), add the site's domains (`www.indiecreations.fun`, `indiecreations.fun`, and the Vercel preview domain while testing) as allowed origins, and upload the logo there (it is not set in code, because Privy's in-code logo breaks server rendering). Then set `NEXT_PUBLIC_PRIVY_APP_ID` (and optionally `PRIVY_VERIFICATION_KEY`) in Vercel and run `supabase/accounts.sql`.
+
 🔑 Studio admin (`/admin`)
 
 A private page for the studio (not linked from the site, and hidden from search engines). Sign in with the treasury wallet, the dev wallet, or any wallet listed in `ADMIN_WALLETS`, by signing a free message; the admin session lasts 2 hours. It shows anything that would stop the next payout, and lets you:

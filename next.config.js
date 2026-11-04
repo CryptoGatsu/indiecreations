@@ -6,6 +6,9 @@
 const ARENA_API_ORIGIN = (process.env.ARENA_API_ORIGIN || '').replace(/\/+$/, '');
 
 const nextConfig = {
+  // Always defined (empty when unset), so `process.env.NEXT_PUBLIC_PRIVY_APP_ID ? require(...) : null` in pages/_app.js
+  // becomes a constant at build time and Privy is left out of the bundle while store accounts are off.
+  env: { NEXT_PUBLIC_PRIVY_APP_ID: process.env.NEXT_PUBLIC_PRIVY_APP_ID || '' },
   async redirects() {
     return [
       { source: '/supporter', destination: '/playtest', permanent: true },
@@ -64,6 +67,10 @@ const nextConfig = {
     // Optional deps pulled in by WalletConnect that aren't needed in the browser.
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
     config.resolve.alias['@react-native-async-storage/async-storage'] = false;
+    // Privy's optional integrations the site doesn't use (Farcaster mini apps, Abstract, smart accounts)
+    for (const optional of ['@farcaster/mini-app-solana', '@abstract-foundation/agw-client', 'permissionless']) {
+      config.resolve.alias[optional] = false;
+    }
     return config;
   },
 };

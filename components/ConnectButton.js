@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { shortAddress } from '../lib/config';
+import { usePrivyActions } from './privyActions';
 
 export default function ConnectButton({ className = 'btn btn-primary', label = 'Connect wallet' }) {
   const { address, isConnected } = useAccount();
@@ -8,6 +9,7 @@ export default function ConnectButton({ className = 'btn btn-primary', label = '
   const { disconnect } = useDisconnect();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const privy = usePrivyActions();
 
   // Wallet state only exists in the browser; render the neutral button on the server.
   useEffect(() => setMounted(true), []);
@@ -20,6 +22,15 @@ export default function ConnectButton({ className = 'btn btn-primary', label = '
       <button className="btn btn-ghost wallet-chip" onClick={() => disconnect()} title="Disconnect">
         <span className="dot" />
         {shortAddress(address)}
+      </button>
+    );
+  }
+
+  // With store accounts on, Privy's own wallet picker connects the wallet (and makes it the one wagmi uses).
+  if (privy) {
+    return (
+      <button className={className} onClick={() => privy.connectWallet()}>
+        {label}
       </button>
     );
   }

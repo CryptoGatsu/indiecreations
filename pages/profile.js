@@ -5,7 +5,9 @@ import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 import Avatar from '../components/Avatar';
 import ConnectButton from '../components/ConnectButton';
-import useProfile from '../components/useProfile';
+import useProfile, { refreshProfile } from '../components/useProfile';
+import useStoreAccount from '../components/useStoreAccount';
+import { usePrivyActions } from '../components/privyActions';
 import { MIN_TOKENS, TOKEN_TICKER, shortAddress } from '../lib/config';
 import { GAMES } from '../lib/games';
 import { AVATAR_MAX_BYTES, AVATAR_PX, BIO_MAX, NAME_RE, shownName } from '../lib/profileRules';
@@ -176,8 +178,97 @@ function Editor({ me }) {
   );
 }
 
+// Store account (Privy): email, every linked wallet, which one the site acts as, and linking more.
+function AccountPanel() {
+  const privy = usePrivyActions();
+  const { account, holder, refresh } = useStoreAccount();
+  const [busy, setBusy] = useState(null);
+  const [error, setError] = useState(null);
+  if (!privy || !account) return null;
+
+  const makePrimary = async (address) => {
+    setBusy(address);
+    setError(null);
+    try {
+      const res = await fetch('/api/auth/account', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ primaryWallet: address }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || 'Could not switch wallets.');
+      await Promise.all([refresh(), refreshProfile()]);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const extraRoles = account.roles.filter((r) => r !== 'player');
+  return (
+    <section className="card profile-card account-panel">
+      <p className="eyebrow">Your account</p>
+      <p className="small">
+        {account.email ? (
+          <>
+            Signed in as <strong>{account.email}</strong>
+          </>
+        ) : (
+          <>
+            No email yet.{' '}
+            <button type="button" className="link-button" onClick={() => privy.linkEmail()}>
+              Add one
+            </button>{' '}
+            so you can always get back in.
+          </>
+        )}
+        {extraRoles.map((r) => (
+          <span key={r} className="pill account-role">
+            {r}
+          </span>
+        ))}
+      </p>
+
+      <ul className="account-wallets">
+        {account.wallets.map((w) => {
+          const primary = w.chain === 'evm' && w.address === account.primaryWallet;
+          return (
+            <li key={`${w.chain}:${w.address}`}>
+              <span className="pill">{w.chain === 'evm' ? 'Robinhood Chain' : 'Solana'}</span>
+              <span className="mono" title={w.address}>
+                {w.chain === 'evm' ? shortAddress(w.address) : `${w.address.slice(0, 4)}…${w.address.slice(-4)}`}
+              </span>
+              <span className="muted small">{w.type === 'embedded' ? 'made for you' : 'linked'}</span>
+              {holder?.wallet === w.address && <span className="pill pill-solid">Holder</span>}
+              {primary ? (
+                <span className="small account-primary">Profile wallet</span>
+              ) : w.chain === 'evm' ? (
+                <button type="button" className="link-button small" disabled={busy !== null} onClick={() => makePrimary(w.address)}>
+                  {busy === w.address ? 'Switching…' : 'Use for my profile'}
+                </button>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+      <div className="admin-row">
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => privy.linkWallet()}>
+          Link a wallet
+        </button>
+        {error && <span className="error small">{error}</span>}
+      </div>
+      <p className="muted small">
+        Your profile, comments and cosmetics use your profile wallet. {TOKEN_TICKER} in any linked wallet counts toward
+        holder perks. Your wallets are yours: Indie Creations never holds their keys.
+      </p>
+    </section>
+  );
+}
+
 export default function Profile() {
   const me = useProfile();
+  const privy = usePrivyActions();
   const { address: wallet, isConnected } = useAccount();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -208,11 +299,22 @@ export default function Profile() {
     body = (
       <div className="gate">
         <h1>Your profile</h1>
-        <p className="muted">
-          Sign in with your wallet to set a name, a picture and a bio, mark your favorite games, comment under games and
-          see your {TOKEN_TICKER}. Signing in is a free message, not a transaction.
-        </p>
-        {isConnected ? (
+        {privy ? (
+          <p className="muted">
+            Sign in with your email or a wallet to set a name, a picture and a bio, mark your favorite games, comment
+            under games and see your {TOKEN_TICKER}. New accounts get their own wallets, and only you hold the keys.
+          </p>
+        ) : (
+          <p className="muted">
+            Sign in with your wallet to set a name, a picture and a bio, mark your favorite games, comment under games
+            and see your {TOKEN_TICKER}. Signing in is a free message, not a transaction.
+          </p>
+        )}
+        {privy ? (
+          <button className="btn btn-primary" onClick={signIn} disabled={busy}>
+            {busy ? 'Signing in…' : 'Sign in'}
+          </button>
+        ) : isConnected ? (
           <button className="btn btn-primary" onClick={signIn} disabled={busy}>
             {busy ? 'Check your wallet…' : `Sign in as ${shortAddress(wallet)}`}
           </button>
@@ -241,7 +343,7 @@ export default function Profile() {
             </div>
           </div>
         </div>
-        {wallet && wallet.toLowerCase() !== me.address && (
+        {!privy && wallet && wallet.toLowerCase() !== me.address && (
           <p className="notice small">
             Your wallet is on {shortAddress(wallet)}, but this browser is signed in as {shortAddress(me.address)}.{' '}
             <button className="link-button" onClick={signIn}>
@@ -251,7 +353,10 @@ export default function Profile() {
         )}
         <div className="profile-grid">
           <Editor key={me.address} me={me} />
-          <Balance balance={me.balance} />
+          <div className="profile-side">
+            <AccountPanel />
+            <Balance balance={me.balance} />
+          </div>
         </div>
       </>
     );

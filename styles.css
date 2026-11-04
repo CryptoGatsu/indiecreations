@@ -2296,3 +2296,47 @@ main > .section:first-child {
 .share-actions > :last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
+
+/* Store account panel on /profile (Privy) */
+.profile-side {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.account-wallets {
+  list-style: none;
+  margin: 14px 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.account-wallets li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+.account-primary {
+  font-weight: 600;
+  margin-left: auto;
+}
+.account-wallets .link-button {
+  margin-left: auto;
+}
+.account-role {
+  margin-left: 8px;
+  text-transform: capitalize;
+}
+
+/* The profile's favorite-game chips wrap on phones (the shop's chip row scrolls sideways, which overflows a card) */
+@media (max-width: 720px) {
+  .shop-chips.profile-favorites {
+    flex-wrap: wrap;
+    max-width: none;
+    overflow: visible;
+  }
+}

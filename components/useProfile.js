@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAccount, useSignMessage } from 'wagmi';
+import { usePrivyActions } from './privyActions';
 
 // The signed-in player on this browser: { address, profile, balance } from /api/profile/me, shared by every
 // component that asks (header, profile page, comments), with sign in / sign out / refresh.
-// Signing in is the free wallet message the browser games use too, so one sign-in covers both.
+// Signing in is the free wallet message the browser games use too, so one sign-in covers both. With store accounts
+// switched on (Privy), signing in is the account login instead (email or wallet), which sets the same cookie.
 const shared = { data: undefined, loading: null, listeners: new Set() };
 
 function publish(data) {
@@ -36,7 +38,10 @@ export default function useProfile() {
     return () => shared.listeners.delete(setData);
   }, []);
 
+  const privy = usePrivyActions();
+
   const signIn = useCallback(async () => {
+    if (privy) return privy.login();
     if (!wallet) throw new Error('Connect your wallet first.');
     const n = await fetch(`/api/game/signin?address=${wallet}`).then((r) => r.json());
     if (!n.message) throw new Error(n.error || 'Could not start signing in.');
@@ -49,12 +54,13 @@ export default function useProfile() {
     const out = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(out.error || 'Sign-in failed.');
     await refreshProfile();
-  }, [wallet, signMessageAsync]);
+  }, [privy, wallet, signMessageAsync]);
 
   const signOut = useCallback(async () => {
+    if (privy) return privy.logout();
     await fetch('/api/game/me', { method: 'DELETE' }).catch(() => {});
     await refreshProfile();
-  }, []);
+  }, [privy]);
 
   return {
     loading: data === undefined,
