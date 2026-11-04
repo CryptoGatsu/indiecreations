@@ -1,4 +1,4 @@
-import { AccountError, accountHolder, getAccount, setPrimaryWallet } from '../../../lib/accounts';
+import { AccountError, accountHolder, getAccount, setAdultOptIn, setPrimaryWallet } from '../../../lib/accounts';
 import {
   ACCOUNT_COOKIE,
   accountCookieHeader,
@@ -12,6 +12,7 @@ import { persistent } from '../../../lib/supabase';
 
 // GET -> { account, holder } for the store account signed in on this browser ({ account: null } when signed out).
 // PUT { primaryWallet } -> makes another linked EVM wallet the one the site acts as (profile, comments, cosmetics).
+// PUT { adultOptIn, confirm18 } -> shows or hides adult games for this account.
 // DELETE -> signs out of the account, the player sign-in and the holder session.
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -35,6 +36,10 @@ export default async function handler(req, res) {
       }
       const holder = await accountHolder(account);
       return res.status(200).json({ account, holder: { holder: holder.holder, wallet: holder.wallet, balances: holder.balances } });
+    }
+    if (req.method === 'PUT' && typeof req.body?.adultOptIn === 'boolean') {
+      const account = await setAdultOptIn(token.uid, req.body.adultOptIn, req.body.confirm18 === true);
+      return res.status(200).json({ account });
     }
     if (req.method === 'PUT') {
       const account = await setPrimaryWallet(token.uid, req.body?.primaryWallet);

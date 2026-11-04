@@ -55,7 +55,12 @@ const PERKS = [
 // Decorative 5x5 board echoing the logo mark. 1 = ink tile.
 const BOARD = [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0];
 
-export default function Home() {
+export async function getStaticProps() {
+  const { storeGamesForPages } = await import('../lib/platform/storeList');
+  return { props: { storeGames: await storeGamesForPages() }, revalidate: 60 };
+}
+
+export default function Home({ storeGames = [] }) {
   const economy = useEconomyStats();
 
   return (
@@ -100,6 +105,9 @@ export default function Home() {
           <h2>On the store.</h2>
           <div className="games-grid">
             {GAMES.map((game) => (
+              <GameCard game={game} key={game.slug} />
+            ))}
+            {storeGames.slice(0, 6).map((game) => (
               <GameCard game={game} key={game.slug} />
             ))}
           </div>

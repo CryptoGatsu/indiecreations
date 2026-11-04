@@ -1,4 +1,5 @@
 import { PLAYABLE, clientIp, playerCounts, recordPing } from '../../lib/presence';
+import { isPlayableStoreGame } from '../../lib/platform/storeGames';
 
 // POST { game, id } -> "this browser is playing <game>" (sent by /presence.js once a minute while a game is open).
 // GET -> { [game slug]: { now, day, month } }: players right now, in the last 24 hours and in the last 30 days.
@@ -6,7 +7,8 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'POST') {
       const { game, id } = req.body || {};
-      if (!PLAYABLE.has(game) || !/^[a-z0-9]{16,40}$/.test(id || '')) return res.status(400).json({ error: 'Bad ping.' });
+      if (!/^[a-z0-9]{16,40}$/.test(id || '')) return res.status(400).json({ error: 'Bad ping.' });
+      if (!PLAYABLE.has(game) && !(await isPlayableStoreGame(game))) return res.status(400).json({ error: 'Bad ping.' });
       await recordPing({ game, id, ip: clientIp(req) });
       return res.status(204).end();
     }

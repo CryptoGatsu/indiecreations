@@ -4,16 +4,33 @@ import { GAMES, findGame } from '../../lib/games';
 import { TOKEN_TICKER } from '../../lib/config';
 import PlayerCount, { usePlayerCounts } from '../../components/PlayerCount';
 import GameComments from '../../components/GameComments';
+import StoreGamePage from '../../components/StoreGamePage';
 
 export async function getStaticPaths() {
-  return { paths: GAMES.map((g) => ({ params: { slug: g.slug } })), fallback: false };
+  // studio games are built ahead; store games (published by developers) are built on first visit and refreshed
+  return { paths: GAMES.map((g) => ({ params: { slug: g.slug } })), fallback: 'blocking' };
 }
 
 export async function getStaticProps({ params }) {
-  return { props: { game: findGame(params.slug) } };
+  const studio = findGame(params.slug);
+  if (studio) return { props: { game: studio } };
+  const { persistent } = await import('../../lib/supabase');
+  if (!persistent) return { notFound: true, revalidate: 60 };
+  const { liveGame } = await import('../../lib/platform/storeGames');
+  const g = await liveGame(params.slug).catch(() => null);
+  if (!g) return { notFound: true, revalidate: 30 };
+  const { id, devId, ...game } = g;
+  // adult store pages never go out in the page itself; the browser fetches them once the visitor has opted in
+  const storeGame = game.adult ? { slug: game.slug, adultGate: true } : game;
+  return { props: { storeGame }, revalidate: 60 };
 }
 
-export default function GamePage({ game }) {
+export default function GamePage({ game, storeGame }) {
+  if (storeGame) return <StoreGamePage game={storeGame} />;
+  return <StudioGamePage game={game} />;
+}
+
+function StudioGamePage({ game }) {
   const counts = usePlayerCounts();
   const shopHref = `/shop?game=${game.slug}`;
   // a Steam game with no shop on this site yet (lib/games.js): everything points to its Steam page

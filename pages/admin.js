@@ -7,6 +7,7 @@ import { dollars } from '../components/EconomyStats';
 import { buildAdminSignInMessage } from '../lib/authMessage';
 import { LINKS, TOKEN_ADDRESS, TOKEN_TICKER, robinhoodChain, shortAddress } from '../lib/config';
 import { revshareAbi } from '../lib/revshare';
+import StoreReview from '../components/StoreReview';
 
 // Studio admin: holder payouts, treasury approval, the payout wallet, the daily job, shop orders and playtest
 // downloads. Only wallets on the admin list (lib/admin.js) get past the sign-in; on-chain actions are signed by the
@@ -486,13 +487,14 @@ export default function Admin() {
           <div className="page-head">
             <div>
               <p className="eyebrow">Studio admin</p>
-              <h1>Payouts and the shop</h1>
+              <h1>Store, payouts and the shop</h1>
               <p className="muted small">Signed in as {shortAddress(status.admin)}. <button className="link-button" onClick={signOut}>Sign out</button> · <button className="link-button" onClick={load}>Refresh</button></p>
             </div>
           </div>
           {error && <p className="error small">{error}</p>}
           <Warnings list={status.warnings} />
           <div className="admin-grid">
+            <StoreReview />
             <Payouts s={status} />
             <Treasury s={status} refresh={load} />
             <Job s={status} refresh={load} />

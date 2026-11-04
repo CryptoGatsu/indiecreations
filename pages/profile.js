@@ -262,6 +262,34 @@ function AccountPanel() {
         Your profile, comments and cosmetics use your profile wallet. {TOKEN_TICKER} in any linked wallet counts toward
         holder perks. Your wallets are yours: Indie Creations never holds their keys.
       </p>
+      <label className="small account-adult">
+        <input
+          type="checkbox"
+          checked={account.adultOptIn}
+          disabled={busy !== null}
+          onChange={async (e) => {
+            const on = e.target.checked;
+            if (on && !window.confirm('Adult games contain content for adults only. Confirm that you are 18 or over.')) return;
+            setBusy('adult');
+            setError(null);
+            try {
+              const res = await fetch('/api/auth/account', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adultOptIn: on, confirm18: on }),
+              });
+              const out = await res.json().catch(() => ({}));
+              if (!res.ok) throw new Error(out.error || 'Could not change it.');
+              await refresh();
+            } catch (err) {
+              setError(err.message);
+            } finally {
+              setBusy(null);
+            }
+          }}
+        />{' '}
+        Show adult games (18+) on the store
+      </label>
     </section>
   );
 }

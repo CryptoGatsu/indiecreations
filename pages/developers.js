@@ -96,10 +96,12 @@ export default function Developers() {
             </p>
           </div>
           <div className="actions">
-            <Link href="/dev/guidelines" className="btn btn-primary">
+            <Link href="/dev/apply" className="btn btn-primary">
+              Apply
+            </Link>
+            <Link href="/dev/guidelines" className="btn btn-ghost">
               Read the guidelines
             </Link>
-            <span className="pill">Applications open soon</span>
           </div>
         </div>
 

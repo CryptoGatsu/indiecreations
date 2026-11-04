@@ -12,7 +12,7 @@ import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
 import { WagmiProvider, createConfig, useSetActiveWallet } from '@privy-io/wagmi';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { http } from 'wagmi';
-import { robinhoodChain } from '../lib/config';
+import { robinhoodChain, robinhoodTestnet } from '../lib/config';
 import { PRIVY_APP_ID } from '../lib/privyClient';
 import { PrivyActionsContext } from './privyActions';
 import { refreshProfile } from './useProfile';
@@ -25,9 +25,9 @@ import { currentAccount, refreshAccount } from './useStoreAccount';
 // Only bundled when NEXT_PUBLIC_PRIVY_APP_ID is set (see pages/_app.js).
 
 const wagmiConfig = createConfig({
-  chains: [robinhoodChain],
+  chains: [robinhoodChain, robinhoodTestnet],
   ssr: true,
-  transports: { [robinhoodChain.id]: http() },
+  transports: { [robinhoodChain.id]: http(), [robinhoodTestnet.id]: http() },
 });
 
 const solanaConnectors = toSolanaWalletConnectors();
@@ -146,7 +146,7 @@ export default function PrivyProviders({ queryClient, children }) {
           walletChainType: 'ethereum-and-solana',
         },
         defaultChain: robinhoodChain,
-        supportedChains: [robinhoodChain],
+        supportedChains: [robinhoodChain, robinhoodTestnet],
         embeddedWallets: {
           // people who sign in with MetaMask already have an EVM wallet; everyone gets a Solana one
           ethereum: { createOnLogin: 'users-without-wallets' },

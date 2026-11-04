@@ -2407,3 +2407,332 @@ main > .section:first-child {
     gap: 14px;
   }
 }
+
+/* Developer pages: forms, the burn step, uploads */
+.dev-form {
+  display: grid;
+  gap: 20px;
+  max-width: 760px;
+}
+.dev-form .field input + input {
+  margin-top: 8px;
+}
+.dev-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.slug-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.slug-input .admin-input {
+  flex: 1;
+  min-width: 0;
+}
+.price-input {
+  width: 110px;
+}
+.burn-step {
+  display: grid;
+  gap: 12px;
+}
+.burn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+.burn-row .field {
+  margin: 0;
+}
+.burn-row input.admin-input {
+  flex: 1;
+  min-width: 0;
+}
+.burn-amount {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.burn-amount span {
+  font-size: 16px;
+  color: var(--muted);
+}
+.burn-paste summary {
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.dev-capsule {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+.dev-shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.dev-shots figure {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.dev-shots img {
+  width: 160px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+.upload-progress {
+  position: relative;
+  margin-top: 10px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--soft);
+  overflow: hidden;
+}
+.upload-progress div {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--line);
+  transition: width 0.2s;
+}
+.upload-progress span {
+  position: relative;
+  line-height: 28px;
+  padding-left: 10px;
+}
+.code-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  display: grid;
+  gap: 8px;
+}
+.small-code {
+  display: inline-grid;
+  width: 34px;
+  height: 24px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.review-result {
+  margin-bottom: 20px;
+}
+.dev-games-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.dev-game-row {
+  color: inherit;
+  text-decoration: none;
+}
+.page .card + .card,
+.page .card + .dev-head {
+  margin-top: 20px;
+}
+.account-adult {
+  display: block;
+  margin-top: 12px;
+}
+
+/* Store review on /admin */
+.store-review .shop-chips {
+  margin: 8px 0 16px;
+  align-items: center;
+}
+.review-item {
+  border-top: 1px solid var(--line);
+  padding: 18px 0;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.review-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.review-link {
+  display: block;
+  word-break: break-all;
+}
+.review-listing {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.review-capsule {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+.review-desc {
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow: auto;
+}
+.review-shots {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+.review-shots img {
+  height: 90px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.review-frame {
+  width: 100%;
+  height: 520px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #000;
+}
+.review-decide {
+  display: grid;
+  gap: 8px;
+}
+.review-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.review-decide textarea {
+  width: 100%;
+}
+
+/* Storefront: store game pages, the player, the library */
+.store-top {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.store-media {
+  min-width: 0;
+}
+.store-thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-top: 10px;
+  padding-bottom: 4px;
+}
+.store-thumb {
+  flex: none;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+.store-thumb-on {
+  border-color: var(--ink);
+}
+.store-thumb img {
+  display: block;
+  width: 120px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.store-side {
+  display: grid;
+  gap: 16px;
+}
+.store-actions {
+  display: grid;
+  gap: 10px;
+}
+.store-price {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+.store-facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.store-facts dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.store-facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+.store-description p {
+  white-space: pre-wrap;
+}
+.abandoned-banner {
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.play-page {
+  padding-top: 24px;
+}
+.play-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.play-frame {
+  height: 78vh;
+  background: #000;
+}
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+.library-card {
+  padding: 0;
+  overflow: hidden;
+}
+.library-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.library-card > div {
+  padding: 16px;
+}
+@media (max-width: 720px) {
+  .dev-two,
+  .store-top,
+  .review-listing {
+    grid-template-columns: 1fr;
+  }
+  .review-frame {
+    height: 360px;
+  }
+  .play-frame {
+    height: 60vh;
+  }
+}

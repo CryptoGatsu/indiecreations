@@ -31,6 +31,7 @@ export default function Layout({ children }) {
 
           <nav className="nav">
             <Link href="/games">Store</Link>
+            <Link href="/library">Library</Link>
             <Link href="/community">Community</Link>
             <Link href="/create">Create</Link>
             <Link href="/developers">Developers</Link>
@@ -64,6 +65,7 @@ export default function Layout({ children }) {
             <Link href="/community">Community games</Link>
             <Link href="/create">Make a game</Link>
             <Link href="/developers">Developers</Link>
+            <Link href="/dev">Developer dashboard</Link>
             <Link href="/dev/guidelines">Guidelines</Link>
             <Link href="/token">Token</Link>
             <Link href="/playtest">Playtest</Link>
