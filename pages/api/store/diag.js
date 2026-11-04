@@ -1,10 +1,29 @@
 import crypto from 'crypto';
+import https from 'https';
 import { rest } from '../../../lib/supabase';
 import { listPrefix } from '../../../lib/platform/storage';
 
 // TEMPORARY diagnostic (remove after debugging): GET ?build=<uuid> -> how each stored file of that build comes back
-// from storage (status, headers, size, checksum, first bytes). Reveals nothing but file names and checksums, and only
-// to someone who already has the build's id.
+// from storage when asked the way a browser asks (raw bytes, not decoded): status, headers, size, checksum.
+// Reveals nothing but file names and checksums, and only to someone who already has the build's id.
+const AE = 'gzip, deflate, br, zstd';
+
+function raw(url) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(
+      url,
+      { headers: { 'accept-encoding': AE, origin: 'null', 'sec-fetch-mode': 'cors', 'user-agent': 'Mozilla/5.0 Chrome/131.0 Safari/537.36' } },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => resolve({ res, buf: Buffer.concat(chunks) }));
+        res.on('error', reject);
+      }
+    );
+    req.on('error', reject);
+  });
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const id = String(req.query.build || '');
@@ -14,18 +33,14 @@ export default async function handler(req, res) {
   const files = await listPrefix(b.storage_prefix);
   const out = [];
   for (const f of files) {
-    const r = await fetch(f.url, { headers: { 'accept-encoding': 'identity' }, cache: 'no-store' });
-    const buf = Buffer.from(await r.arrayBuffer());
-    const h = (k) => r.headers.get(k);
+    if (!/\.(unityweb|js)$/.test(f.pathname)) continue;
+    const { res: r, buf } = await raw(f.url);
     out.push({
       path: f.pathname.slice(b.storage_prefix.length),
       listed: f.size,
-      status: r.status,
-      type: h('content-type'),
-      encoding: h('content-encoding'),
-      length: h('content-length'),
-      cors: h('access-control-allow-origin'),
-      got: buf.length,
+      status: r.statusCode,
+      headers: r.headers,
+      gotRaw: buf.length,
       sha: crypto.createHash('sha256').update(buf).digest('hex').slice(0, 16),
       head: buf.subarray(0, 8).toString('hex'),
     });
